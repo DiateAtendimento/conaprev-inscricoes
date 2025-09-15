@@ -1,12 +1,17 @@
 import express from "express";
 import morgan from "morgan";
-import security from "./src/middlewares/security.js";
-import corsMw from "./src/middlewares/cors.js";
-import errorMw from "./src/middlewares/errors.js";
-import healthRoutes from "./src/routes/health.routes.js";
-import inscricoesRoutes from "./src/routes/inscricoes.routes.js";
-import adminRoutes from "./src/routes/admin.routes.js";
-import certsRoutes from "./src/routes/certs.routes.js";
+import express from "express";
+import morgan from "morgan";
+
+import security from "./middlewares/security.js";
+import corsMw from "./middlewares/cors.js";
+import errorMw from "./middlewares/errors.js";
+
+import healthRoutes from "./routes/health.routes.js";
+import inscricoesRoutes from "./routes/inscricoes.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import certsRoutes from "./routes/certs.routes.js";
+
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
