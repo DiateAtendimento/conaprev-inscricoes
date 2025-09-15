@@ -1,0 +1,108 @@
+/* ===== Gate / Contagem regressiva — tema preto ===== */
+.gate-wrap{
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #000;             /* fundo preto */
+  color: #fff;                  /* textos brancos */
+}
+
+.gate-header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px 16px;
+}
+.gate-logo{
+  height: 56px;                 /* ajuste se precisar */
+  width: auto;
+}
+
+.gate-main{
+  display: grid;
+  place-items: center;
+  padding: 24px 16px 56px;
+}
+
+.gate-card{
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr; /* texto | contador */
+  gap: clamp(16px, 4vw, 48px);
+  align-items: center;
+  background: transparent;
+}
+
+.gate-left h1{
+  font-weight: 800;
+  letter-spacing: .2px;
+  font-size: clamp(28px, 4.2vw, 44px);
+  line-height: 1.15;
+  margin: 0 0 12px 0;
+  color: #fff;
+}
+.gate-left p{
+  color: #d1d5db;
+  font-size: clamp(15px, 1.3vw, 18px);
+  margin: 0;
+  max-width: 56ch;
+}
+
+.gate-right{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* grid de contagem + separadores ":" grandes */
+.gate-count{
+  display:grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: clamp(8px, 1.6vw, 18px);
+}
+
+.gate-box{
+  background: #fff;            /* blocos brancos */
+  color: #0b0b0e;              /* números pretos */
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: clamp(74px, 9vw, 110px);
+  text-align:center;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.gate-num{
+  font-size: clamp(28px, 6vw, 54px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .5px;
+}
+
+.gate-lab{
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  opacity: .7;
+  margin-top: 6px;
+}
+
+.gate-sep{
+  font-weight: 900;
+  font-size: clamp(28px, 5.2vw, 48px);
+  line-height: 1;
+  color: #fff;                 /* separador branco */
+  transform: translateY(-4px);
+}
+
+/* responsivo */
+@media (max-width: 900px){
+  .gate-card{
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .gate-left p{ margin-left:auto; margin-right:auto; }
+}

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CONAPREV 83 — Inscrições</title>
+
+  <!-- Tipografia + Bootstrap + Ícones -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Estilos do projeto -->
+  <link href="/src/css/main.css" rel="stylesheet">
+  <link href="/src/css/components.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ====== GATE (cronômetro para visitantes) ====== -->
+  <div id="gate-root"></div>
+
+  <!-- ====== APP (fica oculto até liberação) ====== -->
+  <div id="app" class="d-none">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="#" id="appTitle">CONAPREV 83</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+            <li class="nav-item text-white-50 small">
+              <i class="bi bi-telephone me-1"></i>(61) 2021-5347
+            </li>
+            <li class="nav-item text-white-50 small">
+              <i class="bi bi-envelope me-1"></i>conaprev@previdencia.gov.br
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-outline-light btn-sm" id="adminAccessBtn">
+                <i class="bi bi-gear me-1"></i>Administrador
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-light btn-sm" id="emitirCertificadoBtn">
+                <i class="bi bi-clipboard2-check me-1"></i>Certificado
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Banner -->
+    <section class="banner position-relative">
+      <img src="/imagens/banner.png" class="w-100 object-cover" alt="Banner CONAPREV">
+      <div class="banner-text container">
+        <div class="card card-overlay text-white">
+          <div class="card-body p-3 p-md-4">
+            <div class="d-flex flex-column gap-1">
+              <div><i class="bi bi-calendar-event me-2"></i><span id="evtDia1">12/08/2025 — 08:30</span></div>
+              <div><i class="bi bi-calendar-event me-2"></i><span id="evtDia2">13/08/2025 — 13:00</span></div>
+              <div><i class="bi bi-geo-alt me-2"></i><span id="evtLocal">A definir</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="container py-5">
+      <!-- Home: Cards de Perfis -->
+      <section id="home" class="mb-5">
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+          <!-- Conselheiro -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Conselheiro">
+              <img src="/imagens/card-conselheiro.png" class="card-img-top" alt="Conselheiro">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Conselheiro</h5>
+                <p class="card-text text-secondary flex-grow-1">Membro titular/suplente designado no CONAPREV.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- CNRPPS -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="CNRPPS">
+              <img src="/imagens/card-cnrpps.png" class="card-img-top" alt="CNRPPS">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">CNRPPS</h5>
+                <p class="card-text text-secondary flex-grow-1">Membros da CNRPPS que acompanham o evento.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Palestrante -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Palestrante">
+              <img src="/imagens/card-palestrante.png" class="card-img-top" alt="Palestrante">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Palestrante</h5>
+                <p class="card-text text-secondary flex-grow-1">Especialista convidado para apresentar conteúdo.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Staff -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Staff">
+              <img src="/imagens/card-staff.png" class="card-img-top" alt="Staff">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Staff</h5>
+                <p class="card-text text-secondary flex-grow-1">Equipe de apoio e logística do evento.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Convidado -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Convidado">
+              <img src="/imagens/card-convidado.png" class="card-img-top" alt="Convidado"
+                   onerror="this.onerror=null;this.src='/imagens/card-staff.png'">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Convidado</h5>
+                <p class="card-text text-secondary flex-grow-1">Participante convidado pela coordenação.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- COPAJURE -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="COPAJURE">
+              <img src="/imagens/card-copajure.png" class="card-img-top" alt="COPAJURE"
+                   onerror="this.onerror=null;this.src='/imagens/card-staff.png'">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">COPAJURE</h5>
+                <p class="card-text text-secondary flex-grow-1">Comissão Organizadora — apoio jurídico/operacional.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+          <!-- Patrocinador -->
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Patrocinador">
+              <img src="/imagens/card-patrocinador.png" class="card-img-top" alt="Patrocinador"
+                   onerror="this.onerror=null;this.src='/imagens/card-staff.png'">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Patrocinador</h5>
+                <p class="card-text text-secondary flex-grow-1">Empresas parceiras com vagas limitadas por empresa.</p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 1/2/3 ... (inalterado) -->
+      <section id="step1" class="d-none"> … </section>
+      <section id="step2" class="d-none"> … </section>
+      <section id="step3" class="d-none"> … </section>
+    </main>
+
+    <!-- Modais / Toast / Loader / Footer … (inalterado) -->
+    <!-- ... mantenha o restante do HTML como já estava ... -->
+  </div>
+
+  <!-- Scripts base -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <!-- Gate decide se carrega o app -->
+  <script type="module" src="/src/js/gate.js"></script>
+</body>
+</html>
