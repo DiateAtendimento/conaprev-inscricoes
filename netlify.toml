@@ -1,5 +1,3 @@
 [build]
-  # sem base — o Netlify usa a raiz do repo
   publish = "public"
-  # copia /src para /public/src para que /src/js/... e /src/css/... funcionem em produção
   command = "mkdir -p public/src && cp -R src/* public/src/"

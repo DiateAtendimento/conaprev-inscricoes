@@ -1,13 +1,21 @@
-// frontend/src/js/gate.js
-import { EVENTO } from './config.js';
+// src/js/gate.js  (substitui o import fixo)
+let EVENTO = { INICIO: '2025-09-22T08:00:00-03:00' }; // default seguro
+try {
+  const mod = await import('./config.js');
+  if (mod?.EVENTO?.INICIO) EVENTO = mod.EVENTO;
+} catch (e) {
+  console.warn('[gate] config.js não encontrado; usando defaults');
+}
+
 
 /** =============================
  *  Config do “portão” (gate)
  *  ============================= */
-const MAINTENANCE_MODE = true; // enquanto true, todos veem o gate (bypass via preview continua funcionando)
+const MAINTENANCE_MODE = false; // enquanto true, todos veem o gate (bypass via preview continua funcionando)
 
 // ⚠️ Data/hora exata da liberação das inscrições (fuso São Paulo -03:00)
-const RELEASE_AT = '2025-09-22T08:00:00-03:00';
+const RELEASE_AT = EVENTO?.INICIO || '2025-09-22T08:00:00-03:00';
+
 
 // token para preview do app (grava cookie). Use: ?preview=CONAPREV83_DEV
 const PREVIEW_TOKEN = 'CONAPREV83_DEV';
