@@ -1,16 +1,16 @@
+// backend/routes/health.routes.js
 import { Router } from "express";
-import sheetsSvc from "../services/sheets.service.js";
+import { getSpreadsheetMeta } from "../services/sheets.service.js"; // <= aqui!
 
 const r = Router();
 
-r.get("/health", (req, res) => {
+r.get("/health", (_req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// teste rápido: título da planilha (valida Sheets + credenciais)
-r.get("/test/sheets", async (req, res) => {
+r.get("/test/sheets", async (_req, res) => {
   try {
-    const meta = await sheetsSvc.getSpreadsheetMeta();
+    const meta = await getSpreadsheetMeta(); // <= e aqui
     res.json({ spreadsheetId: meta.spreadsheetId, title: meta.title });
   } catch (e) {
     res.status(500).json({ error: String(e) });
