@@ -1,11 +1,16 @@
+// frontend/src/js/gate.js
 import { EVENTO } from './config.js';
 
 /** =============================
  *  Config do “portão” (gate)
  *  ============================= */
-const MAINTENANCE_MODE = true;               // enquanto true, todos veem o gate
-const RELEASE_AT = EVENTO.INICIO;            // ou defina data/hora específica
-const PREVIEW_TOKEN = 'CONAPREV83_DEV';      // use ?preview=CONAPREV83_DEV para liberar
+const MAINTENANCE_MODE = true; // enquanto true, todos veem o gate (bypass via preview continua funcionando)
+
+// ⚠️ Data/hora exata da liberação das inscrições (fuso São Paulo -03:00)
+const RELEASE_AT = '2025-09-22T08:00:00-03:00';
+
+// token para preview do app (grava cookie). Use: ?preview=CONAPREV83_DEV
+const PREVIEW_TOKEN = 'CONAPREV83_DEV';
 
 /* Helpers cookie/query */
 function setCookie(name, value, days=7){
@@ -33,55 +38,71 @@ const shouldGate = (MAINTENANCE_MODE || now < releaseTs) && !hasBypass;
 
 /* Modo gate vs. app */
 if(shouldGate){
+  document.body.classList.add('gate-active');
   mountGate();
 } else {
   document.getElementById('app')?.classList.remove('d-none');
-  import('./main.js');
+  import('./main.js'); // carrega sua aplicação
 }
 
-/* ===== Render do Gate (tema preto + logo MPS central) ===== */
+/* ===== Render do Gate (tema preto, logos no topo, texto à esquerda e contador à direita) ===== */
 function mountGate(){
   const root = document.getElementById('gate-root');
+  const release = new Date(RELEASE_AT);
+
   root.innerHTML = `
-    <section class="gate-wrap">
-      <header class="gate-header">
-        <img src="/imagens/logo-mps.svg" alt="Ministério da Previdência Social" class="gate-logo" />
-      </header>
+    <header class="py-4 border-bottom border-dark-subtle">
+      <div class="container d-flex justify-content-center align-items-center gap-3">
+        <img src="/imagens/logo-mps.svg" alt="Ministério da Previdência Social" style="height:40px" />
+        <div style="width:1px;height:28px;background:#2b2b2b"></div>
+        <img src="/imagens/logo-conaprev.svg" alt="CONAPREV" style="height:40px" />
+      </div>
+    </header>
 
-      <main class="gate-main">
-        <div class="gate-card">
-          <div class="gate-left">
-            <h1>Nosso website está em construção</h1>
-            <p>Estamos preparando o sistema de inscrições da 83ª reunião do CONAPREV.
-               Volte no horário abaixo para realizar sua inscrição.</p>
-          </div>
+    <main class="container py-5">
+      <div class="row g-4 align-items-center">
+        <!-- Texto à esquerda -->
+        <div class="col-12 col-lg-6">
+          <h1 class="fw-semibold" style="font-size:clamp(24px,3vw,36px);line-height:1.2;">
+            Aguarde, falta pouco para a liberação das inscrições da
+            <strong>83ª Reunião Ordinária do CONAPREV</strong>.
+          </h1>
+          <p class="text-secondary mt-2">
+            Abertura prevista para <strong>${pad(release.getDate())}/${pad(release.getMonth()+1)}/${release.getFullYear()}</strong>
+            às <strong>${pad(release.getHours())}:${pad(release.getMinutes())}</strong> (horário de Brasília).
+          </p>
+          <p class="text-secondary mb-0">
+            Se você é da equipe e precisa testar, use:
+            <code>?preview=${PREVIEW_TOKEN}</code> &nbsp;|&nbsp; para limpar: <code>?preview=clear</code>.
+          </p>
+        </div>
 
-          <div class="gate-right">
-            <div class="gate-count" role="timer" aria-live="polite">
-              <div class="gate-box">
-                <div id="gDays" class="gate-num">07</div>
-                <div class="gate-lab">Dias</div>
-              </div>
-              <div class="gate-sep">:</div>
-              <div class="gate-box">
-                <div id="gHours" class="gate-num">07</div>
-                <div class="gate-lab">Horas</div>
-              </div>
-              <div class="gate-sep">:</div>
-              <div class="gate-box">
-                <div id="gMinutes" class="gate-num">09</div>
-                <div class="gate-lab">Minutos</div>
-              </div>
-              <div class="gate-sep">:</div>
-              <div class="gate-box">
-                <div id="gSeconds" class="gate-num">52</div>
-                <div class="gate-lab">Segundos</div>
-              </div>
+        <!-- Contador à direita -->
+        <div class="col-12 col-lg-6">
+          <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center">
+            <div class="gate-tile">
+              <div id="gDays" class="gate-num">00</div>
+              <div class="gate-lab">Dias</div>
+            </div>
+            <div class="gate-sep d-none d-lg-flex align-items-center">:</div>
+            <div class="gate-tile">
+              <div id="gHours" class="gate-num">00</div>
+              <div class="gate-lab">Hrs</div>
+            </div>
+            <div class="gate-sep d-none d-lg-flex align-items-center">:</div>
+            <div class="gate-tile">
+              <div id="gMinutes" class="gate-num">00</div>
+              <div class="gate-lab">Min</div>
+            </div>
+            <div class="gate-sep d-none d-lg-flex align-items-center">:</div>
+            <div class="gate-tile">
+              <div id="gSeconds" class="gate-num">00</div>
+              <div class="gate-lab">Sec</div>
             </div>
           </div>
         </div>
-      </main>
-    </section>
+      </div>
+    </main>
   `;
 
   // Timer
@@ -89,11 +110,15 @@ function mountGate(){
   const hEl = document.getElementById('gHours');
   const mEl = document.getElementById('gMinutes');
   const sEl = document.getElementById('gSeconds');
-  const target = new Date(RELEASE_AT).getTime();
+  const target = releaseTs;
 
   function tick(){
     const t = target - Date.now();
-    if(t <= 0){ location.reload(); return; }
+    if(t <= 0){
+      // chegou a hora → recarrega pra liberar a app automaticamente
+      location.reload();
+      return;
+    }
     const s = Math.floor(t/1000);
     const days = Math.floor(s / 86400);
     const hours = Math.floor((s % 86400) / 3600);
@@ -107,3 +132,5 @@ function mountGate(){
   }
   tick();
 }
+
+function pad(n){ return String(n).padStart(2,'0'); }
