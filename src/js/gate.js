@@ -1,24 +1,18 @@
-// src/js/gate.js  (substitui o import fixo)
-let EVENTO = { INICIO: '2025-09-22T08:00:00-03:00' }; // default seguro
+// Carrega EVENTO.INICIO se existir em config.js, senão usa default
+let EVENTO = { INICIO: '2025-09-22T08:00:00-03:00' };
 try {
   const mod = await import('./config.js');
   if (mod?.EVENTO?.INICIO) EVENTO = mod.EVENTO;
-} catch (e) {
+} catch {
   console.warn('[gate] config.js não encontrado; usando defaults');
 }
-
 
 /** =============================
  *  Config do “portão” (gate)
  *  ============================= */
-const MAINTENANCE_MODE = false; // enquanto true, todos veem o gate (bypass via preview continua funcionando)
-
-// ⚠️ Data/hora exata da liberação das inscrições (fuso São Paulo -03:00)
-const RELEASE_AT = EVENTO?.INICIO || '2025-09-22T08:00:00-03:00';
-
-
-// token para preview do app (grava cookie). Use: ?preview=CONAPREV83_DEV
-const PREVIEW_TOKEN = 'CONAPREV83_DEV';
+const MAINTENANCE_MODE = true;                 // todos veem o gate (bypass via preview funciona)
+const RELEASE_AT = EVENTO.INICIO;              // data/hora de liberação
+const PREVIEW_TOKEN = 'CONAPREV83_DEV';        // ?preview=CONAPREV83_DEV (salva cookie)
 
 /* Helpers cookie/query */
 function setCookie(name, value, days=7){
@@ -47,25 +41,19 @@ const shouldGate = (MAINTENANCE_MODE || now < releaseTs) && !hasBypass;
 /* Modo gate vs. app */
 if(shouldGate){
   document.body.classList.add('gate-active');
-  mountGate();
+  mountGate({ showHints: hasBypass });
 } else {
   document.getElementById('app')?.classList.remove('d-none');
   import('./main.js'); // carrega sua aplicação
 }
 
-/* ===== Render do Gate (tema preto, logos no topo, texto à esquerda e contador à direita) ===== */
-function mountGate(){
+/* ===== Render do Gate ===== */
+function mountGate({ showHints } = { showHints:false }){
   const root = document.getElementById('gate-root');
   const release = new Date(RELEASE_AT);
 
   root.innerHTML = `
-    <header class="py-4 border-bottom border-dark-subtle">
-      <div class="container d-flex justify-content-center align-items-center gap-3">
-        <img src="/imagens/logo-mps.svg" alt="Ministério da Previdência Social" style="height:40px" />
-        <div style="width:1px;height:28px;background:#2b2b2b"></div>
-        <img src="/imagens/logo-conaprev.svg" alt="CONAPREV" style="height:40px" />
-      </div>
-    </header>
+    <header class="py-4"><!-- sem border-bottom --></header>
 
     <main class="container py-5">
       <div class="row g-4 align-items-center">
@@ -79,9 +67,9 @@ function mountGate(){
             Abertura prevista para <strong>${pad(release.getDate())}/${pad(release.getMonth()+1)}/${release.getFullYear()}</strong>
             às <strong>${pad(release.getHours())}:${pad(release.getMinutes())}</strong> (horário de Brasília).
           </p>
-          <p class="text-secondary mb-0">
+          <p class="text-secondary mb-0 ${showHints ? '' : 'd-none'}">
             Se você é da equipe e precisa testar, use:
-            <code>?preview=${PREVIEW_TOKEN}</code> &nbsp;|&nbsp; para limpar: <code>?preview=clear</code>.
+            <code>?preview=${PREVIEW_TOKEN}</code> | para limpar: <code>?preview=clear</code>.
           </p>
         </div>
 
@@ -122,11 +110,7 @@ function mountGate(){
 
   function tick(){
     const t = target - Date.now();
-    if(t <= 0){
-      // chegou a hora → recarrega pra liberar a app automaticamente
-      location.reload();
-      return;
-    }
+    if(t <= 0){ location.reload(); return; }
     const s = Math.floor(t/1000);
     const days = Math.floor(s / 86400);
     const hours = Math.floor((s % 86400) / 3600);
