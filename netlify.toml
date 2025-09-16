@@ -1,10 +1,5 @@
 [build]
-  # Diz ao Netlify para entrar na pasta frontend na hora do build
-  base = "frontend"
-
-  # Publica a pasta /frontend/public (como o site)
+  # sem base — o Netlify usa a raiz do repo
   publish = "public"
-
-  # Copia tudo de /frontend/src para /frontend/public/src
-  # (assim os caminhos /src/js/gate.js e /src/css/... existem no site publicado)
+  # copia /src para /public/src para que /src/js/... e /src/css/... funcionem em produção
   command = "mkdir -p public/src && cp -R src/* public/src/"
