@@ -28,78 +28,103 @@
   <!-- ============== GATE (cronômetro) ============== -->
   <div id="gate-root"></div>
 
-  <!-- ============== APP (liberada pelo gate) ============== -->
+  <!-- ============== APP ============== -->
   <div id="app" class="d-none">
 
-    <!-- Topbar: logos centralizadas + contato + admin -->
+    <!-- Topbar -->
     <header class="topbar">
       <div class="wrap container">
         <div class="brand-strip">
-          <img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
-          <img src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
-          <img src="imagens/logos/logo-amprev.svg" alt="AMPREV">
+          <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+          <img class="logo logo-govbr"    src="imagens/logos/logo-govbr.svg"    alt="Governo Federal">
+          <img class="logo logo-amprev"   src="imagens/logos/logo-amprev.svg"   alt="AMPREV">
         </div>
+
         <nav class="links" aria-label="Contatos e administração">
           <a href="mailto:conaprev@previdencia.gov.br">
-            <img class="icon-20" src="imagens/icones/mail.svg" alt=""> conaprev@previdencia.gov.br
+            <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
+            conaprev@previdencia.gov.br
           </a>
+
           <a href="tel:+556120215347">
-            <img class="icon-20" src="imagens/icones/phone.svg" alt=""> (61) 2021-5347
+            <img class="icon icon-phone" src="imagens/icones/phone.svg" alt="">
+            (61) 2021-5347
           </a>
-          <a href="#" id="adminAccessBtn">
-            <img class="icon-20" src="imagens/icones/admin.svg" alt=""> Admin
-          </a>
+
+          <!-- Botão do menu (hambúrguer) -->
+          <button class="menu-icon"
+                  type="button"
+                  data-bs-toggle="offcanvas"
+                  data-bs-target="#menuOffcanvas"
+                  aria-label="Abrir menu">
+            <i class="bi bi-list" aria-hidden="true"></i>
+          </button>
         </nav>
       </div>
     </header>
 
-    <!-- HERO -->
-    <img class="amapa-badge" src="imagens/logos/amapa-badge.svg" alt="Amapá">
+    <!-- Offcanvas do menu -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" aria-labelledby="menuOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="menuOffcanvasLabel">Menu</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+      </div>
+      <div class="offcanvas-body">
+        <nav class="menu-list">
+          <a href="#" id="adminAccessBtn" class="menu-item">
+            <i class="bi bi-gear" aria-hidden="true"></i>
+            Administrador
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- HERO (selo em grid, alinhado ao meio) -->
     <section class="hero">
-      <div class="inner container container--narrow">
-        <h1>83ª Reunião Ordinária do</h1>
-        <div class="brand-title">CONAPREV</div>
+      <div class="hero-grid container container--narrow">
+        <img class="amapa-badge" src="imagens/logos/amapa-badge.svg" alt="Amapá">
+        <div class="inner">
+          <h1>83ª Reunião Ordinária do</h1>
+          <div class="brand-title">CONAPREV</div>
 
-        <div class="info-line">
-          <i class="bi bi-geo-alt" aria-hidden="true"></i>
-          <span>Av. Ernestino Borges, 740 – Julião Ramos, Macapá – AP, CEP 68908-198</span>
-        </div>
-        <div class="info-line">
-          <i class="bi bi-calendar-event" aria-hidden="true"></i>
-          <span>Terça-feira, 02 de Dezembro de 2025 — das 8h30 às 17h30</span>
-        </div>
-        <div class="info-line">
-          <i class="bi bi-calendar-event" aria-hidden="true"></i>
-          <span>Quarta-feira, 03 de Dezembro de 2025 — das 8h30 às 13h</span>
-        </div>
+          <div class="info-line">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span>Av. Ernestino Borges, 740 – Julião Ramos, Macapá – AP, CEP 68908-198</span>
+          </div>
+          <div class="info-line">
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
+            <span>Terça-feira, 02 de Dezembro de 2025 — das 8h30 às 17h30</span>
+          </div>
+          <div class="info-line">
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
+            <span>Quarta-feira, 03 de Dezembro de 2025 — das 8h30 às 13h</span>
+          </div>
 
-        <div class="chips" role="navigation" aria-label="Atalhos">
-          <a class="chip" href="#" id="btnEmitirCert">
-            <img class="icon-20" src="imagens/icones/certificado.svg" alt=""> Emitir certificado
-          </a>
-          <a class="chip" href="#" id="btnHospedagem">
-            <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
-          </a>
-          <a class="chip" href="#" id="btnOficio">
-            <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
-          </a>
+          <div class="chips" role="navigation" aria-label="Atalhos">
+            <a class="chip" href="#" id="btnEmitirCert">
+              <img class="icon-20" src="imagens/icones/certificado.svg" alt=""> Emitir certificado
+            </a>
+            <a class="chip" href="#" id="btnHospedagem">
+              <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
+            </a>
+            <a class="chip" href="#" id="btnOficio">
+              <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
+            </a>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- HOME (cards de perfis) -->
+    <!-- HOME -->
     <main class="container container--narrow py-5">
       <section id="home" class="mb-5" aria-label="Selecione seu perfil">
-        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-4">
+        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-5">
 
           <div class="col">
             <div class="card h-100 profile-card" data-profile="Conselheiro">
               <img src="imagens/cards/conselheiro.svg" class="card-img-top" alt="Conselheiro">
-              <div class="card-body d-flex flex-column">
+              <div class="card-body d-flex flex-column text-center">
                 <h5 class="card-title">Conselheiro</h5>
-                <p class="card-text text-secondary flex-grow-1">
-                  Membro titular/suplente designado no CONAPREV.
-                </p>
                 <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
               </div>
             </div>
@@ -108,11 +133,8 @@
           <div class="col">
             <div class="card h-100 profile-card" data-profile="CNRPPS">
               <img src="imagens/cards/cnrpps.svg" class="card-img-top" alt="CNRPPS">
-              <div class="card-body d-flex flex-column">
+              <div class="card-body d-flex flex-column text-center">
                 <h5 class="card-title">CNRPPS</h5>
-                <p class="card-text text-secondary flex-grow-1">
-                  Membros da CNRPPS que acompanham o evento.
-                </p>
                 <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
               </div>
             </div>
@@ -121,11 +143,8 @@
           <div class="col">
             <div class="card h-100 profile-card" data-profile="Palestrante">
               <img src="imagens/cards/palestrante.svg" class="card-img-top" alt="Palestrante">
-              <div class="card-body d-flex flex-column">
+              <div class="card-body d-flex flex-column text-center">
                 <h5 class="card-title">Palestrante</h5>
-                <p class="card-text text-secondary flex-grow-1">
-                  Especialista convidado para apresentar conteúdo.
-                </p>
                 <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
               </div>
             </div>
@@ -134,11 +153,18 @@
           <div class="col">
             <div class="card h-100 profile-card" data-profile="COPAJURE">
               <img src="imagens/cards/copajure.svg" class="card-img-top" alt="COPAJURE">
-              <div class="card-body d-flex flex-column">
+              <div class="card-body d-flex flex-column text-center">
                 <h5 class="card-title">COPAJURE</h5>
-                <p class="card-text text-secondary flex-grow-1">
-                  Comissão Organizadora — apoio jurídico/operacional.
-                </p>
+                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card h-100 profile-card" data-profile="Staff">
+              <img src="imagens/cards/staff.svg" class="card-img-top" alt="Staff">
+              <div class="card-body d-flex flex-column text-center">
+                <h5 class="card-title">Staff</h5>
                 <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
               </div>
             </div>
@@ -146,18 +172,138 @@
 
         </div>
       </section>
-
-      <!-- Steps (placeholders) -->
-      <section id="step1" class="d-none" aria-hidden="true"> … </section>
-      <section id="step2" class="d-none" aria-hidden="true"> … </section>
-      <section id="step3" class="d-none" aria-hidden="true"> … </section>
     </main>
   </div>
+
+  <!-- Modal de Inscrição -->
+  <div class="modal fade" id="modalInscricao" tabindex="-1" aria-labelledby="miTitle" aria-hidden="true" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="miTitle" class="modal-title">Inscrição — <span id="miPerfil">Perfil</span></h5>
+          <span id="miStepLabel" class="ms-3 text-secondary small"></span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Stepper -->
+          <div class="mi-stepper d-flex gap-2 mb-3" aria-label="Etapas da inscrição">
+            <div class="mi-step" data-step="1">CPF</div>
+            <div class="mi-step" data-step="2">Dados</div>
+            <div class="mi-step" data-step="3">Perfil</div>
+            <div class="mi-step" data-step="4">Revisão</div>
+            <div class="mi-step" data-step="5">Enviar</div>
+            <div class="mi-step" data-step="6">Protocolo</div>
+          </div>
+
+          <form id="miForm" novalidate>
+            <!-- Passo 1 -->
+            <div class="mi-pane" data-step="1">
+              <div class="row g-3">
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="miCpf">CPF *</label>
+                  <input id="miCpf" name="cpf" class="form-control" inputmode="numeric" autocomplete="off" required>
+                  <div class="invalid-feedback">Informe um CPF válido.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Passo 2: dados básicos -->
+            <div class="mi-pane" data-step="2">
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="miNome">Nome *</label>
+                  <input id="miNome" name="nome" class="form-control" autocomplete="name" required>
+                  <div class="invalid-feedback">Obrigatório.</div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="miEmail">E-mail *</label>
+                  <input id="miEmail" name="email" type="email" class="form-control" autocomplete="email" required>
+                  <div class="invalid-feedback">Obrigatório.</div>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="miCel">Celular</label>
+                  <input id="miCel" name="cel" class="form-control" autocomplete="tel">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="miUf">UF</label>
+                  <input id="miUf" name="uf" class="form-control" maxlength="2">
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label" for="miOrgao">Órgão/Entidade</label>
+                  <input id="miOrgao" name="orgao" class="form-control">
+                </div>
+              </div>
+            </div>
+
+            <!-- Passo 3: campos do perfil (renderizados dinamicamente) -->
+            <div class="mi-pane" data-step="3">
+              <div id="miPerfilContainer" class="row g-3"></div>
+            </div>
+
+            <!-- Passo 4: revisão -->
+            <div class="mi-pane" data-step="4">
+              <div id="miReview" class="vstack gap-2"></div>
+            </div>
+
+            <!-- Passo 5: envio -->
+            <div class="mi-pane" data-step="5">
+              <p>Ao avançar, sua inscrição será enviada para confirmação.</p>
+            </div>
+
+            <!-- Passo 6: protocolo -->
+            <div class="mi-pane" data-step="6">
+              <div class="alert alert-success">
+                <div class="fw-bold">Inscrição confirmada!</div>
+                Protocolo: <span id="miProtocolo">—</span>
+              </div>
+              <div class="d-flex gap-2">
+                <a id="miBtnBaixar" class="btn btn-outline-primary" target="_blank" rel="noopener">Baixar comprovante (PDF)</a>
+                <button type="button" id="miBtnReenviar" class="btn btn-outline-secondary">Reenviar e-mail</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button id="miBtnVoltar" class="btn btn-outline-secondary" type="button">Voltar</button>
+          <button id="miBtnAvancar" class="btn btn-primary" type="button">Avançar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
 
   <!-- Scripts base -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-  <!-- Gate decide se carrega o app -->
+
+  <!-- Fallback rápido caso config.js ainda esteja como ES module e gate/ui esperem globais -->
+  <script>
+    window.API_BASE = window.API_BASE || 'http://localhost:3000';
+    window.EVENTO = window.EVENTO || {
+      INICIO: '2025-09-22T08:00:00-03:00',
+      FIM:    '2025-08-13T13:00:00-03:00',
+      LOCAL:  'Brasília/DF'
+    };
+  </script>
+
+  <!-- Config (se estiver em formato "window.*", pode ser script normal; se for ES module com export, mantenha como module) -->
+  <script type="module" src="/src/js/config.js"></script>
+
+  <!-- Gate que usa EVENTO da config -->
   <script type="module" src="/src/js/gate.js"></script>
+
+  <!-- Utils -->
+  <script src="/src/js/ui.js"></script>
+  <script src="/src/js/cpf.js"></script>
+  <script src="/src/js/forms.js"></script>
+
+  <!-- API helper (ES module para poder evoluir com imports se necessário) -->
+  <script type="module" src="/src/js/api.js"></script>
+
+  <!-- Fluxo multi-passos (não-module pois manipula DOM global) -->
+  <script src="/src/js/steps.js"></script>
 </body>
 </html>

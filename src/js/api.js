@@ -1,5 +1,12 @@
 // frontend/src/js/api.js
-import { API_BASE } from './config.js';
+// /src/js/api.js (sem import de config)
+const API_BASE = window.API_BASE || 'http://localhost:3000';
+
+export function apiUrl(path) {
+  return `${API_BASE}${path}`;
+}
+
+
 
 // Util: timeout p/ evitar fetch pendurado
 function withTimeout(ms, promise) {
