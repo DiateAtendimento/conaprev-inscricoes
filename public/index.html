@@ -197,7 +197,7 @@
           </div>
 
           <form id="miForm" novalidate>
-            <!-- Passo 1 -->
+            <!-- Passo 1 (somente CPF; botão Pesquisar e assentos entram via JS) -->
             <div class="mi-pane" data-step="1">
               <div class="row g-3">
                 <div class="col-12 col-md-4">
@@ -206,94 +206,11 @@
                   <div class="invalid-feedback">Informe um CPF válido.</div>
                 </div>
               </div>
-
-              <!-- GRID DE ASSENTOS (só será exibido para Conselheiro via JS) -->
-              <div id="miSeatsWrap" class="mt-3 d-none" aria-live="polite">
-                <div class="d-flex align-items-center justify-content-between flex-wrap mb-2">
-                  <h6 class="mb-0">Conselheiros inscritos</h6>
-                  <div class="d-flex align-items-center gap-3">
-                    <span class="small text-secondary">
-                      Ocupados: <strong id="miSeatOcupados">0</strong> / <span id="miSeatTotal">62</span>
-                    </span>
-                    <span class="badge bg-success">Disponível</span>
-                    <span class="badge bg-danger">Ocupado</span>
-                  </div>
-                </div>
-                <div id="miSeatGrid" class="mi-seat-grid"></div>
-              </div>
             </div>
 
-            <!-- Passo 2: dados / conferência -->
+            <!-- Passo 2: será montado dinamicamente pelo steps.js -->
             <div class="mi-pane" data-step="2">
-              <!-- Barra de ações (alterna via JS) -->
-              <div class="d-flex gap-2 mb-3">
-                <button type="button" id="miBtnEditar"  class="btn btn-outline-secondary d-none">Editar dados</button>
-                <button type="button" id="miBtnSalvar"  class="btn btn-success d-none">Salvar dados</button>
-                <button type="button" id="miBtnConfirmar" class="btn btn-primary ms-auto d-none">Confirmar inscrição</button>
-              </div>
-
-              <!-- Painel de conferência (key/value) -->
-              <div id="miDadosReview" class="vstack gap-2 d-none" aria-live="polite">
-                <div id="miReviewKV"></div>
-              </div>
-
-              <!-- Form de edição (mesmos campos do cadastro novo) -->
-              <div id="miDadosForm">
-                <div class="row g-3">
-                  <div class="col-12 col-md-6">
-                    <label class="form-label" for="miNome">Nome *</label>
-                    <input id="miNome" name="nome" class="form-control" autocomplete="name" required>
-                    <div class="invalid-feedback">Obrigatório.</div>
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <label class="form-label" for="miEmail">E-mail *</label>
-                    <input id="miEmail" name="email" type="email" class="form-control" autocomplete="email" required>
-                    <div class="invalid-feedback">Obrigatório.</div>
-                  </div>
-                  <div class="col-12 col-md-4">
-                    <label class="form-label" for="miCel">Celular</label>
-                    <input id="miCel" name="cel" class="form-control" autocomplete="tel">
-                  </div>
-                  <div class="col-12 col-md-4">
-                    <label class="form-label" for="miUf">UF/Sigla</label>
-                    <input id="miUf" name="uf" class="form-control" maxlength="2">
-                  </div>
-                  <div class="col-12 col-md-4">
-                    <label class="form-label" for="miOrgao">Órgão/Entidade</label>
-                    <input id="miOrgao" name="orgao" class="form-control">
-                  </div>
-
-                  <!-- Campos extras quando for perfil Conselheiro -->
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miNomeCracha">Nome no Prisma/Crachá</label>
-                    <input id="miNomeCracha" name="nomenoprismacracha" class="form-control" placeholder="Primeiro e último nome">
-                  </div>
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miRepresent">Representatividade</label>
-                    <input id="miRepresent" name="representatividade" class="form-control">
-                  </div>
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miCargo">Cargo / Função</label>
-                    <input id="miCargo" name="cargofuncao" class="form-control">
-                  </div>
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miSiglaEntidade">Sigla da Entidade</label>
-                    <input id="miSiglaEntidade" name="sigladaentidade" class="form-control">
-                  </div>
-                  <div class="col-12 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miEndereco">Endereço</label>
-                    <input id="miEndereco" name="endereco" class="form-control">
-                  </div>
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miEmailCons">E-mail Conselheiro(a)</label>
-                    <input id="miEmailCons" name="emailconselheiroa" type="email" class="form-control">
-                  </div>
-                  <div class="col-12 col-md-6 d-none" data-extra="conselheiro">
-                    <label class="form-label" for="miEmailSec">E-mail Secretário(a)</label>
-                    <input id="miEmailSec" name="emailsecretarioa" type="email" class="form-control">
-                  </div>
-                </div>
-              </div>
+              <div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>
             </div>
 
             <!-- Passo 3: campos do perfil (renderizados dinamicamente) -->
@@ -333,7 +250,7 @@
     </div>
   </div>
 
-  <!-- Overlay Lottie (uso geral: buscar/salvar/sucesso/erro) -->
+  <!-- Overlay Lottie -->
   <div id="miLottieOverlay" class="d-none" aria-hidden="true">
     <div class="mi-lottie-backdrop"></div>
     <div class="mi-lottie-card">
