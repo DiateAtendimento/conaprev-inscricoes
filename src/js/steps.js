@@ -1,16 +1,15 @@
+
 /* steps.js — fluxo de inscrição multi-perfil + backend real (UX legado) — ATUALIZADO */
 
 (() => {
   /* ===============================
-   * Rotas (ajuste se necessário)
+   * Rotas (usa o que vier de window.APP_ROUTES)
    * =============================== */
   const ROUTES = window.APP_ROUTES ?? {
-    base: '/backend',
-    lookupCpf: (cpf) => `/backend/pessoas?cpf=${encodeURIComponent(cpf)}`,
-    createInscricao: `/backend/inscricoes`,
-    resendEmail: (id) => `/backend/inscricoes/${id}/reenviar-email`,
-    comprovantePdf: (id) => `/backend/inscricoes/${id}/comprovante.pdf`,
-    assentosConselheiros: `/api/inscricoes/assentos/conselheiros`, // ajuste se sua API for diferente
+    base: '',
+    lookupCpf: (cpf) => `/api/inscricoes/buscar?cpf=${encodeURIComponent(cpf)}`, // GET
+    createInscricao: `/api/inscricoes/confirmar`,  // POST { formData, perfil } -> { codigo }
+    assentosConselheiros: `/api/inscricoes/assentos/conselheiros`,
   };
 
   const defaultHeaders = { 'Content-Type': 'application/json' };
@@ -35,8 +34,8 @@
     pdfUrl: null,
 
     // UX
-    searched: false,   // já clicou em Pesquisar?
-    found: false       // CPF encontrado?
+    searched: false,
+    found: false
   };
 
   // Controle do “Nome no prisma” automático
@@ -60,7 +59,7 @@
     { id: 'emailsecretarioa',  label: 'E-mail Secretário(a)',  type: 'email' },
   ];
 
-  // PASSO 2 — Dados para CNRPPS, Staff, Palestrante (reduzido)
+  // PASSO 2 — Dados reduzidos (CNRPPS, Staff, Palestrante)
   const CAMPOS_DADOS_REDUZIDOS = [
     { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
     { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
@@ -70,7 +69,7 @@
     { id: 'email',             label: 'E-mail',              type: 'email' },
   ];
 
-  // PASSO 3 — Perfil (sempre “Identificação”; para Conselheiro também Representatividade e Cargo/Função)
+  // PASSO 3 — Perfil
   const CAMPOS_PERFIL_BASE = [
     { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
   ];
@@ -104,10 +103,72 @@
     setTimeout(() => el.remove(), 3200);
   }
 
-  function showLottie(kind, container) {
-    // gancho para animações Lottie: 'search' | 'saving' | 'confirming' | 'seats' | 'success' | 'error'
-    // lottie.loadAnimation({ container, path: `/lotties/${kind}.json`, loop:true, autoplay:true });
+  /* ========= LOTTIES ========= */
+  // precisa do lottie-web já incluso no index.html
+  const LOTTIE_MAP = {
+    search:         '/animacoes/lottie_search_loading.json',
+    seats:          '/animacoes/lottie_seats_loading.json',
+    saving:         '/animacoes/lottie_save_progress.json',
+    confirming:     '/animacoes/lottie_confirm_progress.json',
+    success:        '/animacoes/lottie_success_check.json',
+    error:          '/animacoes/lottie_error_generic.json',
+    timeout:        '/animacoes/lottie_timeout_hourglass.json',
+    offline:        '/animacoes/lottie_network_off.json',
+    duplicate:      '/animacoes/lottie_duplicate_found.json',
+    pdf:            '/animacoes/lottie_pdf_generating.json',
+    empty:          '/animacoes/lottie_empty_state.json',
+    unauthorized:   '/animacoes/lottie_lock_unauthorized.json',
+  };
+  let _overlayAnim = null;
+
+  function showLottie(kind, container, message = '') {
+    const path = LOTTIE_MAP[kind];
+    if (!path || !window.lottie) return;
+
+    // Se o container for o body, usamos o overlay
+    if (!container || container === document.body) {
+      const overlay = document.getElementById('miLottieOverlay');
+      const holder  = document.getElementById('miLottieHolder');
+      const msgEl   = document.getElementById('miLottieMsg');
+      if (!overlay || !holder) return;
+
+      holder.innerHTML = '';
+      msgEl.textContent = message || '';
+      overlay.classList.remove('d-none');
+
+      _overlayAnim = window.lottie.loadAnimation({
+        container: holder,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path
+      });
+      return {
+        close: hideOverlayLottie
+      };
+    }
+
+    // Inline
+    container.innerHTML = '';
+    return window.lottie.loadAnimation({
+      container,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path
+    });
   }
+
+  function hideOverlayLottie() {
+    const overlay = document.getElementById('miLottieOverlay');
+    const holder  = document.getElementById('miLottieHolder');
+    if (!overlay || !holder) return;
+    try { _overlayAnim?.destroy?.(); } catch {}
+    _overlayAnim = null;
+    holder.innerHTML = '';
+    overlay.classList.add('d-none');
+  }
+  /* ====== fim LOTTIES ====== */
 
   function cpfDigits(str) { return String(str || '').replace(/\D/g, ''); }
 
@@ -178,12 +239,34 @@
         <span class="badge me-2" style="background:#198754">Livre</span>
         <span class="badge" style="background:#dc3545">Ocupado</span>
       </div>
-      <div id="miSeatGrid" style="display:grid;grid-template-columns:repeat(9,40px);gap:10px;"></div>
+      <!-- 19 colunas para ocupar toda a linha -->
+      <div id="miSeatGrid" style="display:grid;grid-template-columns:repeat(19,1fr);gap:10px;"></div>
     `;
     pane.appendChild(seatsWrap);
 
     pane.dataset.enhanced = '1';
+
+    // eventos
     btnSearch.addEventListener('click', onPesquisarCpf);
+
+    // ENTER no CPF dispara busca
+    const cpfInput = document.getElementById('miCpf');
+    cpfInput?.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        onPesquisarCpf();
+      }
+    });
+  }
+
+  function seatBoxStyle(ocupado) {
+    // altura fixa agradável + largura fluida pelas 19 colunas
+    return `
+      display:flex;align-items:center;justify-content:center;
+      border-radius:.5rem;color:#fff;font-weight:600;
+      height:40px;user-select:none;
+      background:${ocupado ? '#dc3545' : '#198754'};
+    `;
   }
 
   async function renderSeats() {
@@ -196,35 +279,42 @@
     }
     wrap.classList.remove('d-none');
     grid.innerHTML = '';
+
+    let anim;
     try {
-      showLottie('seats', grid);
+      anim = showLottie('seats', grid);
       const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
       const occ = {};
       (data || []).forEach(s => occ[Number(s.seat)] = s.name || true);
+
+      // remove lottie antes de pintar
+      try { anim?.destroy?.(); } catch {}
+      grid.innerHTML = '';
+
       const MAX = 62;
       for (let n = 1; n <= MAX; n++) {
         const b = document.createElement('div');
         const ocupado = !!occ[n];
         b.textContent = n;
-        b.className = 'rounded text-white text-center fw-semibold';
-        b.style.cssText = `padding:.35rem 0;font-size:14px;user-select:none;background:${ocupado ? '#dc3545' : '#198754'};`;
+        b.style.cssText = seatBoxStyle(ocupado);
         if (ocupado && typeof occ[n] === 'string') b.title = occ[n];
         grid.appendChild(b);
       }
     } catch {
+      try { anim?.destroy?.(); } catch {}
+      grid.innerHTML = '';
       for (let n = 1; n <= 62; n++) {
         const b = document.createElement('div');
         b.textContent = n;
-        b.className = 'rounded text-white text-center fw-semibold';
-        b.style.cssText = `padding:.35rem 0;background:#198754;`;
+        b.style.cssText = seatBoxStyle(false);
         grid.appendChild(b);
       }
     }
   }
 
   /* ===============================
-   * PASSO 2 — Dados (render dinâmico)
+   * PASSO 2 — Dados
    * =============================== */
   function buildStep2Form(perfil, data = {}) {
     const pane = document.querySelector('.mi-pane[data-step="2"]');
@@ -248,7 +338,7 @@
 
     pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
 
-    // Nome no prisma/crachá automático com respeito à edição manual
+    // Nome no prisma/crachá automático respeitando edição manual
     const nomeEl   = $('#nome');
     const prismaEl = $('#nomenoprismacracha');
 
@@ -256,9 +346,7 @@
     ultimaSugestaoPrisma = '';
 
     if (prismaEl) {
-      prismaEl.addEventListener('input', () => {
-        prismaManual = true; // usuário editou manualmente -> não sobrescrever mais
-      });
+      prismaEl.addEventListener('input', () => { prismaManual = true; });
     }
 
     if (nomeEl && prismaEl) {
@@ -277,7 +365,7 @@
   }
 
   /* ===============================
-   * PASSO 3 — Perfil (render dinâmico)
+   * PASSO 3 — Perfil
    * =============================== */
   function buildStep3Perfil(perfil, data = {}) {
     const pane = document.querySelector('.mi-pane[data-step="3"]');
@@ -359,28 +447,54 @@
    * API helpers
    * =============================== */
   async function apiLookupCpf(cpf) {
-    const url = ROUTES.lookupCpf ? ROUTES.lookupCpf(cpf) : `/api/pessoas?cpf=${encodeURIComponent(cpf)}`;
-    const res = await fetch(url, { method: 'GET', headers: defaultHeaders });
-    if (!res.ok) return null;
-    return res.json();
-  }
-
-  async function apiCreateInscricao(payload) {
-    const res = await fetch(ROUTES.createInscricao, {
-      method: 'POST', headers: defaultHeaders, body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      let msg = 'Erro ao enviar';
-      try { const j = await res.json(); if (j?.message) msg = j.message; } catch {}
-      throw new Error(msg);
+    // se existir ROUTES.lookupCpf como função (GET), usamos; caso contrário,
+    // tentamos POST em /buscar (compat alternativo)
+    if (typeof ROUTES.lookupCpf === 'function') {
+      const res = await fetch(ROUTES.lookupCpf(cpf), { method: 'GET', headers: defaultHeaders });
+      if (!res.ok) return null;
+      return res.json();
+    } else if (ROUTES.buscarCpf) {
+      const res = await fetch(ROUTES.buscarCpf, {
+        method: 'POST', headers: defaultHeaders, body: JSON.stringify({ cpf, perfil: state.perfil })
+      });
+      if (!res.ok) return null;
+      return res.json();
     }
-    return res.json();
+    return null;
   }
 
-  async function apiReenviarEmail(id) {
-    const res = await fetch(ROUTES.resendEmail(id), { method: 'POST', headers: defaultHeaders });
-    if (!res.ok) throw new Error('Não foi possível reenviar o e-mail.');
-    return true;
+  async function apiConfirmar(payload) {
+    // Preferimos ROUTES.createInscricao (como no config atual) que aponta para /confirmar
+    if (ROUTES.createInscricao) {
+      const res = await fetch(ROUTES.createInscricao, {
+        method: 'POST',
+        headers: defaultHeaders,
+        // backend espera { formData, perfil }
+        body: JSON.stringify({ formData: payload, perfil: state.perfil })
+      });
+      if (!res.ok) {
+        let msg = 'Erro ao enviar';
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        throw new Error(msg);
+      }
+      return res.json(); // { codigo, pdfUrl? }
+    }
+
+    // Fallback: ROUTES.confirmar
+    if (ROUTES.confirmar) {
+      const res = await fetch(ROUTES.confirmar, {
+        method: 'POST', headers: defaultHeaders,
+        body: JSON.stringify({ formData: payload, perfil: state.perfil })
+      });
+      if (!res.ok) {
+        let msg = 'Erro ao enviar';
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        throw new Error(msg);
+      }
+      return res.json();
+    }
+
+    throw new Error('Rota de confirmação não configurada.');
   }
 
   /* ===============================
@@ -391,22 +505,18 @@
   $('#miBtnAvancar').addEventListener('click', async () => {
     if (!validateStep()) return;
 
-    // salva rascunho do passo atual
     saveDraft();
 
-    // Passo 5 => envia (salva definitivo)
+    // Passo 5 => envia
     if (state.step === 5) {
+      let closer;
       try {
-        const payload = {
-          perfil: state.perfil,
-          ...state.data,
-          ...readForm(),
-        };
-        showLottie('confirming', document.body);
-        const resp = await apiCreateInscricao(payload);
-        state.idInscricao = resp.id;
-        state.protocolo  = resp.protocolo || resp.numero || resp.codigo || null;
-        state.pdfUrl     = resp.pdfUrl || (resp.id ? ROUTES.comprovantePdf(resp.id) : null);
+        const payload = { ...state.data, ...readForm() };
+        closer = showLottie('confirming', document.body, 'Enviando sua inscrição...');
+        const resp = await apiConfirmar(payload);
+
+        state.protocolo = resp?.codigo || null;
+        if (resp?.pdfUrl) state.pdfUrl = resp.pdfUrl;
 
         const protoEl = $('#miProtocolo');
         if (protoEl) protoEl.textContent = state.protocolo || '—';
@@ -418,19 +528,19 @@
 
         state.step = 6;
         renderStep();
-        return;
       } catch (e) {
         showToast(e.message || 'Erro ao concluir a inscrição', 'danger');
-        return;
+      } finally {
+        hideOverlayLottie();
       }
+      return;
     }
 
     // navegação normal
     if (state.step < STEP_MAX) {
       state.step++;
       renderStep();
-      // montar/atualizar revisão ao entrar no Passo 4
-      if (state.step === 4) renderReview();
+      if (state.step === 4) renderReview(); // revisa ao entrar no Passo 4
     }
   });
 
@@ -439,18 +549,7 @@
     if (state.step > STEP_MIN) {
       state.step--;
       renderStep();
-      if (state.step === 4) renderReview(); // mantém revisão atualizada ao voltar para o 4
-    }
-  });
-
-  // Reenviar e-mail
-  $('#miBtnReenviar').addEventListener('click', async () => {
-    if (!state.idInscricao) return;
-    try {
-      await apiReenviarEmail(state.idInscricao);
-      showToast('E-mail reenviado!', 'success');
-    } catch (e) {
-      showToast(e.message || 'Falha ao reenviar e-mail', 'danger');
+      if (state.step === 4) renderReview();
     }
   });
 
@@ -462,7 +561,7 @@
     renderStep();
   }, { passive: true });
 
-  // Atualiza a revisão “ao vivo” enquanto edita (quando estiver no Passo 4)
+  // Atualiza a revisão “ao vivo” quando estiver no Passo 4
   document.getElementById('miForm').addEventListener('input', () => {
     if (state.step === 4) renderReview();
   });
@@ -480,7 +579,7 @@
     try {
       msg.textContent = 'Buscando...';
       msg.className = 'small ms-2 text-muted';
-      showLottie('search', document.body);
+      const closer = showLottie('search', document.body, 'Consultando CPF...');
 
       const found = await apiLookupCpf(cpf);
       state.searched = true;
@@ -488,7 +587,6 @@
 
       if (found) {
         const perfil = state.perfil;
-        // normaliza campos vindos do backend
         const m = {
           numerodeinscricao: found.numerodeinscricao || found.numero || found.protocolo || '',
           cpf,
@@ -506,27 +604,24 @@
           email: found.email || '',
         };
         state.data = { ...state.data, ...m };
-
-        // Monta Passo 2 e Passo 3 com dados
         buildStep2Form(perfil, m);
         buildStep3Perfil(perfil, m);
-
         msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados e avance.';
         msg.className = 'small ms-2 text-success';
       } else {
-        // cadastro novo: pré-preenche CPF e Identificação
         state.data = { cpf, identificacao: state.perfil };
         buildStep2Form(state.perfil, state.data);
         buildStep3Perfil(state.perfil, state.data);
-
         msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
       }
 
       renderStep();
       renderSeats();
-      loadDraft(cpf); // carrega rascunho local (se houver)
+      loadDraft(cpf);
+      hideOverlayLottie();
     } catch (e) {
+      hideOverlayLottie();
       msg.textContent = e.message || 'Erro na busca.';
       msg.className = 'small ms-2 text-danger';
     }
@@ -553,7 +648,6 @@
       form.reset();
       $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
 
-      // Placeholders do Passo 2 e 3 até a pesquisa
       const step2 = document.querySelector('.mi-pane[data-step="2"]');
       if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
       const step3 = document.querySelector('.mi-pane[data-step="3"]');
@@ -566,3 +660,4 @@
   });
 
 })();
+
