@@ -1,24 +1,29 @@
-/* steps.js — fluxo de inscrição multi-perfil + backend real */
+/* steps.js — fluxo de inscrição multi-perfil + backend real (UX legado) */
 
 (() => {
-  // ====== CONFIGURAR AQUI SUAS ROTAS REAIS ======
+  /* ===============================
+   * Rotas (ajuste se necessário)
+   * =============================== */
   const ROUTES = window.APP_ROUTES ?? {
     base: '/backend',
     lookupCpf: (cpf) => `/backend/pessoas?cpf=${encodeURIComponent(cpf)}`,
     createInscricao: `/backend/inscricoes`,
     resendEmail: (id) => `/backend/inscricoes/${id}/reenviar-email`,
     comprovantePdf: (id) => `/backend/inscricoes/${id}/comprovante.pdf`,
+    assentosConselheiros: `/api/inscricoes/assentos/conselheiros`, // <- ajuste se sua API for diferente
   };
 
   const defaultHeaders = { 'Content-Type': 'application/json' };
 
-  // ====== Estado do fluxo ======
+  /* ===============================
+   * Estado geral
+   * =============================== */
   const modalEl = document.getElementById('modalInscricao');
   if (!modalEl) {
     console.error('Faltou o HTML do modal #modalInscricao no index.html');
     return;
   }
-  const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+  const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
 
   const STEP_MIN = 1, STEP_MAX = 6;
   let state = {
@@ -28,44 +33,48 @@
     idInscricao: null,
     protocolo: null,
     pdfUrl: null,
+
+    // controles de UX
+    searched: false,   // já clicou em Pesquisar?
+    found: false,      // CPF encontrado?
+    edited: false,     // usuário editou e salvou no Passo 2?
   };
 
-  // Campos específicos (passo 3) por perfil
-  const perfilSchemas = {
-    Conselheiro: [
-      { name: 'representa', label: 'Representa Conselho de', type: 'select', required: true,
-        options: ['Estadual','Municipal','Outro'] },
-      { name: 'portaria', label: 'Portaria/Delegação (link ou nº)', type: 'text' },
-      { name: 'obs', label: 'Observações ao organizador', type: 'textarea' },
-    ],
-    CNRPPS: [
-      { name: 'confirmCnrpps', label: 'Sou membro da CNRPPS', type: 'checkbox', required: true },
-      { name: 'eixo', label: 'Eixo/Comissão', type: 'text' },
-    ],
-    Palestrante: [
-      { name: 'instituicao', label: 'Instituição', type: 'text', required: true },
-      { name: 'tema', label: 'Tema/Eixo', type: 'text', required: true },
-      { name: 'titulo', label: 'Título da palestra', type: 'text', required: true },
-      { name: 'linkMaterial', label: 'Link do material (Drive/OneDrive)', type: 'url' },
-      { name: 'necessidades', label: 'Necessidades técnicas', type: 'textarea' },
-    ],
-    COPAJURE: [
-      { name: 'equipe', label: 'Equipe/Função', type: 'select', required: true,
-        options: ['Jurídico','Credenciamento','Logística','TI','Sala','Palco','Comunicação'] },
-      { name: 'turnos', label: 'Dias/turnos (descreva)', type: 'textarea' },
-      { name: 'tamanho', label: 'Tamanho da camiseta/crachá', type: 'select',
-        options: ['PP','P','M','G','GG','XG'] },
-    ],
-    Staff: [
-      { name: 'area', label: 'Área de apoio', type: 'select', required: true,
-        options: ['Credenciamento','Sala','Palco','TI','Comunicação','Logística'] },
-      { name: 'disponibilidade', label: 'Disponibilidade (dias/turnos)', type: 'textarea', required: true },
-      { name: 'tamanho', label: 'Tamanho da camiseta/crachá', type: 'select',
-        options: ['PP','P','M','G','GG','XG'] },
-    ],
-  };
+  /* ===============================
+   * Esquemas de campos por perfil
+   * (Passo 2 – “Dados”)
+   * =============================== */
 
-  // ====== Helpers DOM/UX ======
+  // Campos “legado” (planilha)
+  const CAMPOS_CONSELHEIRO = [
+    { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
+    { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
+    { id: 'nome',              label: 'Nome',                type: 'text', required: true },
+    { id: 'nomenoprismacracha',label: 'Nome no Prisma/Crachá', type: 'text' },
+    { id: 'ufsigla',           label: 'UF/Sigla',            type: 'text' },
+    { id: 'representatividade',label: 'Representatividade',  type: 'text' },
+    { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
+    { id: 'sigladaentidade',   label: 'Sigla da Entidade',   type: 'text' },
+    { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
+    { id: 'endereco',          label: 'Endereço',            type: 'text' },
+    { id: 'emailconselheiroa', label: 'E-mail Conselheiro(a)', type: 'email' },
+    { id: 'emailsecretarioa',  label: 'E-mail Secretário(a)',  type: 'email' },
+  ];
+
+  const CAMPOS_REDUZIDOS = [
+    // usado por CNRPPS, Staff e Palestrante, conforme pedido
+    { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
+    { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
+    { id: 'nome',              label: 'Nome',                type: 'text', required: true },
+    { id: 'ufsigla',           label: 'UF/Sigla',            type: 'text' },
+    { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
+    { id: 'convidadopor',      label: 'Convidado por',       type: 'text' },
+    { id: 'email',             label: 'E-mail',              type: 'email' },
+  ];
+
+  /* ===============================
+   * Helpers DOM/UX
+   * =============================== */
   const $ = sel => document.querySelector(sel);
   const $all = sel => [...document.querySelectorAll(sel)];
 
@@ -100,7 +109,7 @@
         mask.style.background = 'rgba(0,0,0,.25)';
         mask.style.zIndex = '2000';
         mask.innerHTML = `<div style="position:absolute;inset:auto 0 30% 0;display:flex;justify-content:center">
-            <div class="spinner-border text-light" role="status"></div>
+            <div class="spinner-border text-light" role="status" aria-label="Carregando"></div>
           </div>`;
         document.body.appendChild(mask);
       }
@@ -109,7 +118,29 @@
     }
   }
 
-  // ====== Navegação de passos ======
+  // Lottie (opcional)
+  function showLottie(kind, container) {
+    // Se você tiver os JSONs, basta carregar por nome.
+    // Aqui deixamos ganchos para você conectar seus arquivos.
+    // kind: 'search' | 'saving' | 'confirming' | 'seats' | 'success' | 'error'
+    // container: HTMLElement
+    // Ex.: lottie.loadAnimation({ container, path: `/lotties/${kind}.json`, loop:true, autoplay:true, renderer:'svg' });
+  }
+
+  function cpfDigits(str) {
+    return String(str || '').replace(/\D/g, '');
+  }
+
+  /* ===============================
+   * Render do Stepper e rótulos
+   * =============================== */
+  function updateFinalStepLabel() {
+    const lastStep = document.querySelector('.mi-stepper .mi-step[data-step="6"]');
+    if (!lastStep) return;
+    if (state.protocolo) lastStep.textContent = 'Número de inscrição';
+    else lastStep.textContent = 'Finalizar';
+  }
+
   function renderStep() {
     $('#miStepLabel').textContent = `Passo ${state.step} de ${STEP_MAX}`;
     $all('.mi-stepper .mi-step').forEach(s => {
@@ -119,55 +150,214 @@
     });
     $all('.mi-pane').forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
     $('#miBtnVoltar').disabled = state.step === STEP_MIN;
-    $('#miBtnAvancar').textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
+
+    const avancar = $('#miBtnAvancar');
+    avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
+    avancar.classList.toggle('mi-blink', state.step === 5 && state.edited); // “piscar” no enviar
+
+    // No Passo 1, “Avançar” só libera depois do Pesquisar
+    if (state.step === 1) {
+      avancar.disabled = !state.searched;
+    } else {
+      avancar.disabled = false;
+    }
+
+    updateFinalStepLabel();
   }
 
-  function renderPerfilFields(perfil) {
-    const box = $('#miPerfilContainer');
-    box.innerHTML = '';
-    (perfilSchemas[perfil] || []).forEach(f => {
-      const col = document.createElement('div');
-      col.className = 'col-12 col-md-6';
-      const id = `mi_${f.name}`;
-      let control = '';
-      if (f.type === 'select') {
-        const opts = (f.options||[]).map(o => `<option value="${o}">${o}</option>`).join('');
-        control = `<select id="${id}" name="${f.name}" class="form-select" ${f.required?'required':''}>
-                     <option value="">—</option>${opts}
-                   </select>`;
-      } else if (f.type === 'textarea') {
-        control = `<textarea id="${id}" name="${f.name}" rows="3" class="form-control" ${f.required?'required':''}></textarea>`;
-      } else if (f.type === 'checkbox') {
-        control = `<div class="form-check mt-2">
-            <input class="form-check-input" type="checkbox" id="${id}" name="${f.name}" ${f.required?'required':''}>
-            <label class="form-check-label" for="${id}">${f.label}</label>
-          </div>`;
-      } else {
-        control = `<input id="${id}" name="${f.name}" type="${f.type||'text'}" class="form-control" ${f.required?'required':''}>`;
+  /* ===============================
+   * Construção dinâmica do Passo 1
+   * (CPF + Pesquisar + Assentos)
+   * =============================== */
+  function ensureStep1UI() {
+    const pane = document.querySelector('.mi-pane[data-step="1"]');
+    if (!pane || pane.dataset.enhanced === '1') return;
+
+    // linha da ação
+    const actions = document.createElement('div');
+    actions.className = 'd-flex align-items-end gap-2 mt-2';
+
+    const btnSearch = document.createElement('button');
+    btnSearch.type = 'button';
+    btnSearch.id = 'miBtnBuscarCpf';
+    btnSearch.className = 'btn btn-primary';
+    btnSearch.textContent = 'Pesquisar';
+
+    const msg = document.createElement('div');
+    msg.id = 'miCpfMsg';
+    msg.className = 'small ms-2 text-muted';
+
+    actions.appendChild(btnSearch);
+    actions.appendChild(msg);
+
+    // adiciona abaixo da linha do CPF
+    const row = pane.querySelector('.row.g-3');
+    row?.appendChild(actions);
+
+    // Mapa de assentos (só Conselheiro)
+    const seatsWrap = document.createElement('div');
+    seatsWrap.id = 'miSeatsWrap';
+    seatsWrap.className = 'mt-4 d-none';
+    seatsWrap.innerHTML = `
+      <div class="fw-semibold mb-2">Conselheiros inscritos</div>
+      <div id="miSeatsLegend" class="mb-2">
+        <span class="badge me-2" style="background:#198754">Livre</span>
+        <span class="badge" style="background:#dc3545">Ocupado</span>
+      </div>
+      <div id="miSeatGrid" style="
+        display:grid;grid-template-columns:repeat(9,40px);gap:10px;
+      "></div>
+    `;
+    pane.appendChild(seatsWrap);
+
+    pane.dataset.enhanced = '1';
+
+    // eventos
+    btnSearch.addEventListener('click', onPesquisarCpf);
+  }
+
+  async function renderSeats() {
+    const wrap = $('#miSeatsWrap');
+    const grid = $('#miSeatGrid');
+    if (!wrap || !grid) return;
+    if (state.perfil !== 'Conselheiro') {
+      wrap.classList.add('d-none');
+      return;
+    }
+    wrap.classList.remove('d-none');
+    grid.innerHTML = '';
+    try {
+      showLottie('seats', grid);
+      const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
+      const data = res.ok ? await res.json() : [];
+      // data esperado: [{ seat: 1, name: 'Fulano' }, ...]
+      const occ = {};
+      (data || []).forEach(s => occ[Number(s.seat)] = s.name || true);
+      const MAX = 62;
+      for (let n = 1; n <= MAX; n++) {
+        const b = document.createElement('div');
+        const ocupado = !!occ[n];
+        b.textContent = n;
+        b.className = 'rounded text-white text-center fw-semibold';
+        b.style.cssText = `
+          padding:.35rem 0; font-size:14px; user-select:none;
+          background:${ocupado ? '#dc3545' : '#198754'};
+        `;
+        if (ocupado && typeof occ[n] === 'string') {
+          b.title = occ[n];
+        }
+        grid.appendChild(b);
       }
-      col.innerHTML = (f.type === 'checkbox')
-        ? control
-        : `<label class="form-label" for="${id}">${f.label}${f.required?' *':''}</label>${control}
-           ${f.required?'<div class="invalid-feedback">Campo obrigatório.</div>':''}`;
-      box.appendChild(col);
-    });
+      grid.innerHTML += ''; // “mata” o lottie se existir
+    } catch {
+      // em caso de erro, mostra placeholders livres
+      for (let n = 1; n <= 62; n++) {
+        const b = document.createElement('div');
+        b.textContent = n;
+        b.className = 'rounded text-white text-center fw-semibold';
+        b.style.cssText = `padding:.35rem 0;background:#198754;`;
+        grid.appendChild(b);
+      }
+    }
   }
 
+  /* ===============================
+   * Construção dinâmica do Passo 2
+   * =============================== */
+  function buildStep2Form(perfil, data = {}, readonly = false) {
+    const pane = document.querySelector('.mi-pane[data-step="2"]');
+    if (!pane) return;
+
+    const fields = (perfil === 'Conselheiro') ? CAMPOS_CONSELHEIRO : CAMPOS_REDUZIDOS;
+    const blocks = fields.map(f => {
+      // não renderiza Número de Inscrição se vier vazio
+      if (f.id === 'numerodeinscricao' && !data.numerodeinscricao) return '';
+      const val = data[f.id] ?? '';
+      const ro = f.readonly || readonly ? 'readonly' : '';
+      const req = f.required ? 'required' : '';
+      const type = f.type || 'text';
+      return `
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="${f.id}">${f.label}${f.required ? ' *' : ''}</label>
+          <input id="${f.id}" name="${f.id}" type="${type}" class="form-control" value="${escapeHtml(val)}" ${ro} ${req}>
+          ${f.required ? '<div class="invalid-feedback">Campo obrigatório.</div>' : ''}
+        </div>
+      `;
+    }).join('');
+
+    pane.innerHTML = `
+      <div class="row g-3">${blocks}</div>
+      <div class="mt-3 d-flex gap-2">
+        <button type="button" id="miBtnEditToggle" class="btn btn-outline-secondary">${readonly ? 'Editar dados' : 'Salvar dados'}</button>
+      </div>
+    `;
+
+    // Nome no prisma automático
+    const nomeEl = $('#nome');
+    const prismaEl = $('#nomenoprismacracha');
+    if (nomeEl && prismaEl) {
+      nomeEl.addEventListener('input', () => {
+        const t = (nomeEl.value || '').trim();
+        if (!t) { prismaEl.value = ''; return; }
+        const parts = t.split(/\s+/);
+        const first = parts[0] || '';
+        const last = parts.length > 1 ? parts[parts.length - 1] : '';
+        prismaEl.value = (first + ' ' + last).trim();
+      });
+    }
+
+    // Identificação = perfil
+    const ident = $('#identificacao');
+    if (ident) ident.value = perfil;
+
+    // Toggle Editar/Salvar
+    const btn = $('#miBtnEditToggle');
+    btn.onclick = () => {
+      const isReadonly = !!$('#cpf')?.readOnly; // checamos um campo para inferir
+      const inputs = pane.querySelectorAll('input');
+      if (isReadonly) {
+        inputs.forEach(i => { if (i.id !== 'numerodeinscricao' && i.id !== 'identificacao') i.readOnly = false; });
+        btn.textContent = 'Salvar dados';
+      } else {
+        // validação leve
+        let ok = true;
+        inputs.forEach(i => {
+          if (i.required && !i.value.trim()) {
+            i.classList.add('is-invalid'); ok = false;
+          } else {
+            i.classList.remove('is-invalid');
+          }
+        });
+        if (!ok) { showToast('Preencha os campos obrigatórios.', 'warning'); return; }
+
+        // salva em state.data
+        const d = readForm();
+        state.data = { ...state.data, ...d };
+        // trava novamente
+        inputs.forEach(i => { if (i.id !== 'numerodeinscricao' && i.id !== 'identificacao') i.readOnly = true; });
+        btn.textContent = 'Editar dados';
+        state.edited = true; // aciona “piscando” no Passo 5
+        showToast('Dados salvos. Avance para confirmar sua inscrição.', 'success');
+      }
+    };
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, s => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]
+    ));
+  }
+
+  /* ===============================
+   * Leitura/validação do formulário
+   * =============================== */
   function readForm() {
     const form = $('#miForm');
     const data = new FormData(form);
     const obj = {};
     data.forEach((v,k) => {
-      if (obj[k] !== undefined) {
-        obj[k] = Array.isArray(obj[k]) ? [...obj[k], v] : [obj[k], v];
-      } else {
-        obj[k] = v;
-      }
+      obj[k] = v;
     });
-    // checkboxes do passo 3
-    (perfilSchemas[state.perfil]||[])
-      .filter(f => f.type === 'checkbox')
-      .forEach(f => obj[f.name] = $('#mi_'+f.name)?.checked || false);
     return obj;
   }
 
@@ -181,13 +371,9 @@
     return ok;
   }
 
-  // ====== Rascunho local (sempre CPF LIMPO) ======
-  function cpfDigits(str) {
-    return String(str || '').replace(/\D/g, '');
-  }
+  // Rascunho local (por CPF limpo)
   function draftKey(cpf = $('#miCpf').value) {
-    const keyCpf = cpfDigits(cpf);
-    return `inscricao:${state.perfil}:${keyCpf}`;
+    return `inscricao:${state.perfil}:${cpfDigits(cpf)}`;
   }
   function saveDraft() {
     const d = readForm();
@@ -195,16 +381,13 @@
     localStorage.setItem(draftKey(), JSON.stringify(state.data));
   }
   function loadDraft(cpf) {
-    const key = draftKey(cpf);
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(draftKey(cpf));
     if (!raw) return;
     state.data = JSON.parse(raw);
     Object.entries(state.data).forEach(([k,v]) => {
       const el = document.querySelector(`[name="${k}"]`);
       if (!el) return;
-      if (el.type === 'checkbox') el.checked = !!v;
-      else if (Array.isArray(v)) el.value = v[0];
-      else el.value = v;
+      el.value = v;
     });
   }
 
@@ -213,67 +396,52 @@
     const lines = Object.entries(d)
       .filter(([k,v]) => String(v).trim() !== '')
       .map(([k,v]) => `<div class="d-flex">
-        <div class="me-2 text-secondary text-capitalize" style="min-width:180px">${k}</div>
-        <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.join(', '):v}</div>
+        <div class="me-2 text-secondary text-capitalize" style="min-width:220px">${k}</div>
+        <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.join(', '):escapeHtml(v)}</div>
       </div>`);
     $('#miReview').innerHTML = lines.join('');
   }
 
-  // ====== Integrações com backend ======
+  /* ===============================
+   * API helpers
+   * =============================== */
   async function apiLookupCpf(cpf) {
-    blockUI(true);
-    try {
-      const res = await fetch(ROUTES.lookupCpf(cpf), { headers: defaultHeaders, method: 'GET' });
-      if (!res.ok) throw new Error('Falha ao consultar CPF');
-      const data = await res.json();
-      return data || null;
-    } finally {
-      blockUI(false);
-    }
+    const url = ROUTES.lookupCpf ? ROUTES.lookupCpf(cpf) : `/api/pessoas?cpf=${encodeURIComponent(cpf)}`;
+    const res = await fetch(url, { method: 'GET', headers: defaultHeaders });
+    if (!res.ok) return null;
+    return res.json();
   }
 
   async function apiCreateInscricao(payload) {
-    blockUI(true);
-    try {
-      const res = await fetch(ROUTES.createInscricao, {
-        method: 'POST',
-        headers: defaultHeaders,
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.message || `Erro ${res.status}`);
-      }
-      return await res.json();
-    } finally {
-      blockUI(false);
+    const res = await fetch(ROUTES.createInscricao, {
+      method: 'POST', headers: defaultHeaders, body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      let msg = 'Erro ao enviar';
+      try { const j = await res.json(); if (j?.message) msg = j.message; } catch {}
+      throw new Error(msg);
     }
+    return res.json();
   }
 
   async function apiReenviarEmail(id) {
-    blockUI(true);
-    try {
-      const res = await fetch(ROUTES.resendEmail(id), {
-        method: 'POST',
-        headers: defaultHeaders
-      });
-      if (!res.ok) throw new Error('Não foi possível reenviar o e-mail.');
-      return true;
-    } finally {
-      blockUI(false);
-    }
+    const res = await fetch(ROUTES.resendEmail(id), { method: 'POST', headers: defaultHeaders });
+    if (!res.ok) throw new Error('Não foi possível reenviar o e-mail.');
+    return true;
   }
 
-  async function safeJson(res) {
-    try { return await res.json(); } catch { return null; }
-  }
+  /* ===============================
+   * Eventos principais
+   * =============================== */
 
-  // ====== Eventos de UI ======
+  // Avançar
   $('#miBtnAvancar').addEventListener('click', async () => {
     if (!validateStep()) return;
 
+    // salva rascunho
     saveDraft();
 
+    // gerar revisão quando entrar no 4
     if (state.step === 4) renderReview();
 
     // Passo 5 => envia
@@ -284,37 +452,37 @@
           ...state.data,
           ...readForm(),
         };
+        showLottie('confirming', document.body);
         const resp = await apiCreateInscricao(payload);
         state.idInscricao = resp.id;
-        state.protocolo  = resp.protocolo;
+        state.protocolo  = resp.protocolo || resp.numero || resp.codigo || null;
         state.pdfUrl     = resp.pdfUrl || (resp.id ? ROUTES.comprovantePdf(resp.id) : null);
 
-        $('#miProtocolo').textContent = state.protocolo || '—';
+        const protoEl = $('#miProtocolo');
+        if (protoEl) protoEl.textContent = state.protocolo || '—';
         if (state.pdfUrl) $('#miBtnBaixar').href = state.pdfUrl;
-        else $('#miBtnBaixar').classList.add('disabled');
+        else $('#miBtnBaixar')?.classList.add('disabled');
 
-        // Só atualiza status se existir no DOM
-        const miStatus = document.getElementById('miStatus');
-        if (miStatus) miStatus.textContent = 'Inscrição confirmada';
-
+        updateFinalStepLabel();
         showToast('Inscrição registrada com sucesso!', 'success');
 
         state.step = 6;
         renderStep();
         return;
       } catch (e) {
-        console.error(e);
         showToast(e.message || 'Erro ao concluir a inscrição', 'danger');
         return;
       }
     }
 
+    // navegação normal
     if (state.step < STEP_MAX) {
       state.step++;
       renderStep();
     }
   });
 
+  // Voltar
   $('#miBtnVoltar').addEventListener('click', () => {
     if (state.step > STEP_MIN) {
       state.step--;
@@ -322,6 +490,7 @@
     }
   });
 
+  // Reenviar e-mail
   $('#miBtnReenviar').addEventListener('click', async () => {
     if (!state.idInscricao) return;
     try {
@@ -332,49 +501,104 @@
     }
   });
 
-  // Busca CPF (debounced)
-  let cpfTimer;
+  // Input de CPF — só mascara/limpa números e não dispara busca automática
   $('#miCpf').addEventListener('input', (e) => {
-    const v = e.target.value;
-    clearTimeout(cpfTimer);
-    cpfTimer = setTimeout(async () => {
-      const clean = v.replace(/\D/g, '');
-      if (clean.length !== 11) return;
-      try {
-        const found = await apiLookupCpf(clean);
-        if (found) {
-          const map = {
-            nome: 'miNome', email: 'miEmail', cel: 'miCel',
-            uf: 'miUf', orgao: 'miOrgao', vinculo: 'miVinculo'
-          };
-          Object.entries(map).forEach(([k,id]) => {
-            if (found[k] && document.getElementById(id)) {
-              document.getElementById(id).value = found[k];
-            }
-          });
-          // carrega rascunho local com CPF LIMPO
-          loadDraft(clean);
-          showToast('Dados pré-carregados pelo CPF.', 'info');
-        }
-      } catch {
-        // silencioso (CPF não encontrado, segue preenchendo)
-      }
-    }, 500);
+    const v = e.target.value.replace(/[^\d]/g, '');
+    e.target.value = v;
+    // sempre que o CPF muda, desabilita avancar até pesquisar
+    state.searched = false;
+    renderStep();
   }, { passive: true });
 
-  // Abrir modal a partir dos cards
+  // Clique em “Pesquisar”
+  async function onPesquisarCpf() {
+    const cpf = cpfDigits($('#miCpf').value);
+    const msg = $('#miCpfMsg');
+    if (!cpf || cpf.length !== 11) {
+      msg.textContent = 'Digite um CPF válido (11 dígitos).';
+      msg.className = 'small ms-2 text-danger';
+      return;
+    }
+
+    try {
+      msg.textContent = 'Buscando...';
+      msg.className = 'small ms-2 text-muted';
+      showLottie('search', document.body);
+
+      const found = await apiLookupCpf(cpf);
+      state.searched = true;
+      state.found = !!found;
+
+      if (found) {
+        // monta Passo 2 preenchido e readonly
+        const perfil = state.perfil;
+        // mapeia possíveis chaves vindas do backend pro legado
+        const m = {
+          numerodeinscricao: found.numerodeinscricao || found.numero || found.protocolo || '',
+          cpf: cpf,
+          nome: found.nome || '',
+          nomenoprismacracha: found.nomenoprismacracha || '',
+          ufsigla: found.uf || found.ufsigla || '',
+          representatividade: found.representatividade || found.representa || '',
+          cargofuncao: found.cargofuncao || found.cargo || '',
+          sigladaentidade: found.sigladaentidade || found.sigla || '',
+          identificacao: perfil,
+          endereco: found.endereco || '',
+          emailconselheiroa: found.emailconselheiroa || found.email || '',
+          emailsecretarioa: found.emailsecretarioa || '',
+          convidadopor: found.convidadopor || '',
+        };
+        state.data = { ...state.data, ...m };
+        buildStep2Form(perfil, m, true);
+        msg.textContent = 'Inscrição encontrada. Confira os dados e avance.';
+        msg.className = 'small ms-2 text-success';
+      } else {
+        // cadastro novo
+        state.data = { cpf, identificacao: state.perfil };
+        buildStep2Form(state.perfil, state.data, false); // campos livres
+        msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
+        msg.className = 'small ms-2';
+      }
+
+      // habilita avançar
+      renderStep();
+      // assentos (se necessário)
+      renderSeats();
+    } catch (e) {
+      msg.textContent = e.message || 'Erro na busca.';
+      msg.className = 'small ms-2 text-danger';
+    }
+  }
+
+  /* ===============================
+   * Abrir modal a partir dos cards
+   * =============================== */
   $all('.select-profile').forEach(btn => {
     btn.addEventListener('click', () => {
       const card = btn.closest('.profile-card');
       const perfil = card?.dataset.profile || 'Conselheiro';
-      state = { perfil, step: 1, data: {}, idInscricao: null, protocolo: null, pdfUrl: null };
+      state = {
+        perfil, step: 1, data: {}, idInscricao: null, protocolo: null, pdfUrl: null,
+        searched: false, found: false, edited: false,
+      };
 
-      document.getElementById('miPerfil').textContent = perfil;
-      renderPerfilFields(perfil);
+      $('#miPerfil').textContent = perfil;
 
-      // reset visual/validações
-      document.getElementById('miForm').reset();
+      // Garante UI do Passo 1 (Pesquisar + assentos)
+      ensureStep1UI();
+      renderSeats();
+
+      // Reseta formulário e validações
+      const form = document.getElementById('miForm');
+      form.reset();
       $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
+
+      // Passo 2 começa vazio até a pesquisa
+      const step2 = document.querySelector('.mi-pane[data-step="2"]');
+      if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
+
+      // Ajusta rótulo do último passo
+      updateFinalStepLabel();
 
       renderStep();
       modal.show();
