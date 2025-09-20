@@ -1,15 +1,18 @@
-
-/* steps.js — fluxo de inscrição multi-perfil + backend real (UX legado) — ATUALIZADO */
-
 (() => {
   /* ===============================
-   * Rotas (usa o que vier de window.APP_ROUTES)
+   * Rotas (com fallback seguro)
    * =============================== */
-  const ROUTES = window.APP_ROUTES ?? {
-    base: '',
-    lookupCpf: (cpf) => `/api/inscricoes/buscar?cpf=${encodeURIComponent(cpf)}`, // GET
-    createInscricao: `/api/inscricoes/confirmar`,  // POST { formData, perfil } -> { codigo }
-    assentosConselheiros: `/api/inscricoes/assentos/conselheiros`,
+  const inferApiBase = () => {
+    const h = location.hostname;
+    const isLocal = (h === 'localhost' || h === '127.0.0.1');
+    return isLocal ? 'http://localhost:3000' : 'https://conaprev-inscricoes.onrender.com';
+  };
+  const API = (window.API_BASE && String(window.API_BASE).trim()) || inferApiBase();
+
+  const ROUTES = {
+    buscarCpf: `${API}/api/inscricoes/buscar`, // POST { cpf, perfil }
+    confirmar: `${API}/api/inscricoes/confirmar`, // POST { formData, perfil } -> { codigo[, pdfUrl] }
+    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`, // GET -> [{seat, name}]
   };
 
   const defaultHeaders = { 'Content-Type': 'application/json' };
@@ -29,24 +32,19 @@
     perfil: null,
     step: 1,
     data: {},
-    idInscricao: null,
     protocolo: null,
     pdfUrl: null,
-
-    // UX
     searched: false,
     found: false
   };
 
-  // Controle do “Nome no prisma” automático
+  // “Nome no prisma” automático
   let prismaManual = false;
   let ultimaSugestaoPrisma = '';
 
   /* ===============================
-   * Esquemas de campos
+   * Esquemas
    * =============================== */
-
-  // PASSO 2 — Dados (pessoais/contato)
   const CAMPOS_DADOS_CONSELHEIRO = [
     { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
     { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
@@ -58,8 +56,6 @@
     { id: 'emailconselheiroa', label: 'E-mail Conselheiro(a)', type: 'email' },
     { id: 'emailsecretarioa',  label: 'E-mail Secretário(a)',  type: 'email' },
   ];
-
-  // PASSO 2 — Dados reduzidos (CNRPPS, Staff, Palestrante)
   const CAMPOS_DADOS_REDUZIDOS = [
     { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
     { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
@@ -68,8 +64,6 @@
     { id: 'convidadopor',      label: 'Convidado por',       type: 'text' },
     { id: 'email',             label: 'E-mail',              type: 'email' },
   ];
-
-  // PASSO 3 — Perfil
   const CAMPOS_PERFIL_BASE = [
     { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
   ];
@@ -103,54 +97,27 @@
     setTimeout(() => el.remove(), 3200);
   }
 
-  /* ========= LOTTIES ========= */
-  // precisa do lottie-web já incluso no index.html
+  // Lotties (usa /animacoes/*.json que você tem na pasta public)
   const LOTTIE_MAP = {
-    search:         '/animacoes/lottie_search_loading.json',
-    seats:          '/animacoes/lottie_seats_loading.json',
-    saving:         '/animacoes/lottie_save_progress.json',
-    confirming:     '/animacoes/lottie_confirm_progress.json',
-    success:        '/animacoes/lottie_success_check.json',
-    error:          '/animacoes/lottie_error_generic.json',
-    timeout:        '/animacoes/lottie_timeout_hourglass.json',
-    offline:        '/animacoes/lottie_network_off.json',
-    duplicate:      '/animacoes/lottie_duplicate_found.json',
-    pdf:            '/animacoes/lottie_pdf_generating.json',
-    empty:          '/animacoes/lottie_empty_state.json',
-    unauthorized:   '/animacoes/lottie_lock_unauthorized.json',
+    search:      '/animacoes/lottie_search_loading.json',
+    seats:       '/animacoes/lottie_seats_loading.json',
+    saving:      '/animacoes/lottie_save_progress.json',
+    confirming:  '/animacoes/lottie_confirm_progress.json',
+    success:     '/animacoes/lottie_success_check.json',
+    error:       '/animacoes/lottie_error_generic.json',
+    timeout:     '/animacoes/lottie_timeout_hourglass.json',
+    network:     '/animacoes/lottie_network_off.json',
+    duplicate:   '/animacoes/lottie_duplicate_found.json',
+    pdf:         '/animacoes/lottie_pdf_generating.json',
+    empty:       '/animacoes/lottie_empty_state.json',
+    lock:        '/animacoes/lottie_lock_unauthorized.json',
   };
-  let _overlayAnim = null;
 
-  function showLottie(kind, container, message = '') {
+  function showLottie(kind, container) {
     const path = LOTTIE_MAP[kind];
-    if (!path || !window.lottie) return;
-
-    // Se o container for o body, usamos o overlay
-    if (!container || container === document.body) {
-      const overlay = document.getElementById('miLottieOverlay');
-      const holder  = document.getElementById('miLottieHolder');
-      const msgEl   = document.getElementById('miLottieMsg');
-      if (!overlay || !holder) return;
-
-      holder.innerHTML = '';
-      msgEl.textContent = message || '';
-      overlay.classList.remove('d-none');
-
-      _overlayAnim = window.lottie.loadAnimation({
-        container: holder,
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        path
-      });
-      return {
-        close: hideOverlayLottie
-      };
-    }
-
-    // Inline
+    if (!path || !window.lottie || !container) return;
     container.innerHTML = '';
-    return window.lottie.loadAnimation({
+    window.lottie.loadAnimation({
       container,
       renderer: 'svg',
       loop: true,
@@ -159,19 +126,7 @@
     });
   }
 
-  function hideOverlayLottie() {
-    const overlay = document.getElementById('miLottieOverlay');
-    const holder  = document.getElementById('miLottieHolder');
-    if (!overlay || !holder) return;
-    try { _overlayAnim?.destroy?.(); } catch {}
-    _overlayAnim = null;
-    holder.innerHTML = '';
-    overlay.classList.add('d-none');
-  }
-  /* ====== fim LOTTIES ====== */
-
-  function cpfDigits(str) { return String(str || '').replace(/\D/g, ''); }
-
+  const cpfDigits = (str) => String(str || '').replace(/\D/g, '');
   function escapeHtml(str) {
     return String(str ?? '').replace(/[&<>"']/g, s => (
       { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]
@@ -179,7 +134,7 @@
   }
 
   /* ===============================
-   * Stepper e rótulos
+   * Stepper
    * =============================== */
   function updateFinalStepLabel() {
     const lastStep = document.querySelector('.mi-stepper .mi-step[data-step="6"]');
@@ -229,7 +184,7 @@
     actions.appendChild(msg);
     pane.querySelector('.row.g-3')?.appendChild(actions);
 
-    // Grid de assentos (apenas Conselheiro)
+    // Grid de assentos (apenas Conselheiro) — agora sem inline-style: usa classe CSS responsiva
     const seatsWrap = document.createElement('div');
     seatsWrap.id = 'miSeatsWrap';
     seatsWrap.className = 'mt-4 d-none';
@@ -239,34 +194,12 @@
         <span class="badge me-2" style="background:#198754">Livre</span>
         <span class="badge" style="background:#dc3545">Ocupado</span>
       </div>
-      <!-- 19 colunas para ocupar toda a linha -->
-      <div id="miSeatGrid" style="display:grid;grid-template-columns:repeat(19,1fr);gap:10px;"></div>
+      <div id="miSeatGrid" class="mi-seat-grid"></div>
     `;
     pane.appendChild(seatsWrap);
 
     pane.dataset.enhanced = '1';
-
-    // eventos
     btnSearch.addEventListener('click', onPesquisarCpf);
-
-    // ENTER no CPF dispara busca
-    const cpfInput = document.getElementById('miCpf');
-    cpfInput?.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        onPesquisarCpf();
-      }
-    });
-  }
-
-  function seatBoxStyle(ocupado) {
-    // altura fixa agradável + largura fluida pelas 19 colunas
-    return `
-      display:flex;align-items:center;justify-content:center;
-      border-radius:.5rem;color:#fff;font-weight:600;
-      height:40px;user-select:none;
-      background:${ocupado ? '#dc3545' : '#198754'};
-    `;
   }
 
   async function renderSeats() {
@@ -279,35 +212,28 @@
     }
     wrap.classList.remove('d-none');
     grid.innerHTML = '';
-
-    let anim;
     try {
-      anim = showLottie('seats', grid);
+      showLottie('seats', grid);
       const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
       const occ = {};
       (data || []).forEach(s => occ[Number(s.seat)] = s.name || true);
-
-      // remove lottie antes de pintar
-      try { anim?.destroy?.(); } catch {}
-      grid.innerHTML = '';
-
       const MAX = 62;
+      grid.innerHTML = '';
       for (let n = 1; n <= MAX; n++) {
         const b = document.createElement('div');
         const ocupado = !!occ[n];
         b.textContent = n;
-        b.style.cssText = seatBoxStyle(ocupado);
+        b.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
         if (ocupado && typeof occ[n] === 'string') b.title = occ[n];
         grid.appendChild(b);
       }
     } catch {
-      try { anim?.destroy?.(); } catch {}
-      grid.innerHTML = '';
+      // fallback: todos livres
       for (let n = 1; n <= 62; n++) {
         const b = document.createElement('div');
         b.textContent = n;
-        b.style.cssText = seatBoxStyle(false);
+        b.className = 'mi-seat available';
         grid.appendChild(b);
       }
     }
@@ -338,7 +264,7 @@
 
     pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
 
-    // Nome no prisma/crachá automático respeitando edição manual
+    // Nome no prisma/crachá automático
     const nomeEl   = $('#nome');
     const prismaEl = $('#nomenoprismacracha');
 
@@ -348,7 +274,6 @@
     if (prismaEl) {
       prismaEl.addEventListener('input', () => { prismaManual = true; });
     }
-
     if (nomeEl && prismaEl) {
       nomeEl.addEventListener('input', () => {
         const t = (nomeEl.value || '').trim();
@@ -370,12 +295,10 @@
   function buildStep3Perfil(perfil, data = {}) {
     const pane = document.querySelector('.mi-pane[data-step="3"]');
     if (!pane) return;
-
     const fields = [
       ...CAMPOS_PERFIL_BASE,
       ...(perfil === 'Conselheiro' ? CAMPOS_PERFIL_CONSELHEIRO : []),
     ];
-
     const blocks = fields.map(f => {
       const val = (f.id === 'identificacao') ? perfil : (data[f.id] ?? '');
       const ro  = f.readonly ? 'readonly' : '';
@@ -387,7 +310,6 @@
         </div>
       `;
     }).join('');
-
     pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
   }
 
@@ -412,7 +334,7 @@
     return ok;
   }
 
-  // Rascunho local (por CPF limpo)
+  // Rascunho local
   function draftKey(cpf = $('#miCpf').value) {
     return `inscricao:${state.perfil}:${cpfDigits(cpf)}`;
   }
@@ -447,79 +369,46 @@
    * API helpers
    * =============================== */
   async function apiLookupCpf(cpf) {
-    // se existir ROUTES.lookupCpf como função (GET), usamos; caso contrário,
-    // tentamos POST em /buscar (compat alternativo)
-    if (typeof ROUTES.lookupCpf === 'function') {
-      const res = await fetch(ROUTES.lookupCpf(cpf), { method: 'GET', headers: defaultHeaders });
-      if (!res.ok) return null;
-      return res.json();
-    } else if (ROUTES.buscarCpf) {
-      const res = await fetch(ROUTES.buscarCpf, {
-        method: 'POST', headers: defaultHeaders, body: JSON.stringify({ cpf, perfil: state.perfil })
-      });
-      if (!res.ok) return null;
-      return res.json();
-    }
-    return null;
+    const res = await fetch(ROUTES.buscarCpf, {
+      method: 'POST',
+      headers: defaultHeaders,
+      body: JSON.stringify({ cpf, perfil: state.perfil })
+    });
+    if (!res.ok) return null;
+    return res.json();
   }
 
   async function apiConfirmar(payload) {
-    // Preferimos ROUTES.createInscricao (como no config atual) que aponta para /confirmar
-    if (ROUTES.createInscricao) {
-      const res = await fetch(ROUTES.createInscricao, {
-        method: 'POST',
-        headers: defaultHeaders,
-        // backend espera { formData, perfil }
-        body: JSON.stringify({ formData: payload, perfil: state.perfil })
-      });
-      if (!res.ok) {
-        let msg = 'Erro ao enviar';
-        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
-        throw new Error(msg);
-      }
-      return res.json(); // { codigo, pdfUrl? }
+    const res = await fetch(ROUTES.confirmar, {
+      method: 'POST',
+      headers: defaultHeaders,
+      body: JSON.stringify({ formData: payload, perfil: state.perfil })
+    });
+    if (!res.ok) {
+      let msg = 'Erro ao enviar';
+      try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+      throw new Error(msg);
     }
-
-    // Fallback: ROUTES.confirmar
-    if (ROUTES.confirmar) {
-      const res = await fetch(ROUTES.confirmar, {
-        method: 'POST', headers: defaultHeaders,
-        body: JSON.stringify({ formData: payload, perfil: state.perfil })
-      });
-      if (!res.ok) {
-        let msg = 'Erro ao enviar';
-        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
-        throw new Error(msg);
-      }
-      return res.json();
-    }
-
-    throw new Error('Rota de confirmação não configurada.');
+    return res.json(); // { codigo[, pdfUrl] }
   }
 
   /* ===============================
    * Eventos principais
    * =============================== */
-
-  // Avançar
   $('#miBtnAvancar').addEventListener('click', async () => {
     if (!validateStep()) return;
 
     saveDraft();
 
-    // Passo 5 => envia
     if (state.step === 5) {
-      let closer;
       try {
         const payload = { ...state.data, ...readForm() };
-        closer = showLottie('confirming', document.body, 'Enviando sua inscrição...');
+        showLottie('confirming', document.getElementById('miLottieHolder') || document.body);
         const resp = await apiConfirmar(payload);
-
         state.protocolo = resp?.codigo || null;
         if (resp?.pdfUrl) state.pdfUrl = resp.pdfUrl;
 
-        const protoEl = $('#miProtocolo');
-        if (protoEl) protoEl.textContent = state.protocolo || '—';
+        $('#miProtocolo').textContent = state.protocolo || '—';
         if (state.pdfUrl) $('#miBtnBaixar').href = state.pdfUrl;
         else $('#miBtnBaixar')?.classList.add('disabled');
 
@@ -528,23 +417,20 @@
 
         state.step = 6;
         renderStep();
+        return;
       } catch (e) {
         showToast(e.message || 'Erro ao concluir a inscrição', 'danger');
-      } finally {
-        hideOverlayLottie();
+        return;
       }
-      return;
     }
 
-    // navegação normal
     if (state.step < STEP_MAX) {
       state.step++;
       renderStep();
-      if (state.step === 4) renderReview(); // revisa ao entrar no Passo 4
+      if (state.step === 4) renderReview();
     }
   });
 
-  // Voltar
   $('#miBtnVoltar').addEventListener('click', () => {
     if (state.step > STEP_MIN) {
       state.step--;
@@ -553,20 +439,26 @@
     }
   });
 
-  // CPF: só números e bloqueia avançar até pesquisar
-  $('#miCpf').addEventListener('input', (e) => {
+  // CPF: só números + ENTER para pesquisar
+  const cpfInput = document.getElementById('miCpf');
+  cpfInput.addEventListener('input', (e) => {
     const v = e.target.value.replace(/[^\d]/g, '');
     e.target.value = v;
     state.searched = false;
     renderStep();
   }, { passive: true });
+  cpfInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onPesquisarCpf();
+    }
+  });
 
-  // Atualiza a revisão “ao vivo” quando estiver no Passo 4
+  // Atualiza revisão ao vivo no passo 4
   document.getElementById('miForm').addEventListener('input', () => {
     if (state.step === 4) renderReview();
   });
 
-  // Clique em “Pesquisar”
   async function onPesquisarCpf() {
     const cpf = cpfDigits($('#miCpf').value);
     const msg = $('#miCpfMsg');
@@ -579,7 +471,7 @@
     try {
       msg.textContent = 'Buscando...';
       msg.className = 'small ms-2 text-muted';
-      const closer = showLottie('search', document.body, 'Consultando CPF...');
+      showLottie('search', document.getElementById('miLottieHolder') || document.body);
 
       const found = await apiLookupCpf(cpf);
       state.searched = true;
@@ -602,16 +494,20 @@
           emailsecretarioa: found.emailsecretarioa || '',
           convidadopor: found.convidadopor || '',
           email: found.email || '',
+          _rowIndex: found._rowIndex
         };
         state.data = { ...state.data, ...m };
+
         buildStep2Form(perfil, m);
         buildStep3Perfil(perfil, m);
+
         msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados e avance.';
         msg.className = 'small ms-2 text-success';
       } else {
         state.data = { cpf, identificacao: state.perfil };
         buildStep2Form(state.perfil, state.data);
         buildStep3Perfil(state.perfil, state.data);
+
         msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
       }
@@ -619,9 +515,7 @@
       renderStep();
       renderSeats();
       loadDraft(cpf);
-      hideOverlayLottie();
     } catch (e) {
-      hideOverlayLottie();
       msg.textContent = e.message || 'Erro na busca.';
       msg.className = 'small ms-2 text-danger';
     }
@@ -635,7 +529,7 @@
       const card = btn.closest('.profile-card');
       const perfil = card?.dataset.profile || 'Conselheiro';
       state = {
-        perfil, step: 1, data: {}, idInscricao: null, protocolo: null, pdfUrl: null,
+        perfil, step: 1, data: {}, protocolo: null, pdfUrl: null,
         searched: false, found: false,
       };
 
@@ -660,4 +554,3 @@
   });
 
 })();
-

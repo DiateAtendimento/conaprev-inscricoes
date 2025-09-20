@@ -41,7 +41,7 @@ body::before{
   position:fixed;
   inset:0;
   z-index:-1;
-  background: url("/public/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
+  background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
 }
 
 /* Guard-rail */
@@ -330,7 +330,7 @@ body.gate-active .topbar{ display:none !important; }
 @media (max-width: 768px){
   :root{ --content-max: 92vw; --topbar-h: 56px; }
   body::before{
-    background: url("/public/imagens/bg/bg-mobile.jpg") center top / cover no-repeat;
+    background: url("/imagens/bg/bg-mobile.jpg") center top / cover no-repeat;
   }
   .hero-grid{
     grid-template-columns: 1fr;
