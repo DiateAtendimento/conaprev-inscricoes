@@ -14,26 +14,41 @@ import certsRoutes from "./routes/certs.routes.js";
 
 const app = express();
 
-// se estiver atrás de proxy (Render), isso ajuda logs/limiter a pegar IP correto
-app.set("trust proxy", true);
+/**
+ * IMPORTANTE no Render:
+ * Em vez de `true` (permissivo), configure hops conhecidos.
+ * `1` = confia apenas no primeiro proxy (o do Render).
+ * Isso satisfaz o express-rate-limit e mantém IPs corretos.
+ */
+app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("tiny"));
-app.use(security);   // array com helmet, hpp e rate-limit
+app.use(security);   // helmet + hpp + rate-limit (ver arquivo atualizado abaixo)
 app.use(corsMw);
 
-// rotas
+// rotas API
 app.use("/api", healthRoutes);
 app.use("/api/inscricoes", inscricoesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/certificado", certsRoutes);
+
+// rota raiz amigável (evita 404 no "/")
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    name: "CONAPREV Inscrições API",
+    docs: "/api",
+    time: new Date().toISOString(),
+  });
+});
 
 // health check do Render
 app.get("/healthz", (_req, res) =>
   res.json({ ok: true, time: new Date().toISOString() })
 );
 
-// 404
+// 404 para demais caminhos
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
 // errors
