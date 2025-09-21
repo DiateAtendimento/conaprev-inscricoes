@@ -10,9 +10,9 @@
   const API = (window.API_BASE && String(window.API_BASE).trim()) || inferApiBase();
 
   const ROUTES = {
-    buscarCpf: `${API}/api/inscricoes/buscar`, // POST { cpf, perfil }
-    confirmar: `${API}/api/inscricoes/confirmar`, // POST { formData, perfil } -> { codigo[, pdfUrl] }
-    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`, // GET -> [{seat, name}]
+    buscarCpf: `${API}/api/inscricoes/buscar`,                         // POST { cpf, perfil }
+    confirmar: `${API}/api/inscricoes/confirmar`,                      // POST { formData, perfil } -> { codigo[, pdfUrl] }
+    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`// GET -> [{seat, name}]
   };
 
   const defaultHeaders = { 'Content-Type': 'application/json' };
@@ -97,7 +97,7 @@
     setTimeout(() => el.remove(), 3200);
   }
 
-  // Lotties (usa /animacoes/*.json que você tem na pasta public)
+  /* ===== Lottie overlay ===== */
   const LOTTIE_MAP = {
     search:      '/animacoes/lottie_search_loading.json',
     seats:       '/animacoes/lottie_seats_loading.json',
@@ -113,17 +113,31 @@
     lock:        '/animacoes/lottie_lock_unauthorized.json',
   };
 
-  function showLottie(kind, container) {
+  let lottieInst = null;
+  function openLottie(kind, msg = '') {
+    const overlay = document.getElementById('miLottieOverlay');
+    const holder  = document.getElementById('miLottieHolder');
+    const msgEl   = document.getElementById('miLottieMsg');
+    if (!overlay || !holder) return;
+    try { if (lottieInst) lottieInst.destroy(); } catch {}
+    holder.innerHTML = '';
     const path = LOTTIE_MAP[kind];
-    if (!path || !window.lottie || !container) return;
-    container.innerHTML = '';
-    window.lottie.loadAnimation({
-      container,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path
-    });
+    if (path && window.lottie) {
+      lottieInst = window.lottie.loadAnimation({
+        container: holder, renderer: 'svg', loop: true, autoplay: true, path
+      });
+    }
+    msgEl && (msgEl.textContent = msg);
+    overlay.classList.remove('d-none');
+  }
+  function closeLottie() {
+    const overlay = document.getElementById('miLottieOverlay');
+    const holder  = document.getElementById('miLottieHolder');
+    if (!overlay) return;
+    overlay.classList.add('d-none');
+    try { if (lottieInst) lottieInst.destroy(); } catch {}
+    lottieInst = null;
+    if (holder) holder.innerHTML = '';
   }
 
   const cpfDigits = (str) => String(str || '').replace(/\D/g, '');
@@ -184,7 +198,7 @@
     actions.appendChild(msg);
     pane.querySelector('.row.g-3')?.appendChild(actions);
 
-    // Grid de assentos (apenas Conselheiro) — agora sem inline-style: usa classe CSS responsiva
+    // Grid de assentos
     const seatsWrap = document.createElement('div');
     seatsWrap.id = 'miSeatsWrap';
     seatsWrap.className = 'mt-4 d-none';
@@ -212,8 +226,9 @@
     }
     wrap.classList.remove('d-none');
     grid.innerHTML = '';
+
     try {
-      showLottie('seats', grid);
+      openLottie('seats', 'Carregando mapa de assentos…');
       const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
       const occ = {};
@@ -236,6 +251,8 @@
         b.className = 'mi-seat available';
         grid.appendChild(b);
       }
+    } finally {
+      closeLottie();
     }
   }
 
@@ -400,10 +417,11 @@
 
     saveDraft();
 
+    // envio final
     if (state.step === 5) {
       try {
         const payload = { ...state.data, ...readForm() };
-        showLottie('confirming', document.getElementById('miLottieHolder') || document.body);
+        openLottie('confirming', 'Confirmando sua inscrição…');
         const resp = await apiConfirmar(payload);
         state.protocolo = resp?.codigo || null;
         if (resp?.pdfUrl) state.pdfUrl = resp.pdfUrl;
@@ -417,13 +435,20 @@
 
         state.step = 6;
         renderStep();
+        openLottie('success', 'Inscrição confirmada!');
+        setTimeout(closeLottie, 1200);
         return;
       } catch (e) {
+        openLottie('error', e.message || 'Erro ao concluir a inscrição.');
+        setTimeout(closeLottie, 1600);
         showToast(e.message || 'Erro ao concluir a inscrição', 'danger');
         return;
+      } finally {
+        // closeLottie é chamado acima após efeito
       }
     }
 
+    // navegação normal
     if (state.step < STEP_MAX) {
       state.step++;
       renderStep();
@@ -471,7 +496,7 @@
     try {
       msg.textContent = 'Buscando...';
       msg.className = 'small ms-2 text-muted';
-      showLottie('search', document.getElementById('miLottieHolder') || document.body);
+      openLottie('search', 'Buscando CPF…');
 
       const found = await apiLookupCpf(cpf);
       state.searched = true;
@@ -479,6 +504,7 @@
 
       if (found) {
         const perfil = state.perfil;
+        // mapeia a resposta do backend -> campos do formulário
         const m = {
           numerodeinscricao: found.numerodeinscricao || found.numero || found.protocolo || '',
           cpf,
@@ -518,6 +544,11 @@
     } catch (e) {
       msg.textContent = e.message || 'Erro na busca.';
       msg.className = 'small ms-2 text-danger';
+      openLottie('error', 'Falha ao buscar CPF.');
+      setTimeout(closeLottie, 1400);
+      return;
+    } finally {
+      setTimeout(closeLottie, 300); // fecha suavemente
     }
   }
 
