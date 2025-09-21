@@ -360,15 +360,18 @@
     state.data = { ...state.data, ...d };
     localStorage.setItem(draftKey(), JSON.stringify(state.data));
   }
-  function loadDraft(cpf) {
-    const raw = localStorage.getItem(draftKey(cpf));
-    if (!raw) return;
-    state.data = JSON.parse(raw);
-    Object.entries(state.data).forEach(([k,v]) => {
-      const el = document.querySelector(`[name="${k}"]`);
-      if (!el) return;
-      el.value = v;
+  function readDraft(cpf) {
+    try {
+      const raw = localStorage.getItem(draftKey(cpf));
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+  function filterNonEmpty(obj) {
+    const out = {};
+    Object.entries(obj || {}).forEach(([k, v]) => {
+      if (v != null && String(v).trim() !== '') out[k] = v;
     });
+    return out;
   }
 
   function renderReview() {
@@ -497,13 +500,14 @@
       openLottie('search', 'Buscando CPF…');
 
       const found = await apiLookupCpf(cpf);
+      const draft  = readDraft(cpf);
+
       state.searched = true;
       state.found = !!found;
 
       if (found) {
         const perfil = state.perfil;
-        // mapeia a resposta do backend -> campos do formulário
-        const m = {
+        const back = {
           numerodeinscricao: found.numerodeinscricao || found.numero || found.protocolo || '',
           cpf,
           nome: found.nome || '',
@@ -520,31 +524,31 @@
           email: found.email || '',
           _rowIndex: found._rowIndex
         };
-        state.data = { ...state.data, ...m };
+        // rascunho só entra onde tem valor não-vazio
+        const merged = { ...back, ...filterNonEmpty(draft) };
 
-        buildStep2Form(perfil, m);
-        buildStep3Perfil(perfil, m);
+        state.data = merged;
+        buildStep2Form(perfil, merged);
+        buildStep3Perfil(perfil, merged);
 
-        // >>> Avança automaticamente para "Dados" quando encontrado
+        // avança automaticamente para "Dados"
         state.step = 2;
         renderStep();
-        // foca no primeiro campo editável
-        setTimeout(() => { document.getElementById('nome')?.focus(); }, 50);
 
-        msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados e avance.';
+        msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados.';
         msg.className = 'small ms-2 text-success';
       } else {
-        // CPF não encontrado: mantém no passo 1 (como solicitado)
-        state.data = { cpf, identificacao: state.perfil };
-        buildStep2Form(state.perfil, state.data);
-        buildStep3Perfil(state.perfil, state.data);
+        const base = { cpf, identificacao: state.perfil, ...(draft || {}) };
+        state.data = base;
+        buildStep2Form(state.perfil, base);
+        buildStep3Perfil(state.perfil, base);
 
+        // permanece no passo 1 para o usuário revisar antes de avançar
         msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
       }
 
-      renderSeats(); // atualiza assentos
-      loadDraft(cpf);
+      renderSeats();
     } catch (e) {
       msg.textContent = e.message || 'Erro na busca.';
       msg.className = 'small ms-2 text-danger';
