@@ -10,21 +10,17 @@
   const API = (window.API_BASE && String(window.API_BASE).trim()) || inferApiBase();
 
   const ROUTES = {
-    buscarCpf: `${API}/api/inscricoes/buscar`,                         // POST { cpf, perfil }
-    confirmar: `${API}/api/inscricoes/confirmar`,                      // POST { formData, perfil } -> { codigo[, pdfUrl] }
-    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`// GET -> [{seat, name}]
+    buscarCpf: `${API}/api/inscricoes/buscar`,
+    confirmar: `${API}/api/inscricoes/confirmar`,
+    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
   };
-
   const defaultHeaders = { 'Content-Type': 'application/json' };
 
   /* ===============================
    * Estado geral
    * =============================== */
   const modalEl = document.getElementById('modalInscricao');
-  if (!modalEl) {
-    console.error('Faltou o HTML do modal #modalInscricao no index.html');
-    return;
-  }
+  if (!modalEl) { console.error('Faltou o HTML do modal #modalInscricao no index.html'); return; }
   const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
 
   const STEP_MIN = 1, STEP_MAX = 6;
@@ -79,31 +75,12 @@
   const $ = sel => document.querySelector(sel);
   const $all = sel => [...document.querySelectorAll(sel)];
 
-  function showToast(msg, type = 'info') {
-    const wrapId = 'mi_toast_wrap';
-    let wrap = document.getElementById(wrapId);
-    if (!wrap) {
-      wrap = document.createElement('div');
-      wrap.id = wrapId;
-      wrap.style.position = 'fixed';
-      wrap.style.right = '12px';
-      wrap.style.bottom = '12px';
-      wrap.style.zIndex = '2000';
-      document.body.appendChild(wrap);
-    }
-    const el = document.createElement('div');
-    el.className = `alert alert-${type} shadow-sm mb-2`;
-    el.textContent = msg;
-    wrap.appendChild(el);
-    setTimeout(() => el.remove(), 3200);
-  }
-
   /* ===== Lottie overlay ===== */
   const LOTTIE_MAP = {
     search:      '/animacoes/lottie_search_loading.json',
     seats:       '/animacoes/lottie_seats_loading.json',
-    saving:      '/animacoes/lottie_save_progress.json',
-    confirming:  '/animacoes/lottie_confirm_progress.json',
+    saving:      '/animacoes/lottie_save_progress.json',       // <- progresso
+    confirming:  '/animacoes/lottie_confirm_progress.json',    // <- sucesso
     success:     '/animacoes/lottie_success_check.json',
     error:       '/animacoes/lottie_error_generic.json',
     timeout:     '/animacoes/lottie_timeout_hourglass.json',
@@ -165,10 +142,17 @@
       s.classList.toggle('is-done', n < state.step);
     });
     $all('.mi-pane').forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
-    $('#miBtnVoltar').disabled = state.step === STEP_MIN;
+
+    // Voltar: visível só do passo 2 ao 6 e fica à esquerda (CSS cuida do layout)
+    const btnVoltar = $('#miBtnVoltar');
+    btnVoltar.classList.toggle('d-none', state.step === 1);
 
     const avancar = $('#miBtnAvancar');
-    avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
+    if (state.step === 4 && state.data?.numerodeinscricao) {
+      avancar.textContent = 'Salvar e Sair';
+    } else {
+      avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
+    }
     avancar.disabled = (state.step === 1 && !state.searched);
 
     updateFinalStepLabel();
@@ -245,7 +229,6 @@
         grid.appendChild(b);
       }
     } catch {
-      // fallback: todos livres
       for (let n = 1; n <= 62; n++) {
         const b = document.createElement('div');
         b.textContent = n;
@@ -289,9 +272,7 @@
     prismaManual = false;
     ultimaSugestaoPrisma = '';
 
-    if (prismaEl) {
-      prismaEl.addEventListener('input', () => { prismaManual = true; });
-    }
+    if (prismaEl) prismaEl.addEventListener('input', () => { prismaManual = true; });
     if (nomeEl && prismaEl) {
       nomeEl.addEventListener('input', () => {
         const t = (nomeEl.value || '').trim();
@@ -332,7 +313,7 @@
   }
 
   /* ===============================
-   * Leitura/validação
+   * Leitura/validação + rascunho
    * =============================== */
   function readForm() {
     const form = $('#miForm');
@@ -352,7 +333,6 @@
     return ok;
   }
 
-  // Rascunho local
   function draftKey(cpf = $('#miCpf').value) {
     return `inscricao:${state.perfil}:${cpfDigits(cpf)}`;
   }
@@ -375,7 +355,7 @@
     return out;
   }
 
-  // Mapa de rótulos legíveis para a Revisão
+  // Rótulos bonitos para Revisão
   const LABELS = {
     numerodeinscricao: 'Número de Inscrição',
     cpf: 'CPF',
@@ -396,7 +376,6 @@
 
   function prettyLabel(key) {
     if (LABELS[key]) return LABELS[key];
-    // fallback simples (Capitalizar + espaços em camel/snake)
     return String(key)
       .replace(/^_+/, '')
       .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -406,13 +385,25 @@
 
   function renderReview() {
     const d = { ...state.data, ...readForm() };
-    const lines = Object.entries(d)
+    const rows = Object.entries(d)
       .filter(([k,v]) => !HIDDEN_KEYS.has(k) && String(v).trim() !== '')
       .map(([k,v]) => `<div class="d-flex">
         <div class="me-2 text-secondary" style="min-width:220px">${escapeHtml(prettyLabel(k))}</div>
         <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.map(escapeHtml).join(', '):escapeHtml(v)}</div>
-      </div>`);
-    $('#miReview').innerHTML = lines.join('') || '<div class="text-muted">Sem dados para revisar.</div>';
+      </div>`)
+      .join('');
+
+    const editarLink = `<div class="mt-3">
+      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informações</button>
+    </div>`;
+
+    $('#miReview').innerHTML = (rows || '<div class="text-muted">Sem dados para revisar.</div>') + editarLink;
+
+    // Editar → volta para passo 2
+    $('#miEditarInfo')?.addEventListener('click', () => {
+      state.step = 2;
+      renderStep();
+    });
   }
 
   /* ===============================
@@ -465,38 +456,50 @@
    * Eventos principais
    * =============================== */
   $('#miBtnAvancar').addEventListener('click', async () => {
-    // Passo 6: concluir fecha modal
-    if (state.step === 6) {
-      modal.hide();
+    // Passo 6: concluir → fecha modal
+    if (state.step === 6) { modal.hide(); return; }
+
+    // Caso “Salvar e Sair” (editar dados de quem já tem número)
+    if (state.step === 4 && state.data?.numerodeinscricao) {
+      if (!validateStep()) return;
+      saveDraft();
+      try {
+        const payload = { ...state.data, ...readForm() };
+        openLottie('saving', 'Salvando alterações…');
+        await apiConfirmar(payload); // backend trata como update
+        closeLottie();
+        openLottie('confirming', `${(payload.nome || '').split(' ')[0] || 'OK'}, dados atualizados!`);
+        setTimeout(() => { closeLottie(); modal.hide(); }, 1200);
+      } catch (e) {
+        openLottie('error', e.message || 'Erro ao salvar.');
+        setTimeout(closeLottie, 1600);
+      }
       return;
     }
 
     if (!validateStep()) return;
     saveDraft();
 
-    // envio final
+    // envio final (gerar número de inscrição)
     if (state.step === 5) {
       try {
         const payload = { ...state.data, ...readForm() };
-        openLottie('confirming', 'Confirmando sua inscrição…');
+        openLottie('saving', 'Confirmando sua inscrição…');        // progresso
         const resp = await apiConfirmar(payload);
         state.protocolo = resp?.codigo || null;
         state.pdfUrl = resp?.pdfUrl || null;
-
         $('#miProtocolo').textContent = state.protocolo || '—';
-
-        updateFinalStepLabel();
-        showToast('Inscrição registrada com sucesso!', 'success');
 
         state.step = 6;
         renderStep();
-        openLottie('success', 'Inscrição confirmada!');
+
+        closeLottie();
+        openLottie('confirming', 'Inscrição confirmada!');         // sucesso
         setTimeout(closeLottie, 1200);
         return;
       } catch (e) {
         openLottie('error', e.message || 'Erro ao concluir a inscrição.');
         setTimeout(closeLottie, 1600);
-        showToast(e.message || 'Erro ao concluir a inscrição', 'danger');
         return;
       }
     }
@@ -526,10 +529,7 @@
     renderStep();
   }, { passive: true });
   cpfInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      onPesquisarCpf();
-    }
+    if (e.key === 'Enter') { e.preventDefault(); onPesquisarCpf(); }
   });
 
   // Atualiza revisão ao vivo no passo 4
@@ -576,18 +576,18 @@
           email: found.email || '',
           _rowIndex: found._rowIndex
         };
-        // rascunho só entra onde tem valor não-vazio
         const merged = { ...back, ...filterNonEmpty(draft) };
 
         state.data = merged;
         buildStep2Form(perfil, merged);
         buildStep3Perfil(perfil, merged);
 
-        // avança automaticamente para "Dados"
-        state.step = 2;
+        // AVANÇA DIRETO PARA REVISÃO (passo 4)
+        state.step = 4;
         renderStep();
+        renderReview();
 
-        msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados.';
+        msg.textContent = 'Inscrição encontrada. Revise os dados.';
         msg.className = 'small ms-2 text-success';
       } else {
         const base = { cpf, identificacao: state.perfil, ...(draft || {}) };
@@ -595,7 +595,6 @@
         buildStep2Form(state.perfil, base);
         buildStep3Perfil(state.perfil, base);
 
-        // permanece no passo 1 para o usuário revisar antes de avançar
         msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
       }
@@ -608,7 +607,7 @@
       setTimeout(closeLottie, 1400);
       return;
     } finally {
-      setTimeout(closeLottie, 300); // fecha suavemente
+      setTimeout(closeLottie, 300);
     }
   }
 
@@ -643,4 +642,3 @@
   });
 
 })();
-

@@ -304,6 +304,31 @@ body, .container, .container-fluid, .row{ max-width:100vw; overflow-x:hidden; }
   61%, 100% { box-shadow: 0 0 0 6px rgba(13,110,253,.15); }
 }
 
+/* Modal footer: voltar à esquerda, avançar à direita */
+.modal-footer{
+  justify-content: space-between;   /* separa os botões */
+}
+#miBtnVoltar.d-none{ display:none !important; }
+
+/* LOTTIE OVERLAY (sem card branco, transparente) */
+#miLottieOverlay{
+  position:fixed; inset:0; z-index:2000;
+}
+#miLottieOverlay.d-none{ display:none; }
+.mi-lottie-backdrop{
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.38);   /* só o backdrop escuro */
+}
+.mi-lottie-card{
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:transparent;        /* <- sem fundo branco */
+  border:none; box-shadow:none;  /* <- sem borda/sombra */
+  padding:0; width:auto;
+}
+.mi-lottie-box{ width:220px; height:220px; margin:auto; }
+
+
 /* =========================
    GATE (contador)
    ========================= */
