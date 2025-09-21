@@ -97,3 +97,13 @@ window.testCancelar = async () => {
     console.log('cancelar:', r);
   } catch (e) { console.error(e); }
 };
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('btnHospedagem');
+  if (btn) btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('/hospedagem.html', '_blank', 'noopener');
+  });
+});
+
