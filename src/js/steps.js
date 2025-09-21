@@ -304,12 +304,6 @@
         }
       });
     }
-
-    // REAPLICA valores com segurança (alguns navegadores ignoram value no innerHTML)
-    Object.entries(data || {}).forEach(([k, v]) => {
-      const el = document.querySelector(`[name="${k}"]`);
-      if (el) el.value = v ?? '';
-    });
   }
 
   /* ===============================
@@ -334,29 +328,12 @@
       `;
     }).join('');
     pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
-
-    // Refill programático também aqui
-    Object.entries(data || {}).forEach(([k, v]) => {
-      const el = document.querySelector(`[name="${k}"]`);
-      if (el) el.value = (k === 'identificacao') ? perfil : (v ?? '');
-    });
   }
 
   /* ===============================
    * Leitura/validação
    * =============================== */
-  function readActivePane() {
-    const active = $('.mi-pane.active') || document;
-    const obj = {};
-    active.querySelectorAll('input,select,textarea').forEach(el => {
-      if (!el.name) return;
-      obj[el.name] = el.value;
-    });
-    return obj;
-  }
-
   function readForm() {
-    // leitura completa, quando necessário (ex.: passo 5)
     const form = $('#miForm');
     const data = new FormData(form);
     const obj = {};
@@ -379,8 +356,7 @@
     return `inscricao:${state.perfil}:${cpfDigits(cpf)}`;
   }
   function saveDraft() {
-    // salva apenas o que o usuário está vendo/alterando agora
-    const d = readActivePane();
+    const d = readForm();
     state.data = { ...state.data, ...d };
     localStorage.setItem(draftKey(), JSON.stringify(state.data));
   }
@@ -526,6 +502,7 @@
 
       if (found) {
         const perfil = state.perfil;
+        // mapeia a resposta do backend -> campos do formulário
         const m = {
           numerodeinscricao: found.numerodeinscricao || found.numero || found.protocolo || '',
           cpf,
@@ -548,15 +525,16 @@
         buildStep2Form(perfil, m);
         buildStep3Perfil(perfil, m);
 
-        // segurança extra — garante valores na UI agora
-        Object.entries(m).forEach(([k,v]) => {
-          const el = document.querySelector(`[name="${k}"]`);
-          if (el) el.value = v ?? '';
-        });
+        // >>> Avança automaticamente para "Dados" quando encontrado
+        state.step = 2;
+        renderStep();
+        // foca no primeiro campo editável
+        setTimeout(() => { document.getElementById('nome')?.focus(); }, 50);
 
         msg.textContent = 'Inscrição encontrada. Confira/ajuste os dados e avance.';
         msg.className = 'small ms-2 text-success';
       } else {
+        // CPF não encontrado: mantém no passo 1 (como solicitado)
         state.data = { cpf, identificacao: state.perfil };
         buildStep2Form(state.perfil, state.data);
         buildStep3Perfil(state.perfil, state.data);
@@ -565,8 +543,7 @@
         msg.className = 'small ms-2';
       }
 
-      renderStep();
-      await renderSeats();
+      renderSeats(); // atualiza assentos
       loadDraft(cpf);
     } catch (e) {
       msg.textContent = e.message || 'Erro na busca.';
@@ -583,7 +560,7 @@
    * Abrir modal a partir dos cards
    * =============================== */
   $all('.select-profile').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
       const card = btn.closest('.profile-card');
       const perfil = card?.dataset.profile || 'Conselheiro';
       state = {
@@ -593,8 +570,8 @@
 
       $('#miPerfil').textContent = perfil;
 
-      openLottie('empty', 'Preparando formulário…');
       ensureStep1UI();
+      renderSeats();
 
       const form = document.getElementById('miForm');
       form.reset();
@@ -607,8 +584,6 @@
 
       updateFinalStepLabel();
       renderStep();
-      await renderSeats();            // aguarda o carregamento do grid
-      closeLottie();                  // só depois abre o modal
       modal.show();
     });
   });
