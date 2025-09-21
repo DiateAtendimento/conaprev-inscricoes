@@ -197,7 +197,7 @@
           </div>
 
           <form id="miForm" novalidate>
-            <!-- Passo 1 (somente CPF; botão Pesquisar e assentos entram via JS) -->
+            <!-- Passo 1 -->
             <div class="mi-pane" data-step="1">
               <div class="row g-3">
                 <div class="col-12 col-md-4">
@@ -208,35 +208,31 @@
               </div>
             </div>
 
-            <!-- Passo 2: será montado dinamicamente pelo steps.js -->
+            <!-- Passo 2 -->
             <div class="mi-pane" data-step="2">
               <div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>
             </div>
 
-            <!-- Passo 3: campos do perfil (renderizados dinamicamente) -->
+            <!-- Passo 3 -->
             <div class="mi-pane" data-step="3">
               <div id="miPerfilContainer" class="row g-3"></div>
             </div>
 
-            <!-- Passo 4: revisão geral -->
+            <!-- Passo 4 -->
             <div class="mi-pane" data-step="4">
               <div id="miReview" class="vstack gap-2"></div>
             </div>
 
-            <!-- Passo 5: envio -->
+            <!-- Passo 5 -->
             <div class="mi-pane" data-step="5">
               <p>Ao avançar, sua inscrição será enviada para confirmação.</p>
             </div>
 
-            <!-- Passo 6: protocolo -->
+            <!-- Passo 6 -->
             <div class="mi-pane" data-step="6">
               <div class="alert alert-success">
                 <div class="fw-bold">Inscrição confirmada!</div>
                 Protocolo: <span id="miProtocolo">—</span>
-              </div>
-              <div class="d-flex gap-2">
-                <a id="miBtnBaixar" class="btn btn-outline-primary" target="_blank" rel="noopener">Baixar comprovante (PDF)</a>
-                <button type="button" id="miBtnReenviar" class="btn btn-outline-secondary">Reenviar e-mail</button>
               </div>
             </div>
           </form>
@@ -259,7 +255,7 @@
     </div>
   </div>
 
-  <!-- Modal de sucesso compacto -->
+  <!-- Modal de sucesso compacto (mantido para uso futuro, se quiser) -->
   <div class="modal fade" id="miOkModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered">
       <div class="modal-content">
@@ -274,8 +270,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ======================================================= -->
 
   <!-- Scripts base -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -300,10 +294,10 @@
   <script src="/src/js/cpf.js" defer></script>
   <script src="/src/js/forms.js" defer></script>
 
-  <!-- API helper -->
+  <!-- API helper (stub) -->
   <script src="/src/js/api.js" defer></script>
 
-  <!-- Fluxo multi-passos -->
+  <!-- Fluxo multi-passos (este arquivo contém o <script> com o código acima) -->
   <script src="/src/js/steps.js" defer></script>
 </body>
 </html>

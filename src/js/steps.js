@@ -28,7 +28,7 @@
   const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
 
   const STEP_MIN = 1, STEP_MAX = 6;
-  let state = {
+  const initialState = () => ({
     perfil: null,
     step: 1,
     data: {},
@@ -36,7 +36,8 @@
     pdfUrl: null,
     searched: false,
     found: false
-  };
+  });
+  let state = initialState();
 
   // “Nome no prisma” automático
   let prismaManual = false;
@@ -374,15 +375,44 @@
     return out;
   }
 
+  // Mapa de rótulos legíveis para a Revisão
+  const LABELS = {
+    numerodeinscricao: 'Número de Inscrição',
+    cpf: 'CPF',
+    nome: 'Nome',
+    nomenoprismacracha: 'Nome no Prisma/Crachá',
+    ufsigla: 'UF/Sigla',
+    representatividade: 'Representatividade',
+    cargofuncao: 'Cargo / Função',
+    sigladaentidade: 'Sigla da Entidade',
+    identificacao: 'Identificação',
+    endereco: 'Endereço',
+    emailconselheiroa: 'E-mail Conselheiro(a)',
+    emailsecretarioa: 'E-mail Secretário(a)',
+    convidadopor: 'Convidado por',
+    email: 'E-mail'
+  };
+  const HIDDEN_KEYS = new Set(['_rowIndex']);
+
+  function prettyLabel(key) {
+    if (LABELS[key]) return LABELS[key];
+    // fallback simples (Capitalizar + espaços em camel/snake)
+    return String(key)
+      .replace(/^_+/, '')
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/[_\-]+/g, ' ')
+      .replace(/\b\w/g, m => m.toUpperCase());
+  }
+
   function renderReview() {
     const d = { ...state.data, ...readForm() };
     const lines = Object.entries(d)
-      .filter(([k,v]) => String(v).trim() !== '')
+      .filter(([k,v]) => !HIDDEN_KEYS.has(k) && String(v).trim() !== '')
       .map(([k,v]) => `<div class="d-flex">
-        <div class="me-2 text-secondary text-capitalize" style="min-width:220px">${k}</div>
-        <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.join(', '):escapeHtml(v)}</div>
+        <div class="me-2 text-secondary" style="min-width:220px">${escapeHtml(prettyLabel(k))}</div>
+        <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.map(escapeHtml).join(', '):escapeHtml(v)}</div>
       </div>`);
-    $('#miReview').innerHTML = lines.join('');
+    $('#miReview').innerHTML = lines.join('') || '<div class="text-muted">Sem dados para revisar.</div>';
   }
 
   /* ===============================
@@ -413,11 +443,35 @@
   }
 
   /* ===============================
+   * Reset do modal/estado
+   * =============================== */
+  function resetModal() {
+    state = initialState();
+    const form = document.getElementById('miForm');
+    form.reset();
+    $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
+    $('#miCpfMsg') && ($('#miCpfMsg').textContent = '');
+    const step2 = document.querySelector('.mi-pane[data-step="2"]');
+    if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
+    const step3 = document.querySelector('.mi-pane[data-step="3"]');
+    if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecerão aqui após a pesquisa do CPF.</div>';
+    $('#miReview') && ($('#miReview').innerHTML = '');
+    updateFinalStepLabel();
+    renderStep();
+  }
+  modalEl.addEventListener('hidden.bs.modal', resetModal);
+
+  /* ===============================
    * Eventos principais
    * =============================== */
   $('#miBtnAvancar').addEventListener('click', async () => {
-    if (!validateStep()) return;
+    // Passo 6: concluir fecha modal
+    if (state.step === 6) {
+      modal.hide();
+      return;
+    }
 
+    if (!validateStep()) return;
     saveDraft();
 
     // envio final
@@ -427,11 +481,9 @@
         openLottie('confirming', 'Confirmando sua inscrição…');
         const resp = await apiConfirmar(payload);
         state.protocolo = resp?.codigo || null;
-        if (resp?.pdfUrl) state.pdfUrl = resp.pdfUrl;
+        state.pdfUrl = resp?.pdfUrl || null;
 
         $('#miProtocolo').textContent = state.protocolo || '—';
-        if (state.pdfUrl) $('#miBtnBaixar').href = state.pdfUrl;
-        else $('#miBtnBaixar')?.classList.add('disabled');
 
         updateFinalStepLabel();
         showToast('Inscrição registrada com sucesso!', 'success');
@@ -567,10 +619,8 @@
     btn.addEventListener('click', () => {
       const card = btn.closest('.profile-card');
       const perfil = card?.dataset.profile || 'Conselheiro';
-      state = {
-        perfil, step: 1, data: {}, protocolo: null, pdfUrl: null,
-        searched: false, found: false,
-      };
+      state = initialState();
+      state.perfil = perfil;
 
       $('#miPerfil').textContent = perfil;
 
@@ -593,3 +643,4 @@
   });
 
 })();
+
