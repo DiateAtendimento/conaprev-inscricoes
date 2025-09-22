@@ -597,6 +597,8 @@
 
         msg.innerHTML = '<span class="text-warning">CPF não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
+
+        renderStep();
       }
 
       renderSeats();
