@@ -311,6 +311,7 @@
 
   <!-- Config + Gate -->
   <script src="/src/js/config.js" defer></script>
+
   <!--<script src="/src/js/gate.js" defer></script>-->
 
   <!-- Utils -->
@@ -323,5 +324,23 @@
 
   <!-- Fluxo multi-passos (este arquivo contém o <script> com o código acima) -->
   <script src="/src/js/steps.js" defer></script>
+
+  <script>
+    // Força abrir o app e remove qualquer vestígio do gate,
+    // mesmo que o gate.js esteja em cache.
+    (function () {
+      const show = () => {
+        document.getElementById('app')?.classList.remove('d-none');
+        document.body.classList.remove('gate-active');
+        document.getElementById('gate-root')?.remove();
+      };
+      // já mostra agora…
+      show();
+      // …e garante após carregar tudo
+      window.addEventListener('DOMContentLoaded', show);
+      window.addEventListener('load', show);
+    })();
+  </script>
+
 </body>
 </html>
