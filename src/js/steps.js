@@ -480,7 +480,7 @@
       try {
         const payload = { ...state.data, ...readForm() };
         openLottie('saving', 'Salvando alterações…');
-        await apiConfirmar(payload); // backend trata como update
+        await apiAtualizar(payload);  // ✅ editar = /atualizar
         closeLottie();
         openLottie('confirming', `${(payload.nome || '').split(' ')[0] || 'OK'}, dados atualizados!`);
         setTimeout(() => { closeLottie(); modal.hide(); }, 1200);
@@ -490,6 +490,7 @@
       }
       return;
     }
+
 
     if (!validateStep()) return;
     saveDraft();

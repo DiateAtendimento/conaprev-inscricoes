@@ -105,11 +105,23 @@ r.post("/atualizar", async (req, res) => {
  * body: { formData, perfil }
  * Confirma a inscrição e retorna { codigo }
  */
+
 r.post("/confirmar", async (req, res) => {
   try {
-    const { formData, perfil } = req.body || {};
-    if (!formData || !perfil) {
-      return res.status(400).json({ error: "Dados incompletos" });
+    const { formData = {}, perfil } = req.body || {};
+    if (!perfil) return res.status(400).json({ error: "Dados incompletos" });
+
+    // Fallback: se não veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
+    if ((!formData._rowIndex || Number(formData._rowIndex) < 2) && formData.cpf) {
+      const achado = await buscarPorCpf(String(formData.cpf), String(perfil));
+      if (!achado) {
+        return res.status(404).json({ error: "Registro não encontrado para confirmar (CPF não localizado nesse perfil)." });
+      }
+      formData._rowIndex = achado._rowIndex;
+    }
+
+    if (!formData._rowIndex || Number(formData._rowIndex) < 2) {
+      return res.status(400).json({ error: "Linha inválida (faltou _rowIndex)." });
     }
 
     const codigo = await confirmarInscricao(formData, String(perfil));
@@ -119,6 +131,7 @@ r.post("/confirmar", async (req, res) => {
     return res.status(500).json({ error: String(e.message || e) });
   }
 });
+
 
 /**
  * POST /api/inscricoes/cancelar
