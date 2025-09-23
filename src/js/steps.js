@@ -11,9 +11,23 @@
 
   const ROUTES = {
     buscarCpf: `${API}/api/inscricoes/buscar`,
+    criar:     `${API}/api/inscricoes/criar`,
+    atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
     assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
   };
+
+  async function apiCriar(payload){
+    const res = await fetch(ROUTES.criar, { method:'POST', headers:defaultHeaders, body:JSON.stringify({ formData:payload, perfil: state.perfil })});
+    if(!res.ok){ const j=await res.json().catch(()=>null); throw new Error(j?.error||'Erro ao criar'); }
+    return res.json(); // { codigo }
+  }
+  async function apiAtualizar(payload){
+    const res = await fetch(ROUTES.atualizar, { method:'POST', headers:defaultHeaders, body:JSON.stringify({ formData:payload, perfil: state.perfil })});
+    if(!res.ok){ const j=await res.json().catch(()=>null); throw new Error(j?.error||'Erro ao atualizar'); }
+    return res.json(); // { ok:true }
+  }
+
   const defaultHeaders = { 'Content-Type': 'application/json' };
 
   /* ===============================
@@ -483,18 +497,33 @@
     // envio final (gerar número de inscrição)
     if (state.step === 5) {
       try {
-        const payload = { ...state.data, ...readForm() };
-        openLottie('saving', 'Confirmando sua inscrição…');        // progresso
-        const resp = await apiConfirmar(payload);
+        const payload   = { ...state.data, ...readForm() };
+        const isNew     = !state.found || !payload._rowIndex;       // não veio da planilha ⇒ novo
+        const hasNumero = !!payload.numerodeinscricao;               // já tem nº? ⇒ é edição
+
+        let resp;
+
+        if (isNew) {
+          openLottie('saving', 'Realizando sua inscrição…');
+          resp = await apiCriar(payload);                            // { codigo }
+        } else if (hasNumero) {
+          openLottie('saving', 'Atualizando seus dados…');
+          await apiAtualizar(payload);                               // { ok:true }
+          resp = { codigo: payload.numerodeinscricao };
+        } else {
+          openLottie('saving', 'Confirmando sua inscrição…');
+          resp = await apiConfirmar(payload);                        // { codigo }
+        }
+
         state.protocolo = resp?.codigo || null;
-        state.pdfUrl = resp?.pdfUrl || null;
+        state.pdfUrl    = resp?.pdfUrl || null;
         $('#miProtocolo').textContent = state.protocolo || '—';
 
         state.step = 6;
         renderStep();
 
         closeLottie();
-        openLottie('confirming', 'Inscrição confirmada!');         // sucesso
+        openLottie('confirming', 'Inscrição concluída!');
         setTimeout(closeLottie, 1200);
         return;
       } catch (e) {
@@ -503,6 +532,7 @@
         return;
       }
     }
+
 
     // navegação normal
     if (state.step < STEP_MAX) {

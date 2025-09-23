@@ -26,12 +26,22 @@ const PROFILE_PREFIX = {
   "CNRPPS": "CJU",
   "Palestrante": "PLT",
   "Staff": "STF",
+  "Convidado": "CON",
+  "Patrocinador": "PAT"
 };
 
 function sheetForPerfil(perfil) {
-  const map = { Conselheiro: "Conselheiros", CNRPPS: "CNRPPS", Palestrante: "Palestrantes", Staff: "Staffs" };
+  const map = {
+    Conselheiro: "Conselheiros",
+    CNRPPS: "CNRPPS",
+    Palestrante: "Palestrantes",
+    Staff: "Staffs",
+    Convidado: "Convidados",
+    Patrocinador: "Patrocinadores",
+  };
   return map[perfil] || "Banco de dados";
 }
+
 
 export async function getSpreadsheetMeta() {
   const sheets = await getSheets();
