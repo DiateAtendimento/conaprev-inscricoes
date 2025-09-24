@@ -1,3 +1,4 @@
+// backend/middlewares/cors.js
 import cors from "cors";
 import cfg from "../config/env.js";
 
@@ -30,8 +31,9 @@ const corsMw = cors({
     "Content-Type",
     "Authorization",
     "X-Admin-Pass",
+    "x-admin-pass", // variante minúscula por segurança
   ],
-  credentials: false,              // mude para true se for usar cookies/sessão
+  credentials: false,              // deixe false: não usamos cookies/sessão
   optionsSuccessStatus: 204,
 });
 
