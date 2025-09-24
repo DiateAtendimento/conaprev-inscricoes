@@ -18,7 +18,10 @@ const HEADER_ALIASES = {
   emailconselheiroa: "emailconselheiroa",
   emailsecretarioa: "emailsecretarioa",
   convidadopor: "convidadopor",
-  email: "email"
+  email: "email",
+  conferido: "conferido",
+  conferidopor: "conferidopor",
+  conferidoem: "conferidoem"
 };
 
 const PROFILE_PREFIX = {
@@ -61,6 +64,26 @@ async function readAll(sheetName) {
   const rows = values.slice(1);
   return { headers, rows };
 }
+
+function headerIndex(headers, wantedNorm) {
+  const idx = headers.map(normalizeKey).indexOf(wantedNorm);
+  return idx; // -1 se não achou
+}
+
+function matchQuery(rowObj, q) {
+  if (!q) return true;
+  const term = String(q).trim().toLowerCase();
+  if (!term) return true;
+  const cpf = String(rowObj.cpf || "").replace(/\D/g, "");
+  const nome = String(rowObj.nome || "").toLowerCase();
+  return cpf.includes(term.replace(/\D/g, "")) || nome.includes(term);
+}
+
+function isConferido(rowObj) {
+  const v = String(rowObj.conferido || "").trim().toUpperCase();
+  return v === "SIM" || v === "TRUE" || v === "OK" || v === "1";
+}
+
 
 function mapRow(headers, row) {
   const out = {};
@@ -218,4 +241,89 @@ export async function getConselheiroSeats() {
     }
   });
   return seats;
+}
+
+export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0 } = {}) {
+  const sheetName = sheetForPerfil(perfil);
+  const { headers, rows } = await readAll(sheetName);
+
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const obj = mapRow(headers, rows[i]);
+    obj._rowIndex = i + 2; // cabeçalho + 1-based
+
+    // status: ativos => não conferidos | finalizados => conferidos
+    const conf = isConferido(obj);
+    const wantFinalizados = (String(status).toLowerCase() === "finalizados");
+    if (wantFinalizados ? !conf : conf) continue;
+
+    // filtro por CPF/Nome
+    if (!matchQuery(obj, q)) continue;
+
+    out.push({
+      _rowIndex: obj._rowIndex,
+      numerodeinscricao: obj.numerodeinscricao || "",
+      cpf: String(obj.cpf || "").replace(/^'+/, ""), // remove apóstrofo inicial
+      nome: obj.nome || "",
+      conferido: obj.conferido || "",
+      conferidopor: obj.conferidopor || "",
+      conferidoem: obj.conferidoem || "",
+    });
+  }
+
+  // paginação
+  const start = Math.max(0, offset);
+  const end = Math.min(out.length, start + Math.max(1, limit));
+  return out.slice(start, end);
+}
+
+
+export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoPor }) {
+  const idx = Number(_rowIndex);
+  if (!idx || idx < 2) throw new Error("Linha inválida.");
+  const sheetName = sheetForPerfil(perfil);
+
+  const { headers } = await readAll(sheetName);
+  const colConf    = headerIndex(headers, "conferido");
+  const colPor     = headerIndex(headers, "conferidopor");
+  const colEm      = headerIndex(headers, "conferidoem");
+
+  if (colConf < 0 || colPor < 0 || colEm < 0) {
+    throw new Error(`Planilha ${sheetName} está sem as colunas de conferência (Conferido/ConferidoPor/ConferidoEm).`);
+  }
+
+  const sheets = await getSheets();
+
+  // valores a gravar
+  const valConf = conferido ? "SIM" : "";
+  const valPor  = conferido ? (conferidoPor || "") : "";
+  const d = new Date();
+  const valEm = conferido ? d.toLocaleString('pt-BR') : "";
+
+
+  // range da linha inteira (para montar o array completo com as 3 posições)
+  const lastColLetter = String.fromCharCode(64 + headers.length);
+  const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
+
+  // lê a linha atual
+  const curResp = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range
+  });
+  const row = (curResp.data.values && curResp.data.values[0]) ? curResp.data.values[0] : [];
+  // garante tamanho
+  while (row.length < headers.length) row.push("");
+
+  row[colConf] = valConf;
+  row[colPor]  = valPor;
+  row[colEm]   = valEm;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range,
+    valueInputOption: "RAW",
+    requestBody: { values: [row] }
+  });
+
+  return { ok: true };
 }

@@ -1,11 +1,21 @@
+// backend/routes/admin.routes.js
 import { Router } from "express";
-import { requireApiKey } from "../middlewares/auth.js";
+import cfg from "../config/env.js";
 import { exportSpreadsheetToXlsx } from "../services/excel.service.js";
 
 const r = Router();
 
+// Mesmo guard usado no restante do admin: header X-Admin-Pass
+const adminGuard = (req, res, next) => {
+  const required = cfg?.adminPass;
+  if (!required) return next(); // se não configurar senha, libera (útil em dev)
+  const got = String(req.headers["x-admin-pass"] || "");
+  if (got === String(required)) return next();
+  return res.status(401).json({ error: "Não autorizado" });
+};
+
 // retorna .xlsx com todas as abas (menos "Senha"), gerado localmente (SEM Drive)
-r.get("/exportar", requireApiKey, async (_req, res) => {
+r.get("/exportar", adminGuard, async (_req, res) => {
   try {
     const { buffer, filename } = await exportSpreadsheetToXlsx();
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

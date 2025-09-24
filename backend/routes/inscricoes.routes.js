@@ -1,5 +1,6 @@
 // backend/routes/inscricoes.routes.js
 import { Router } from "express";
+import cfg from "../config/env.js";
 import {
   buscarPorCpf,
   inscreverDados,
@@ -7,23 +8,68 @@ import {
   confirmarInscricao,
   cancelarInscricao,
   getConselheiroSeats,
+  listarInscricoes,
+  marcarConferido,
 } from "../services/sheets.service.js";
 
 const r = Router();
 
+// Perfis válidos para todas as operações
+const PERFIS_OK = new Set([
+  "Conselheiro",
+  "CNRPPS",
+  "Palestrante",
+  "Staff",
+  "Convidado",
+  "Patrocinador",
+]);
+
+// Guard de administrador (usa header x-admin-pass)
+const adminGuard = (req, res, next) => {
+  const required = cfg?.adminPass;
+  if (!required) return next(); // sem senha configurada, libera
+  const got = String(req.headers["x-admin-pass"] || "");
+  if (got === String(required)) return next();
+  return res.status(401).json({ error: "Não autorizado" });
+};
+
+/**
+ * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
+ * Lista inscrições para acompanhamento administrativo.
+ */
+r.get("/listar", adminGuard, async (req, res) => {
+  try {
+    const perfil = String(req.query.perfil || "");
+    const status = String(req.query.status || "ativos");
+    const q = String(req.query.q || "");
+    const limit = Math.min(parseInt(req.query.limit || "200", 10) || 200, 500);
+    const offset = Math.max(parseInt(req.query.offset || "0", 10) || 0, 0);
+
+    if (!PERFIS_OK.has(perfil)) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
+
+    const out = await listarInscricoes(perfil, status, q, { limit, offset });
+    return res.json(Array.isArray(out) ? out : []);
+  } catch (e) {
+    console.error("[GET /inscricoes/listar]", e);
+    return res.status(500).json({ error: "Erro ao listar inscrições" });
+  }
+});
+
 /**
  * GET /api/inscricoes/buscar?cpf=...&perfil=...
- * Compat: o front pode chamar GET. Mantemos também o POST abaixo (padrão).
+ * Front também usa POST /buscar (abaixo) — mantemos ambos.
  */
 r.get("/buscar", async (req, res) => {
   try {
     const cpf = String(req.query.cpf || "").replace(/\D/g, "");
     const perfil = String(req.query.perfil || "");
-    if (cpf.length !== 11) {
-      return res.status(400).json({ error: "CPF inválido" });
+    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inválido" });
+    if (perfil && !PERFIS_OK.has(perfil)) {
+      return res.status(400).json({ error: "Perfil inválido" });
     }
-
-    const out = await buscarPorCpf(cpf, perfil); // pode ser null
+    const out = await buscarPorCpf(cpf, perfil);
     return res.json(out);
   } catch (e) {
     console.error("[GET /inscricoes/buscar]", e);
@@ -34,15 +80,16 @@ r.get("/buscar", async (req, res) => {
 /**
  * POST /api/inscricoes/buscar
  * body: { cpf, perfil }
+ * (Usado pelo steps.js)
  */
 r.post("/buscar", async (req, res) => {
   try {
     const cpf = String(req.body?.cpf || "").replace(/\D/g, "");
     const perfil = String(req.body?.perfil || "");
-    if (cpf.length !== 11) {
-      return res.status(400).json({ error: "CPF inválido" });
+    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inválido" });
+    if (perfil && !PERFIS_OK.has(perfil)) {
+      return res.status(400).json({ error: "Perfil inválido" });
     }
-
     const out = await buscarPorCpfSafe(cpf, perfil);
     return res.json(out);
   } catch (e) {
@@ -72,6 +119,9 @@ r.post("/criar", async (req, res) => {
     if (!formData || !perfil) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
+    if (!PERFIS_OK.has(String(perfil))) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
 
     const codigo = await inscreverDados(formData, String(perfil));
     return res.status(201).json({ codigo });
@@ -91,6 +141,9 @@ r.post("/atualizar", async (req, res) => {
     if (!formData || !perfil) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
+    if (!PERFIS_OK.has(String(perfil))) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
 
     await atualizarDados(formData, String(perfil));
     return res.json({ ok: true });
@@ -101,15 +154,45 @@ r.post("/atualizar", async (req, res) => {
 });
 
 /**
+ * POST /api/inscricoes/conferir
+ * body: { _rowIndex, perfil, conferido: boolean, conferidoPor?: string }
+ * Marca/Desmarca “Conferido” e, se marcar true, grava ConferidoPor/ConferidoEm.
+ */
+r.post("/conferir", adminGuard, async (req, res) => {
+  try {
+    const { _rowIndex, perfil, conferido, conferidoPor } = req.body || {};
+    if (!_rowIndex || Number(_rowIndex) < 2 || !perfil) {
+      return res.status(400).json({ error: "Dados incompletos (_rowIndex e perfil são obrigatórios)" });
+    }
+    if (!PERFIS_OK.has(String(perfil))) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
+
+    const ok = await marcarConferido({
+      _rowIndex: Number(_rowIndex),
+      perfil: String(perfil),
+      conferido: Boolean(conferido),
+      conferidoPor: String(conferidoPor || ""),
+    });
+    return res.json({ ok: !!ok });
+  } catch (e) {
+    console.error("[POST /inscricoes/conferir]", e);
+    return res.status(500).json({ error: "Erro ao marcar conferido" });
+  }
+});
+
+/**
  * POST /api/inscricoes/confirmar
  * body: { formData, perfil }
  * Confirma a inscrição e retorna { codigo }
  */
-
 r.post("/confirmar", async (req, res) => {
   try {
     const { formData = {}, perfil } = req.body || {};
     if (!perfil) return res.status(400).json({ error: "Dados incompletos" });
+    if (!PERFIS_OK.has(String(perfil))) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
 
     // Fallback: se não veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
     if ((!formData._rowIndex || Number(formData._rowIndex) < 2) && formData.cpf) {
@@ -132,7 +215,6 @@ r.post("/confirmar", async (req, res) => {
   }
 });
 
-
 /**
  * POST /api/inscricoes/cancelar
  * body: { _rowIndex, perfil }
@@ -143,6 +225,10 @@ r.post("/cancelar", async (req, res) => {
     if (_rowIndex == null || perfil == null) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
+    if (!PERFIS_OK.has(String(perfil))) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
+
     await cancelarInscricao({ _rowIndex }, String(perfil));
     return res.json({ ok: true });
   } catch (e) {

@@ -79,9 +79,11 @@
       </div>
       <div class="offcanvas-body">
         <nav class="menu-list">
-          <a href="#" id="adminAccessBtn" class="menu-item">
+          <a href="#" id="adminAccessBtn" class="menu-item d-flex align-items-center gap-2">
             <i class="bi bi-gear" aria-hidden="true"></i>
-            Administrador
+            <span>Administrador</span>
+            <!-- Badge de notificações -->
+            <span id="adminNotifBadge" class="badge rounded-pill bg-danger-subtle text-danger-emphasis ms-auto d-none">0</span>
           </a>
         </nav>
       </div>
@@ -234,6 +236,115 @@
     </div>
   </div>
 
+  <!-- ========== MODAL: Login do Administrador ========== -->
+  <div class="modal fade" id="adminAuthModal" tabindex="-1" aria-hidden="true" aria-labelledby="adminAuthTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="adminAuthForm" autocomplete="off">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminAuthTitle">
+              <i class="bi bi-shield-lock" aria-hidden="true"></i> Acesso do Administrador
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="adminPass" class="form-label">Senha</label>
+              <input id="adminPass" type="password" class="form-control" required autocomplete="new-password" />
+              <div class="form-text">Informe a senha administrativa para continuar.</div>
+            </div>
+            <div id="adminAuthMsg" class="small text-danger d-none">Senha inválida.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">
+              Entrar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: Acompanhar Inscrições ========== -->
+  <div class="modal fade" id="adminMonitorModal" tabindex="-1" aria-hidden="true" aria-labelledby="adminMonitorTitle">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="adminMonitorTitle" class="modal-title d-flex align-items-center gap-2">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            Acompanhar inscrições
+            <span class="position-relative ms-2">
+              <i class="bi bi-bell-fill" aria-hidden="true"></i>
+              <span id="adminNotifCount" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">0</span>
+            </span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Toolbar -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <label for="adminPerfilSelect" class="form-label m-0">Perfil:</label>
+              <select id="adminPerfilSelect" class="form-select form-select-sm">
+                <option value="Convidado">Convidado</option>
+                <option value="Patrocinador">Patrocinador</option>
+                <!-- se quiser listar todos os perfis aqui, basta incluir outros options -->
+              </select>
+            </div>
+
+            <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+              <div class="input-group input-group-sm" style="min-width: 260px">
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+                <input id="adminSearch" type="search" class="form-control" placeholder="Buscar por CPF ou Nome…" />
+              </div>
+              <button id="adminRefreshBtn" type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Atualizar
+              </button>
+              <button id="adminDownloadBtn" type="button" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download" aria-hidden="true"></i> Baixar dashboard
+              </button>
+            </div>
+          </div>
+
+          <!-- Abas -->
+          <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="tabAdminAtivos" data-bs-toggle="tab" data-bs-target="#paneAdminAtivos" type="button" role="tab" aria-controls="paneAdminAtivos" aria-selected="true">
+                Ativos
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="tabAdminFinalizados" data-bs-toggle="tab" data-bs-target="#paneAdminFinalizados" type="button" role="tab" aria-controls="paneAdminFinalizados" aria-selected="false">
+                Finalizados
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <!-- Pane: Ativos -->
+            <div class="tab-pane fade show active" id="paneAdminAtivos" role="tabpanel" aria-labelledby="tabAdminAtivos" tabindex="0">
+              <div id="adminAtivosList" class="vstack gap-2"></div>
+              <div id="adminAtivosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
+            </div>
+
+            <!-- Pane: Finalizados -->
+            <div class="tab-pane fade" id="paneAdminFinalizados" role="tabpanel" aria-labelledby="tabAdminFinalizados" tabindex="0">
+              <div id="adminFinalizadosList" class="vstack gap-2"></div>
+              <div id="adminFinalizadosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
+            </div>
+          </div>
+
+          <!-- Hint -->
+          <div class="mt-3 small text-muted">
+            <i class="bi bi-hand-index-thumb" aria-hidden="true"></i>
+            Clique na mão para marcar <strong>Conferido</strong> (fica verde) e mover o registro para <em>Finalizados</em>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer (mobile) -->
   <footer class="site-footer">
     <div class="footer-links">
@@ -275,6 +386,9 @@
 
   <!-- Fluxo multi-passos (reutilizado) -->
   <script src="/src/js/steps.js" defer></script>
+
+  <!-- Admin -->
+  <script src="/src/js/admin.js" defer></script>
 
   <script>
     // Força abrir o app e remove qualquer vestígio do gate
