@@ -453,3 +453,34 @@ body.gate-active .topbar{ display:none !important; }
 @media (max-width: 1200px){
   .amapa-badge{ width: clamp(190px, 22vw, 260px); }
 }
+
+/* Garante que as abas do modal admin apareçam sempre */
+#adminMonitorModal .nav-tabs{
+  display: flex !important;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  gap: 0.25rem;
+}
+#adminMonitorModal .nav-tabs .nav-link{
+  display: inline-block !important;
+}
+/* Header do modal admin alinhado: título à esquerda, ações à direita */
+#adminMonitorModal .modal-header{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: .5rem;
+}
+/* Evita o título ocupar 100% da linha */
+#adminMonitorModal .modal-header h5{
+  margin: 0;
+  flex: 0 1 auto;
+}
+/* Mantém o grupo de ações grudado à direita */
+#adminMonitorModal .modal-header > .d-flex{
+  margin-left: auto;
+}
+
+#adminMonitorModal .nav-tabs .nav-link.active{
+  border-color: #dee2e6 #dee2e6 #fff !important;
+  background: #fff;
+}

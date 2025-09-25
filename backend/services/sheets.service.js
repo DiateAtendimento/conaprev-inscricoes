@@ -5,6 +5,50 @@ import { normalizeKey, titleCase } from "./normalize.service.js";
 
 const SHEET_ID = cfg.sheetId;
 
+/** =========================================================
+ *  CACHE LEVE (memória) p/ leituras do Google Sheets
+ *  - TTL curto (default 15s)
+ *  - anti-stampede (reaproveita a mesma Promise simultânea)
+ *  - invalidação automática após escritas
+ *  ========================================================= */
+const CACHE_TTL_DEFAULT_MS = 15_000;
+const CACHE_TTL_SEARCH_MS  = 10_000;
+
+const _cache = new Map(); // key -> { expires, data } | Promise
+const _ck = (sheetName) => `sheet:${sheetName}`;
+const _pk = (sheetName) => `${_ck(sheetName)}:pending`;
+
+function invalidateSheetCache(sheetName) {
+  _cache.delete(_ck(sheetName));
+  _cache.delete(_pk(sheetName));
+}
+
+async function readAllCached(sheetName, ttlMs = CACHE_TTL_DEFAULT_MS) {
+  const now = Date.now();
+  const key = _ck(sheetName);
+  const pendingKey = _pk(sheetName);
+
+  const hit = _cache.get(key);
+  if (hit && hit.expires > now) return hit.data;
+
+  if (_cache.has(pendingKey)) {
+    return _cache.get(pendingKey); // reaproveita a mesma promessa
+  }
+
+  const p = (async () => {
+    const res = await readAll(sheetName);
+    _cache.set(key, { expires: now + ttlMs, data: res });
+    _cache.delete(pendingKey);
+    return res;
+  })().catch((err) => {
+    _cache.delete(pendingKey);
+    throw err;
+  });
+
+  _cache.set(pendingKey, p);
+  return p;
+}
+
 const HEADER_ALIASES = {
   numerodeinscricao: "numerodeinscricao",
   cpf: "cpf",
@@ -59,14 +103,12 @@ function nowBRISO() {
     hour12: false
   });
   const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
-  // partes no formato pt-BR → "dd/mm/aaaa, hh:mm:ss"
   const dd = parts.day.padStart(2,'0');
   const mm = parts.month.padStart(2,'0');
   const yyyy = parts.year;
   const HH = parts.hour.padStart(2,'0');
   const MM = parts.minute.padStart(2,'0');
   const SS = parts.second.padStart(2,'0');
-  // Converte para ISO-like com timezone explícito BR
   return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}-03:00`;
 }
 
@@ -150,7 +192,7 @@ function createRowFromFormData(formData, perfil, headers) {
 export async function buscarPorCpf(cpf, perfil) {
   const clean = String(cpf||"").replace(/\D/g, "");
   const sheetName = sheetForPerfil(perfil);
-  const { headers, rows } = await readAll(sheetName);
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_SEARCH_MS);
   const idxCpf = headers.map(normalizeKey).indexOf("cpf");
   if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado.');
   for (let i = 0; i < rows.length; i++) {
@@ -187,7 +229,7 @@ export async function inscreverDados(formData, perfil) {
   const codigo = prefix + raw;
 
   const sheetName = sheetForPerfil(perfil);
-  const { headers } = await readAll(sheetName);
+  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   formData.numerodeinscricao = codigo;
   const row = createRowFromFormData(formData, perfil, headers);
 
@@ -199,13 +241,17 @@ export async function inscreverDados(formData, perfil) {
     insertDataOption: "INSERT_ROWS",
     requestBody: { values: [row] }
   });
+
+  // após escrita, invalida cache dessa aba
+  invalidateSheetCache(sheetName);
+
   return codigo;
 }
 
 export async function atualizarDados(formData, perfil) {
   validarDados(formData);
   const sheetName = sheetForPerfil(perfil);
-  const { headers } = await readAll(sheetName);
+  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   const idx = Number(formData._rowIndex);
   if (!idx || idx < 2) throw new Error("Linha inválida.");
   const row = createRowFromFormData(formData, perfil, headers);
@@ -214,6 +260,8 @@ export async function atualizarDados(formData, perfil) {
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID, range, valueInputOption: "RAW", requestBody: { values: [row] }
   });
+
+  invalidateSheetCache(sheetName);
 }
 
 export async function confirmarInscricao(formData, perfil) {
@@ -230,6 +278,9 @@ export async function confirmarInscricao(formData, perfil) {
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}`, valueInputOption: "RAW", requestBody: { values: [[codigo]] }
   });
+
+  invalidateSheetCache(sheetName);
+
   return codigo;
 }
 
@@ -253,11 +304,13 @@ export async function cancelarInscricao(formData, perfil) {
       }]
     }
   });
+
+  invalidateSheetCache(sheetName);
 }
 
 export async function getConselheiroSeats() {
   const sheetName = sheetForPerfil("Conselheiro");
-  const { headers, rows } = await readAll(sheetName);
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   const normHdrs = headers.map(h => normalizeKey(h));
   const idxCode = normHdrs.indexOf("numerodeinscricao");
   const idxName = normHdrs.indexOf("nome");
@@ -276,7 +329,7 @@ export async function getConselheiroSeats() {
 
 export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0 } = {}) {
   const sheetName = sheetForPerfil(perfil);
-  const { headers, rows } = await readAll(sheetName);
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
 
   const out = [];
   for (let i = 0; i < rows.length; i++) {
@@ -319,7 +372,7 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   if (!idx || idx < 2) throw new Error("Linha inválida.");
   const sheetName = sheetForPerfil(perfil);
 
-  const { headers } = await readAll(sheetName);
+  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   const colConf    = headerIndex(headers, "conferido");
   const colPor     = headerIndex(headers, "conferidopor");
   const colEm      = headerIndex(headers, "conferidoem");
@@ -358,6 +411,8 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
     valueInputOption: "RAW",
     requestBody: { values: [row] }
   });
+
+  invalidateSheetCache(sheetName);
 
   return { ok: true };
 }

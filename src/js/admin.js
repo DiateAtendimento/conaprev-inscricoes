@@ -418,7 +418,10 @@
     try {
       const res = await fetch(`${API}/api/admin/exportar`, {
         method: 'GET',
-        headers: { ...headersAdmin(), 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        headers: {
+          ...headersAdmin(),
+          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
       });
 
       if (res.status === 401) {
@@ -437,9 +440,8 @@
         const m = cd.match(/filename\*?=(?:UTF-8''|")?([^;"']+)/i);
         if (m && m[1]) filename = decodeURIComponent(m[1].replace(/"/g, ''));
       } else {
-        // fallback com timestamp se o header não vier
-        const now = new Date();
-        const ts = now.toISOString().slice(0,19).replace(/[-:T]/g,'');
+        // fallback com timestamp
+        const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g,'');
         filename = `conaprev-inscricoes_${ts}.xlsx`;
       }
 
@@ -458,6 +460,7 @@
       alert(e?.message || 'Não foi possível baixar a planilha completa.');
     }
   }
+
 
 
   // ======= Listeners =======
