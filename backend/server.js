@@ -24,8 +24,14 @@ app.set("trust proxy", 1);
 
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("tiny"));
-app.use(security);   // helmet + hpp + rate-limit (ver arquivo atualizado abaixo)
+
+// CORS primeiro (inclui preflight)
 app.use(corsMw);
+app.options("*", corsMw);
+
+// segurança depois
+app.use(security);
+
 
 // rotas API
 app.use("/api", healthRoutes);
