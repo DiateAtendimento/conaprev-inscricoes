@@ -92,6 +92,7 @@
   /* ===== Lottie overlay ===== */
   const LOTTIE_MAP = {
     search:      '/animacoes/lottie_search_loading.json',
+    download: '/animacoes/lottie_download.json', 
     seats:       '/animacoes/lottie_seats_loading.json',
     saving:      '/animacoes/lottie_save_progress.json',
     confirming:  '/animacoes/lottie_confirm_progress.json',

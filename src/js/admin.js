@@ -456,30 +456,31 @@
 
   // ======= Download XLSX COMPLETO (todas as abas) =======
   async function downloadWorkbookXLSX(){
-    const btn = document.getElementById("adminDownloadBtn");
+    const show = window.miLottieShow || ((k,m)=>window.openLottie?.(k,m));
+    const hide = window.miLottieHide || window.closeLottie;
+
     try {
-      btn && (btn.disabled = true);
-      // usa os helpers globais do steps.js
-      window.miLottieShow?.('search', 'Gerando dashboard…');
+      show && show('download', 'Preparando dashboard…');
 
       const res = await fetch(`${API}/api/admin/exportar`, {
         method: 'GET',
-        headers: { ...headersAdmin(), 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+        headers: {
+          ...headersAdmin(),
+          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Cache-Control': 'no-store'
+        }
       });
 
       if (res.status === 401) {
-        window.miLottieHide?.();
         monitorModal?.hide?.();
         authModal?.show?.();
         return;
       }
-      if (!res.ok) {
-        const j = await res.json().catch(()=>null);
-        throw new Error(j?.error || 'Falha ao gerar XLSX.');
-      }
+      if (!res.ok) throw new Error('Falha ao gerar XLSX.');
 
       const blob = await res.blob();
 
+      // tenta extrair o filename do Content-Disposition
       let filename = 'inscricoes.xlsx';
       const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
       if (cd) {
@@ -496,20 +497,18 @@
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        window.miLottieHide?.();
-      }, 150);
+      }, 0);
     } catch (e) {
       console.error('[admin] downloadWorkbookXLSX', e);
-      window.miLottieHide?.();
       alert(e?.message || 'Não foi possível baixar a planilha completa.');
     } finally {
-      btn && (btn.disabled = false);
+      hide && hide(); // fecha o Lottie ao iniciar o download
     }
   }
+
 
 
   // ======= Listeners =======
@@ -574,8 +573,21 @@
   }, 300));
 
   elRefresh?.addEventListener('click', async () => {
-    await refreshBoth();
-    snapshotActiveProtocols();
+    const show = window.miLottieShow || ((k, m) => window.openLottie?.(k, m));
+    const hide = window.miLottieHide || window.closeLottie;
+
+    try {
+      elRefresh.disabled = true;                 // evita cliques repetidos
+      show && show('timeout', 'Atualizando…');   // usa lottie_timeout_hourglass.json
+      await refreshBoth();                       // recarrega Ativos + Finalizados
+      snapshotActiveProtocols();                 // atualiza snapshot p/ toasts
+    } catch (e) {
+      console.error('[admin] refresh', e);
+      alert('Falha ao atualizar. Tente novamente.');
+    } finally {
+      hide && hide();                            // fecha o overlay
+      elRefresh.disabled = false;
+    }
   });
 
   elDownload?.addEventListener('click', () => {
