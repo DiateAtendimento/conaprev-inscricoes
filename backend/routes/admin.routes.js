@@ -14,15 +14,31 @@ const adminGuard = (req, res, next) => {
   return res.status(401).json({ error: "Não autorizado" });
 };
 
-// retorna .xlsx com todas as abas (menos "Senha"), gerado localmente (SEM Drive)
-r.get("/exportar", adminGuard, async (_req, res) => {
+// GET /api/export/xlsx  → baixa a planilha completa (todas as abas válidas) em XLSX
+r.get("/xlsx", adminGuard, async (_req, res) => {
   try {
-    const { buffer, filename } = await exportSpreadsheetToXlsx();
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    const { buffer, filename, mime } = await exportSpreadsheetToXlsx();
+    res.setHeader("Content-Type", mime || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename || "export.xlsx"}"`);
+    res.setHeader("Cache-Control", "no-store");
     res.send(buffer);
   } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
+    console.error("[GET /api/export/xlsx]", e);
+    res.status(500).json({ error: String(e?.message || e) });
+  }
+});
+
+// Alias legacy para compatibilidade antiga: /api/exportar
+r.get("/exportar", adminGuard, async (_req, res) => {
+  try {
+    const { buffer, filename, mime } = await exportSpreadsheetToXlsx();
+    res.setHeader("Content-Type", mime || "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename || "export.xlsx"}"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.send(buffer);
+  } catch (e) {
+    console.error("[GET /api/exportar]", e);
+    res.status(500).json({ error: String(e?.message || e) });
   }
 });
 

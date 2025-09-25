@@ -20,44 +20,33 @@ function downloadBlob(blob, filename) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // ===== Botão "Certificado" (já existe no HTML) =====
-  document.getElementById('emitirCertificadoBtn')?.addEventListener('click', async () => {
+  // ===== Botão "Emitir certificado" (id alinhado ao HTML) =====
+  document.getElementById('btnEmitirCert')?.addEventListener('click', async (e) => {
+    e.preventDefault();
     const cpf = prompt('Informe seu CPF (somente números)');
     if (!cpf) return;
     try {
       const pdf = await emitirCertificado(cpf);
       downloadBlob(pdf, 'certificado_conaprev.pdf');
-    } catch (e) {
-      alert(e.message || e);
+    } catch (err) {
+      alert(err?.message || 'Não foi possível emitir o certificado.');
     }
   });
 
-  // ===== Botão "Administrador" (exporta XLSX com API key) =====
-  document.getElementById('adminAccessBtn')?.addEventListener('click', async () => {
-    const key = prompt('Digite a API key administrativa:');
-    if (!key) return;
-    try {
-      const xlsx = await baixarExportXlsx(key);
-      downloadBlob(xlsx, 'inscricoes.xlsx');
-    } catch (e) {
-      alert(e.message || e);
-    }
+  // ===== Atalho de hospedagem (abre em nova aba com noopener) =====
+  document.getElementById('btnHospedagem')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('/hospedagem.html', '_blank', 'noopener');
   });
+
+  // IMPORTANTE:
+  // O botão #adminAccessBtn é tratado por /src/js/admin.js (modal + senha).
+  // Não adicionamos listeners aqui para evitar conflitos.
 });
 
 /* =========================
    TESTES RÁPIDOS NO CONSOLE
-   =========================
-   Abra o site com ?preview=CONAPREV83_DEV para ver a app.
-   Depois, no DevTools (Console), chame:
-
-   - window.testBuscar()
-   - window.testCriar()
-   - window.testAtualizar()
-   - window.testConfirmar()
-   - window.testCancelar()
-*/
-
+   ========================= */
 window.testBuscar = async () => {
   try {
     const r = await buscarInscricao('00000000000', 'Conselheiro');
@@ -75,7 +64,6 @@ window.testCriar = async () => {
 
 window.testAtualizar = async () => {
   try {
-    // suponha que você descobriu _rowIndex pelo resultado do buscar
     const formData = { _rowIndex: 2, cpf: '00000000000', nome: 'Fulano Atualizado' };
     const r = await atualizarInscricao(formData, 'Conselheiro');
     console.log('atualizar:', r);
@@ -84,7 +72,6 @@ window.testAtualizar = async () => {
 
 window.testConfirmar = async () => {
   try {
-    // idem: precisa do _rowIndex; confirma e gera número se não existir
     const formData = { _rowIndex: 2, cpf: '00000000000', nome: 'Fulano Atualizado' };
     const codigo = await confirmarInscricao(formData, 'Conselheiro');
     console.log('confirmar -> codigo:', codigo);
@@ -93,17 +80,7 @@ window.testConfirmar = async () => {
 
 window.testCancelar = async () => {
   try {
-    const r = await cancelarInscricao(2, 'Conselheiro'); // apaga a linha 2
+    const r = await cancelarInscricao(2, 'Conselheiro');
     console.log('cancelar:', r);
   } catch (e) { console.error(e); }
 };
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('btnHospedagem');
-  if (btn) btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.open('/hospedagem.html', '_blank', 'noopener');
-  });
-});
-

@@ -1,3 +1,4 @@
+// backend/services/sheets.service.js
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
 import { normalizeKey, titleCase } from "./normalize.service.js";
@@ -47,6 +48,35 @@ function sheetForPerfil(perfil) {
   return map[perfil] || "Banco de dados";
 }
 
+/* ====== Helpers de tempo (BR) ====== */
+// ISO com timezone -03:00 estável (sem depender do fuso do servidor)
+function nowBRISO() {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value]));
+  // partes no formato pt-BR → "dd/mm/aaaa, hh:mm:ss"
+  const dd = parts.day.padStart(2,'0');
+  const mm = parts.month.padStart(2,'0');
+  const yyyy = parts.year;
+  const HH = parts.hour.padStart(2,'0');
+  const MM = parts.minute.padStart(2,'0');
+  const SS = parts.second.padStart(2,'0');
+  // Converte para ISO-like com timezone explícito BR
+  return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}-03:00`;
+}
+
+// extrai número para ordenação (ex.: CNL028 → 28, PAT-0012 → 12)
+function protoKey(v) {
+  const s = String(v || '');
+  const m = s.match(/(\d+)/g);
+  if (!m) return 0;
+  return Math.max(...m.map(n => parseInt(n, 10)).filter(Number.isFinite));
+}
 
 export async function getSpreadsheetMeta() {
   const sheets = await getSheets();
@@ -85,7 +115,6 @@ function isConferido(rowObj) {
   const v = String(rowObj.conferido || "").trim().toUpperCase();
   return v === "SIM" || v === "TRUE" || v === "OK" || v === "1";
 }
-
 
 function mapRow(headers, row) {
   const out = {};
@@ -259,13 +288,14 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     const wantFinalizados = (String(status).toLowerCase() === "finalizados");
     if (wantFinalizados ? !conf : conf) continue;
 
-    // filtro por CPF/Nome
+    // filtro por CPF/Nome (CPF normalizado)
+    obj.cpf = String(obj.cpf || "").replace(/^'+/, ""); // tira apóstrofo
     if (!matchQuery(obj, q)) continue;
 
     out.push({
       _rowIndex: obj._rowIndex,
       numerodeinscricao: obj.numerodeinscricao || "",
-      cpf: String(obj.cpf || "").replace(/^'+/, ""), // remove apóstrofo inicial
+      cpf: String(obj.cpf || "").replace(/\D/g, ""), // só números para exibição/consulta
       nome: obj.nome || "",
       conferido: obj.conferido || "",
       conferidopor: obj.conferidopor || "",
@@ -273,12 +303,16 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     });
   }
 
+  // Ordenação server-side para FINALIZADOS: MAIOR → MENOR por número do protocolo
+  if (String(status).toLowerCase() === "finalizados") {
+    out.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
+  }
+
   // paginação
   const start = Math.max(0, offset);
   const end = Math.min(out.length, start + Math.max(1, limit));
   return out.slice(start, end);
 }
-
 
 export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoPor }) {
   const idx = Number(_rowIndex);
@@ -299,9 +333,7 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   // valores a gravar
   const valConf = conferido ? "SIM" : "";
   const valPor  = conferido ? (conferidoPor || "") : "";
-  const d = new Date();
-  const valEm = conferido ? d.toLocaleString('pt-BR') : "";
-
+  const valEm   = conferido ? nowBRISO() : ""; // ISO com timezone BR (-03:00)
 
   // range da linha inteira (para montar o array completo com as 3 posições)
   const lastColLetter = String.fromCharCode(64 + headers.length);

@@ -9,6 +9,17 @@
   };
   const API = inferApiBase();
 
+  // ======= Perfis monitorados (7 perfis) =======
+  const ALL_PROFILES = [
+    'Conselheiro',
+    'CNRPPS',
+    'Palestrante',
+    'Staff',
+    'Convidado',
+    'COPAJURE',
+    'Patrocinador'
+  ];
+
   // ======= Elements (podem não existir nesta página) =======
   const elAdminBtn         = document.getElementById('adminAccessBtn');
   const elAuthModal        = document.getElementById('adminAuthModal');
@@ -88,7 +99,7 @@
     activeTab: 'ativos', // 'ativos' | 'finalizados'
     loading: false,
     pollTimer: null,     // intervalo de polling quando modal aberto
-    lastAtivosIds: new Set(), // para detectar novas inscrições com protocolo
+    lastAtivosIds: new Set(), // snapshot da aba atual (para toasts)
   };
 
   // ======= Persistência local da sessão admin =======
@@ -126,27 +137,75 @@
     };
   };
 
-  // Contador do sininho: **apenas** inscrições com número (protocolo) que ainda estão em "Ativos"
-  function computeActiveWithProtocolCount() {
-    const arr = state.ativosCache || [];
-    return arr.filter(it => (it && String(it.numerodeinscricao || '').trim())).length;
+  // Data/hora pt-BR com America/Sao_Paulo
+  function fmtDateBR(x) {
+    if (!x) return '—';
+    let d = x;
+    if (!(x instanceof Date)) {
+      // aceita ISO, timestamps ou textos do Sheets
+      const tryDate = new Date(String(x));
+      d = isNaN(tryDate.getTime()) ? null : tryDate;
+    }
+    if (!d) return String(x);
+    return d.toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    });
   }
 
-  function setNotif(fromAtivosCountMaybe) {
-    const c = (typeof fromAtivosCountMaybe === 'number')
-      ? Math.max(0, fromAtivosCountMaybe)
-      : computeActiveWithProtocolCount();
+  // Extrai número para ordenação por protocolo (ex.: 'CNL028' -> 28, 'PAT-0012' -> 12)
+  function protoKey(v) {
+    const s = String(v || '');
+    const m = s.match(/(\d+)/g);
+    if (!m) return 0;
+    // pega o MAIOR trecho numérico (resiste a prefixos diferentes)
+    return Math.max(...m.map(n => parseInt(n, 10)).filter(n => Number.isFinite(n)));
+  }
 
+  // ======= Contador do sininho (GLOBAL = soma de TODOS os perfis) =======
+  async function countAllProfilesActivesWithProtocol() {
+    // busca cada perfil (status=ativos) e soma os que têm numerodeinscricao
+    try {
+      const qs = (perfil) => new URLSearchParams({
+        perfil, status: 'ativos', limit: '200', offset: '0'
+      }).toString();
+
+      const reqs = ALL_PROFILES.map(p =>
+        fetch(`${API}/api/inscricoes/listar?${qs(p)}`, { headers: headersAdmin() })
+          .then(r => (r.ok ? r.json() : []))
+          .catch(() => [])
+      );
+      const lists = await Promise.all(reqs);
+      let total = 0;
+      lists.forEach(arr => {
+        if (Array.isArray(arr)) {
+          total += arr.filter(it => String(it?.numerodeinscricao || '').trim()).length;
+        }
+      });
+      return total;
+    } catch {
+      return 0;
+    }
+  }
+
+  async function refreshGlobalBadge() {
+    const c = await countAllProfilesActivesWithProtocol();
+    setNotif(c);
+  }
+
+  function setNotif(c) {
+    const count = Math.max(0, Number(c) || 0);
     if (elBadgeTop) {
-      if (c > 0) {
-        elBadgeTop.textContent = String(c);
+      if (count > 0) {
+        elBadgeTop.textContent = String(count);
         elBadgeTop.classList.remove('d-none');
       } else {
         elBadgeTop.classList.add('d-none');
         elBadgeTop.textContent = '';
       }
     }
-    if (elBadgeModal) elBadgeModal.textContent = String(c);
+    if (elBadgeModal) elBadgeModal.textContent = String(count);
   }
 
   function handBtnHtml(checked) {
@@ -162,9 +221,15 @@
   function rowCardHtml(item, isFinalizados){
     const conferido = String(item.conferido || '').toUpperCase().trim();
     const checked = (conferido === 'SIM' || conferido === 'TRUE' || conferido === 'OK' || conferido === '1');
+    const temProtocolo = String(item.numerodeinscricao || '').trim().length > 0;
+
+    // “pitadas de verde” quando tem protocolo
+    const highlightStyle = temProtocolo
+      ? 'border-left:6px solid #28a745; background: rgba(40,167,69,0.08);'
+      : '';
 
     return `
-      <div class="card p-2" data-rowindex="${item._rowIndex}">
+      <div class="card p-2" data-rowindex="${item._rowIndex}" style="${highlightStyle}">
         <div class="d-flex flex-wrap align-items-center gap-2">
           <div class="me-3">
             <div class="small text-muted">Protocolo</div>
@@ -183,7 +248,7 @@
             ${handBtnHtml(checked)}
             <div class="text-end small">
               <div><span class="text-muted">Conferido por:</span> ${item.conferidopor || '—'}</div>
-              <div><span class="text-muted">Em:</span> ${item.conferidoem || '—'}</div>
+              <div><span class="text-muted">Em:</span> ${fmtDateBR(item.conferidoem)}</div>
             </div>
           </div>
         </div>
@@ -193,8 +258,15 @@
 
   function renderList(targetEl, pagerEl, data, status){
     if (!targetEl || !pagerEl) return;
-    targetEl.innerHTML = (data && data.length)
-      ? data.map(item => rowCardHtml(item, status === 'finalizados')).join('')
+
+    // Ordenação especial nos FINALIZADOS: MAIOR → MENOR por número do protocolo
+    let toRender = Array.isArray(data) ? [...data] : [];
+    if (status === 'finalizados') {
+      toRender.sort((a, b) => protoKey(b?.numerodeinscricao) - protoKey(a?.numerodeinscricao));
+    }
+
+    targetEl.innerHTML = (toRender && toRender.length)
+      ? toRender.map(item => rowCardHtml(item, status === 'finalizados')).join('')
       : `<div class="text-muted">Nenhum registro encontrado.</div>`;
 
     // Eventos do botão de mão
@@ -212,14 +284,14 @@
     const isAtivos = (status === 'ativos');
     const offset   = isAtivos ? state.ativosOffset : state.finalOffset;
     const canPrev  = offset > 0;
-    const canNext  = (data?.length || 0) >= state.limit;
+    const canNext  = (toRender?.length || 0) >= state.limit;
 
     pagerEl.innerHTML = `
       <div class="d-flex w-100 justify-content-between align-items-center">
         <button class="btn btn-sm btn-outline-secondary pg-prev" ${canPrev ? '' : 'disabled'}>
           <i class="bi bi-chevron-left"></i> Anterior
         </button>
-        <div class="small text-muted">Exibindo ${data.length} ${data.length === 1 ? 'registro' : 'registros'}</div>
+        <div class="small text-muted">Exibindo ${toRender.length} ${toRender.length === 1 ? 'registro' : 'registros'}</div>
         <button class="btn btn-sm btn-outline-secondary pg-next" ${canNext ? '' : 'disabled'}>
           Próximo <i class="bi bi-chevron-right"></i>
         </button>
@@ -270,7 +342,7 @@
     }
   }
 
-  // Guarda os protocolos atuais para detectar novos
+  // Guarda os protocolos atuais para detectar novos (apenas aba ATIVOS do perfil selecionado)
   function snapshotActiveProtocols() {
     const set = new Set();
     (state.ativosCache || []).forEach(it => {
@@ -286,7 +358,6 @@
     const data = await fetchList('ativos');
     state.ativosCache = data;
     renderList(elAtivosList, elAtivosPager, data, 'ativos');
-    setNotif(); // conta apenas com protocolo
     state.loading = false;
   }
 
@@ -296,17 +367,19 @@
     const data = await fetchList('finalizados');
     state.finalCache = data;
     renderList(elFinalList, elFinalPager, data, 'finalizados');
-    setNotif(); // notificação considera só "ativos com protocolo"
     state.loading = false;
   }
 
   async function refreshActiveTab(){
     if (state.activeTab === 'ativos') await refreshAtivos();
     else await refreshFinalizados();
+    // badge é GLOBAL → atualiza separado
+    refreshGlobalBadge();
   }
 
   async function refreshBoth(){
     await Promise.all([refreshAtivos(), refreshFinalizados()]);
+    refreshGlobalBadge();
   }
 
   async function toggleConferido(_rowIndex, marcar){
@@ -331,7 +404,7 @@
         const j = await res.json().catch(()=>null);
         throw new Error(j?.error || 'Erro ao marcar conferido');
       }
-      await refreshBoth();   // move entre abas
+      await refreshBoth();   // move entre abas e atualiza badge global
       snapshotActiveProtocols();
     } catch (e) {
       console.error('[admin] toggleConferido', e);
@@ -339,36 +412,53 @@
     }
   }
 
-  function toCSV(rows){
-    if (!rows || !rows.length) return 'numerodeinscricao,cpf,nome,conferido,conferidopor,conferidoem\n';
-    const head = ['numerodeinscricao','cpf','nome','conferido','conferidopor','conferidoem'];
-    const esc = (v) => {
-      const s = String(v ?? '');
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return `"${s.replace(/"/g, '""')}"`;
+
+  // ======= Download XLSX COMPLETO (todas as abas) =======
+  async function downloadWorkbookXLSX(){
+    try {
+      const res = await fetch(`${API}/api/admin/exportar`, {
+        method: 'GET',
+        headers: { ...headersAdmin(), 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      });
+
+      if (res.status === 401) {
+        monitorModal?.hide?.();
+        authModal?.show?.();
+        return;
       }
-      return s;
-    };
-    const lines = [head.join(',')];
-    rows.forEach(r => {
-      lines.push(head.map(k => esc(r[k])).join(','));
-    });
-    return lines.join('\n');
+      if (!res.ok) throw new Error('Falha ao gerar XLSX.');
+
+      const blob = await res.blob();
+
+      // tenta extrair o filename do Content-Disposition
+      let filename = 'inscricoes.xlsx';
+      const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+      if (cd) {
+        const m = cd.match(/filename\*?=(?:UTF-8''|")?([^;"']+)/i);
+        if (m && m[1]) filename = decodeURIComponent(m[1].replace(/"/g, ''));
+      } else {
+        // fallback com timestamp se o header não vier
+        const now = new Date();
+        const ts = now.toISOString().slice(0,19).replace(/[-:T]/g,'');
+        filename = `conaprev-inscricoes_${ts}.xlsx`;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+    } catch (e) {
+      console.error('[admin] downloadWorkbookXLSX', e);
+      alert(e?.message || 'Não foi possível baixar a planilha completa.');
+    }
   }
 
-  function downloadCSV(filename, text){
-    const blob = new Blob([text], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-  }
 
   // ======= Listeners =======
   elAdminBtn?.addEventListener('click', async (e) => {
@@ -437,12 +527,7 @@
   });
 
   elDownload?.addEventListener('click', () => {
-    const now = new Date();
-    const ts = now.toISOString().slice(0,19).replace(/[-:T]/g,'');
-    const rows = (state.activeTab === 'ativos') ? state.ativosCache : state.finalCache;
-    const csv  = toCSV(rows);
-    const fname = `inscricoes_${state.perfil}_${state.activeTab}_${ts}.csv`;
-    downloadCSV(fname, csv);
+    downloadWorkbookXLSX();
   });
 
   // Abas
@@ -457,12 +542,12 @@
     state.lastAtivosIds = new Set(); // reset snapshot quando não estamos em "Ativos"
   });
 
-  // Ao abrir o modal Admin: refresh e polling focado em novos protocolos
+  // Ao abrir o modal Admin: refresh e polling focado em novos protocolos (do perfil escolhido)
   elMonitorModal?.addEventListener('shown.bs.modal', () => {
     refreshBoth().then(() => snapshotActiveProtocols());
     if (state.pollTimer) clearInterval(state.pollTimer);
     state.pollTimer = setInterval(async () => {
-      // busca apenas ATIVOS para detectar novos protocolos
+      // busca apenas ATIVOS do perfil selecionado para detectar novos protocolos (toasts)
       const data = await fetchList('ativos');
 
       // detecta novos protocolos (apenas com número)
@@ -481,7 +566,9 @@
 
       state.ativosCache = data;
       renderList(elAtivosList, elAtivosPager, data, 'ativos');
-      setNotif();
+
+      // Badge global (soma de todos os perfis)
+      refreshGlobalBadge();
 
       // atualiza snapshot ao final
       state.lastAtivosIds = currentSet;
@@ -500,39 +587,18 @@
     loadSavedSession();
     if (!state.adminPass) return;
     try {
-      const q = new URLSearchParams({
-        perfil: 'Convidado',
-        status: 'ativos',
-        limit: '200',
-        offset: '0'
-      }).toString();
-      const res = await fetch(`${API}/api/inscricoes/listar?${q}`, { headers: headersAdmin() });
-      if (res.status === 401) throw new Error('invalid');
-
-      const data = await res.json().catch(() => []);
-      const count = (Array.isArray(data) ? data : [])
-        .filter(it => String(it.numerodeinscricao || '').trim()).length;
-
-      setNotif(count); // só atualiza o badge
+      // badge GLOBAL logo de cara
+      await refreshGlobalBadge();
     } catch {
       clearSession();
       setNotif(0);
     }
   })();
 
-  // ======= Badge “leve” (fora do modal) a cada 15s, se logado) =======
+  // ======= Badge GLOBAL “leve” (fora do modal) a cada 15s, se logado) =======
   setInterval(async () => {
     if (!state.adminPass) return;
-    try {
-      const q = new URLSearchParams({ perfil: state.perfil, status: 'ativos', limit: '200', offset: '0' }).toString();
-      const res = await fetch(`${API}/api/inscricoes/listar?${q}`, { headers: headersAdmin() });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        const count = data.filter(it => String(it.numerodeinscricao || '').trim()).length;
-        setNotif(count);
-      }
-    } catch {}
+    await refreshGlobalBadge();
   }, 15000);
 
 })();

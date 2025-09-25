@@ -22,7 +22,7 @@ const PERFIS_OK = new Set([
   "Staff",
   "Convidado",
   "Patrocinador",
-  "COPAJURE", // <-- ADICIONADO
+  "COPAJURE",
 ]);
 
 // Guard de administrador (usa header x-admin-pass)
@@ -37,6 +37,8 @@ const adminGuard = (req, res, next) => {
 /**
  * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
  * Lista inscrições para acompanhamento administrativo.
+ * Obs.: a ordenação “finalizados do MAIOR→MENOR protocolo” já está garantida no frontend.
+ * Se quiser mover a ordenação para o backend, ajustamos em sheets.service.js (listarInscricoes).
  */
 r.get("/listar", adminGuard, async (req, res) => {
   try {
@@ -60,7 +62,6 @@ r.get("/listar", adminGuard, async (req, res) => {
 
 /**
  * GET /api/inscricoes/buscar?cpf=...&perfil=...
- * Front também usa POST /buscar (abaixo) — mantemos ambos.
  */
 r.get("/buscar", async (req, res) => {
   try {
@@ -81,7 +82,6 @@ r.get("/buscar", async (req, res) => {
 /**
  * POST /api/inscricoes/buscar
  * body: { cpf, perfil }
- * (Usado pelo steps.js)
  */
 r.post("/buscar", async (req, res) => {
   try {
@@ -112,7 +112,6 @@ async function buscarPorCpfSafe(cpf, perfil) {
 /**
  * POST /api/inscricoes/criar
  * body: { formData, perfil }
- * Cria (pré-inscreve) e retorna { codigo }
  */
 r.post("/criar", async (req, res) => {
   try {
@@ -157,7 +156,6 @@ r.post("/atualizar", async (req, res) => {
 /**
  * POST /api/inscricoes/conferir
  * body: { _rowIndex, perfil, conferido: boolean, conferidoPor?: string }
- * Marca/Desmarca “Conferido” e, se marcar true, grava ConferidoPor/ConferidoEm.
  */
 r.post("/conferir", adminGuard, async (req, res) => {
   try {
@@ -185,7 +183,6 @@ r.post("/conferir", adminGuard, async (req, res) => {
 /**
  * POST /api/inscricoes/confirmar
  * body: { formData, perfil }
- * Confirma a inscrição e retorna { codigo }
  */
 r.post("/confirmar", async (req, res) => {
   try {
@@ -240,7 +237,6 @@ r.post("/cancelar", async (req, res) => {
 
 /**
  * GET /api/inscricoes/assentos/conselheiros
- * Formato: [{ seat: 1, name: 'Fulano' }, ...]
  */
 r.get("/assentos/conselheiros", async (_req, res) => {
   try {
@@ -254,7 +250,6 @@ r.get("/assentos/conselheiros", async (_req, res) => {
 
 /**
  * GET /api/inscricoes/:id/comprovante.pdf
- * (Opcional – stub de geração do PDF)
  */
 r.get("/:id/comprovante.pdf", async (req, res) => {
   try {
