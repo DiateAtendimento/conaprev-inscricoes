@@ -93,8 +93,8 @@
   const LOTTIE_MAP = {
     search:      '/animacoes/lottie_search_loading.json',
     seats:       '/animacoes/lottie_seats_loading.json',
-    saving:      '/animacoes/lottie_save_progress.json',       // <- progresso
-    confirming:  '/animacoes/lottie_confirm_progress.json',    // <- sucesso
+    saving:      '/animacoes/lottie_save_progress.json',
+    confirming:  '/animacoes/lottie_confirm_progress.json',
     success:     '/animacoes/lottie_success_check.json',
     error:       '/animacoes/lottie_error_generic.json',
     timeout:     '/animacoes/lottie_timeout_hourglass.json',
@@ -106,31 +106,44 @@
   };
 
   let lottieInst = null;
-  function openLottie(kind, msg = '') {
+
+  // 🔁 Agora aceita "chave" (ex.: 'search') OU caminho direto (ex.: '/animacoes/xxx.json')
+  function openLottie(kindOrPath = 'search', msg = '') {
     const overlay = document.getElementById('miLottieOverlay');
     const holder  = document.getElementById('miLottieHolder');
     const msgEl   = document.getElementById('miLottieMsg');
     if (!overlay || !holder) return;
+
     try { if (lottieInst) lottieInst.destroy(); } catch {}
     holder.innerHTML = '';
-    const path = LOTTIE_MAP[kind];
+
+    const path = LOTTIE_MAP[kindOrPath] || String(kindOrPath || '');
     if (path && window.lottie) {
       lottieInst = window.lottie.loadAnimation({
         container: holder, renderer: 'svg', loop: true, autoplay: true, path
       });
     }
-    msgEl && (msgEl.textContent = msg);
+
+    if (msgEl) msgEl.textContent = msg;
     overlay.classList.remove('d-none');
   }
+
   function closeLottie() {
     const overlay = document.getElementById('miLottieOverlay');
     const holder  = document.getElementById('miLottieHolder');
+    const msgEl   = document.getElementById('miLottieMsg');
     if (!overlay) return;
+
     overlay.classList.add('d-none');
     try { if (lottieInst) lottieInst.destroy(); } catch {}
     lottieInst = null;
     if (holder) holder.innerHTML = '';
+    if (msgEl) msgEl.textContent = '';
   }
+
+  // 🌍 Expor para outros módulos (ex.: admin.js)
+  window.miLottieShow = (kindOrPath = 'search', msg = '') => openLottie(kindOrPath, msg);
+  window.miLottieHide = () => closeLottie();
 
   const cpfDigits = (str) => String(str || '').replace(/\D/g, '');
   function escapeHtml(str) {

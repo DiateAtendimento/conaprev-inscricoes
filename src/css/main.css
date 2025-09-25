@@ -484,3 +484,9 @@ body.gate-active .topbar{ display:none !important; }
   border-color: #dee2e6 #dee2e6 #fff !important;
   background: #fff;
 }
+
+#adminMonitorModal .nav-tabs{
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+#adminMonitorModal .nav-tabs::-webkit-scrollbar{ height: 6px; }

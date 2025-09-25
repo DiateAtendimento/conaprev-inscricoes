@@ -86,6 +86,47 @@
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
   }
 
+  // ======= Lottie overlay helpers (usa o overlay global do site) =======
+  let _adminLottie = null;
+  const LOTTIE_SEARCH_PATH = "/lottie/lottie_search_loading.json"; // ajuste o caminho se estiver em outra pasta
+
+  function showOverlayLottie(msg = "Preparando download…", path = LOTTIE_SEARCH_PATH) {
+    try {
+      const overlay = document.getElementById("miLottieOverlay");
+      const holder  = document.getElementById("miLottieHolder");
+      const label   = document.getElementById("miLottieMsg");
+      if (!overlay || !holder) return;
+
+      if (label) label.textContent = msg;
+      overlay.classList.remove("d-none");
+      holder.innerHTML = "";
+
+      if (window.lottie) {
+        _adminLottie = window.lottie.loadAnimation({
+          container: holder,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path
+        });
+      }
+    } catch {}
+  }
+
+  function hideOverlayLottie() {
+    try {
+      _adminLottie?.destroy?.();
+      _adminLottie = null;
+      const overlay = document.getElementById("miLottieOverlay");
+      const holder  = document.getElementById("miLottieHolder");
+      const label   = document.getElementById("miLottieMsg");
+      if (overlay) overlay.classList.add("d-none");
+      if (holder) holder.innerHTML = "";
+      if (label) label.textContent = "";
+    } catch {}
+  }
+
+
   // ======= Estado =======
   const state = {
     adminPass: null,
@@ -415,32 +456,36 @@
 
   // ======= Download XLSX COMPLETO (todas as abas) =======
   async function downloadWorkbookXLSX(){
+    const btn = document.getElementById("adminDownloadBtn");
     try {
+      btn && (btn.disabled = true);
+      // usa os helpers globais do steps.js
+      window.miLottieShow?.('search', 'Gerando dashboard…');
+
       const res = await fetch(`${API}/api/admin/exportar`, {
         method: 'GET',
-        headers: {
-          ...headersAdmin(),
-          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
+        headers: { ...headersAdmin(), 'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
       });
 
       if (res.status === 401) {
+        window.miLottieHide?.();
         monitorModal?.hide?.();
         authModal?.show?.();
         return;
       }
-      if (!res.ok) throw new Error('Falha ao gerar XLSX.');
+      if (!res.ok) {
+        const j = await res.json().catch(()=>null);
+        throw new Error(j?.error || 'Falha ao gerar XLSX.');
+      }
 
       const blob = await res.blob();
 
-      // tenta extrair o filename do Content-Disposition
       let filename = 'inscricoes.xlsx';
       const cd = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
       if (cd) {
         const m = cd.match(/filename\*?=(?:UTF-8''|")?([^;"']+)/i);
         if (m && m[1]) filename = decodeURIComponent(m[1].replace(/"/g, ''));
       } else {
-        // fallback com timestamp
         const ts = new Date().toISOString().slice(0,19).replace(/[-:T]/g,'');
         filename = `conaprev-inscricoes_${ts}.xlsx`;
       }
@@ -451,16 +496,20 @@
       a.download = filename;
       document.body.appendChild(a);
       a.click();
+
       setTimeout(() => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-      }, 0);
+        window.miLottieHide?.();
+      }, 150);
     } catch (e) {
       console.error('[admin] downloadWorkbookXLSX', e);
+      window.miLottieHide?.();
       alert(e?.message || 'Não foi possível baixar a planilha completa.');
+    } finally {
+      btn && (btn.disabled = false);
     }
   }
-
 
 
   // ======= Listeners =======
