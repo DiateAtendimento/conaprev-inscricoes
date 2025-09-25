@@ -22,6 +22,7 @@ const PERFIS_OK = new Set([
   "Staff",
   "Convidado",
   "Patrocinador",
+  "COPAJURE", // <-- ADICIONADO
 ]);
 
 // Guard de administrador (usa header x-admin-pass)

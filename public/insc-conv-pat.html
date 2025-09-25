@@ -278,8 +278,15 @@
               <span id="adminNotifCount" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle">0</span>
             </span>
           </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+
+          <div class="d-flex align-items-center gap-2">
+            <button id="adminLogoutBtn" type="button" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sair
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
         </div>
+
 
         <div class="modal-body">
           <!-- Toolbar -->
@@ -345,6 +352,10 @@
     </div>
   </div>
 
+  <!-- Toasts (Admin) -->
+  <div id="adminToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
+
+
   <!-- Footer (mobile) -->
   <footer class="site-footer">
     <div class="footer-links">
@@ -365,13 +376,14 @@
 
   <!-- Fallback rápido -->
   <script>
-    window.API_BASE = window.API_BASE || '';
+    window.API_BASE = window.API_BASE || 'http://localhost:3000';
     window.EVENTO = window.EVENTO || {
       INICIO: '2025-09-22T08:00:00-03:00',
       FIM:    '2025-08-13T13:00:00-03:00',
       LOCAL:  'Brasília/DF'
     };
   </script>
+
 
   <!-- Config (sem gate) -->
   <script src="/src/js/config.js" defer></script>

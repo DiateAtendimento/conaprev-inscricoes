@@ -30,7 +30,8 @@ const PROFILE_PREFIX = {
   "Palestrante": "PLT",
   "Staff": "STF",
   "Convidado": "CON",
-  "Patrocinador": "PAT"
+  "Patrocinador": "PAT",
+  "COPAJURE": "CPJ"
 };
 
 function sheetForPerfil(perfil) {
@@ -41,6 +42,7 @@ function sheetForPerfil(perfil) {
     Staff: "Staffs",
     Convidado: "Convidados",
     Patrocinador: "Patrocinadores",
+    COPAJURE: "COPAJURE"
   };
   return map[perfil] || "Banco de dados";
 }

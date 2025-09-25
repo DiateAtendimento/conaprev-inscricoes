@@ -21,6 +21,7 @@
   const elSearch           = document.getElementById('adminSearch');
   const elRefresh          = document.getElementById('adminRefreshBtn');
   const elDownload         = document.getElementById('adminDownloadBtn');
+  const elLogout           = document.getElementById('adminLogoutBtn'); // <-- botão de logout (opcional no HTML)
 
   const elTabAtivosBtn     = document.getElementById('tabAdminAtivos');
   const elTabFinalBtn      = document.getElementById('tabAdminFinalizados');
@@ -43,6 +44,36 @@
   const authModal    = getModal(elAuthModal);
   const monitorModal = getModal(elMonitorModal);
 
+  // ======= Toast helper (cria container on-demand) =======
+  function ensureToastContainer() {
+    let c = document.getElementById('adminToastContainer');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'adminToastContainer';
+      c.className = 'toast-container position-fixed top-0 end-0 p-3';
+      document.body.appendChild(c);
+    }
+    return c;
+  }
+  function showToast(message) {
+    const container = ensureToastContainer();
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast align-items-center text-bg-success border-0';
+    toastEl.setAttribute('role', 'status');
+    toastEl.setAttribute('aria-live', 'polite');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+      </div>
+    `;
+    container.appendChild(toastEl);
+    const t = new bootstrap.Toast(toastEl, { delay: 4000 });
+    t.show();
+    toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+  }
+
   // ======= Estado =======
   const state = {
     adminPass: null,
@@ -55,7 +86,26 @@
     finalCache: [],
     activeTab: 'ativos', // 'ativos' | 'finalizados'
     loading: false,
+    pollTimer: null,     // intervalo de polling quando modal aberto
+    lastAtivosIds: new Set(), // para detectar novas inscrições com protocolo
   };
+
+  // ======= Persistência local da sessão admin =======
+  const storageKeyPass = 'admin.pass';
+
+  function loadSavedSession() {
+    const saved = localStorage.getItem(storageKeyPass);
+    if (saved) {
+      state.adminPass = saved;
+    }
+  }
+  function saveSession(pass) {
+    try { localStorage.setItem(storageKeyPass, pass); } catch {}
+  }
+  function clearSession() {
+    try { localStorage.removeItem(storageKeyPass); } catch {}
+    state.adminPass = null;
+  }
 
   // ======= Utils =======
   const headersAdmin = () =>
@@ -75,14 +125,25 @@
     };
   };
 
-  function setNotif(count) {
-    const c = Math.max(0, Number(count) || 0);
+  // Contador do sininho: **apenas** inscrições com número (protocolo) que ainda estão em "Ativos"
+  function computeActiveWithProtocolCount() {
+    const arr = state.ativosCache || [];
+    return arr.filter(it => (it && String(it.numerodeinscricao || '').trim())).length;
+  }
+
+  function setNotif(fromAtivosCountMaybe) {
+    // Se veio um count explícito para performance, usa; senão calcula
+    const c = (typeof fromAtivosCountMaybe === 'number')
+      ? Math.max(0, fromAtivosCountMaybe)
+      : computeActiveWithProtocolCount();
+
     if (elBadgeTop) {
       if (c > 0) {
         elBadgeTop.textContent = String(c);
         elBadgeTop.classList.remove('d-none');
       } else {
         elBadgeTop.classList.add('d-none');
+        elBadgeTop.textContent = '';
       }
     }
     if (elBadgeModal) elBadgeModal.textContent = String(c);
@@ -210,13 +271,23 @@
     }
   }
 
+  // Guarda os protocolos atuais para detectar novos
+  function snapshotActiveProtocols() {
+    const set = new Set();
+    (state.ativosCache || []).forEach(it => {
+      const proto = String(it?.numerodeinscricao || '').trim();
+      if (proto) set.add(proto);
+    });
+    state.lastAtivosIds = set;
+  }
+
   async function refreshAtivos(){
     if (!elAtivosList) return;
     state.loading = true;
     const data = await fetchList('ativos');
     state.ativosCache = data;
     renderList(elAtivosList, elAtivosPager, data, 'ativos');
-    setNotif((state.ativosCache || []).length + (state.finalCache || []).length ? (state.ativosCache || []).length : 0);
+    setNotif(); // conta apenas com protocolo
     state.loading = false;
   }
 
@@ -226,7 +297,8 @@
     const data = await fetchList('finalizados');
     state.finalCache = data;
     renderList(elFinalList, elFinalPager, data, 'finalizados');
-    setNotif((state.ativosCache || []).length);
+    // notificação é apenas pelos "ativos com protocolo"
+    setNotif();
     state.loading = false;
   }
 
@@ -241,7 +313,6 @@
 
   async function toggleConferido(_rowIndex, marcar){
     try {
-      // Nome do conferente — se quiser, podemos perguntar uma vez e guardar em localStorage
       const conferidoPor = localStorage.getItem('admin.conferidoPor') || 'Admin';
       const res = await fetch(`${API}/api/inscricoes/conferir`, {
         method: 'POST',
@@ -264,6 +335,7 @@
       }
       // Atualiza as duas listas (mover entre abas)
       await refreshBoth();
+      snapshotActiveProtocols();
     } catch (e) {
       console.error('[admin] toggleConferido', e);
       alert(e.message || 'Erro ao marcar conferido.');
@@ -302,13 +374,14 @@
   }
 
   // ======= Listeners =======
-  elAdminBtn?.addEventListener('click', (e) => {
+  elAdminBtn?.addEventListener('click', async (e) => {
     e.preventDefault();
     if (state.adminPass) {
       // já autenticado
       if (monitorModal) {
         monitorModal.show();
-        refreshBoth();
+        await refreshBoth();
+        snapshotActiveProtocols();
       }
     } else {
       if (authModal) authModal.show();
@@ -327,14 +400,27 @@
       if (res.status === 401) throw new Error('Senha inválida');
       if (!res.ok) throw new Error('Falha na validação');
       state.adminPass = pass;
+      saveSession(pass); // <-- persiste no navegador deste usuário
       elAuthMsg?.classList.add('d-none');
       authModal?.hide();
       monitorModal?.show();
       await refreshBoth();
+      snapshotActiveProtocols();
     } catch (err) {
       elAuthMsg?.classList.remove('d-none');
       elAuthMsg.textContent = 'Senha inválida.';
     }
+  });
+
+  // LOGOUT
+  elLogout?.addEventListener('click', () => {
+    clearSession();
+    // feedback leve
+    showToast('Sessão de administrador encerrada.');
+    // fecha modal se aberto
+    try { monitorModal?.hide(); } catch {}
+    // limpa contadores/estados sensíveis
+    setNotif(0);
   });
 
   elPerfilSelect?.addEventListener('change', async () => {
@@ -343,6 +429,7 @@
     state.ativosOffset = 0;
     state.finalOffset  = 0;
     await refreshBoth();
+    snapshotActiveProtocols();
   });
 
   elSearch?.addEventListener('input', debounce(async () => {
@@ -350,10 +437,12 @@
     state.ativosOffset = 0;
     state.finalOffset  = 0;
     await refreshActiveTab();
+    if (state.activeTab === 'ativos') snapshotActiveProtocols();
   }, 300));
 
   elRefresh?.addEventListener('click', async () => {
     await refreshBoth();
+    snapshotActiveProtocols();
   });
 
   elDownload?.addEventListener('click', () => {
@@ -369,6 +458,7 @@
   elTabAtivosBtn?.addEventListener('shown.bs.tab', async () => {
     state.activeTab = 'ativos';
     await refreshAtivos();
+    snapshotActiveProtocols();
   });
   elTabFinalBtn?.addEventListener('shown.bs.tab', async () => {
     state.activeTab = 'finalizados';
@@ -377,24 +467,71 @@
 
   // Se o modal Admin abrir por outros meios, garantir refresh inicial:
   elMonitorModal?.addEventListener('shown.bs.modal', () => {
-    // carrega ambos em paralelo e mantém a aba atual como “primária”
-    refreshBoth();
+    refreshBoth().then(() => snapshotActiveProtocols());
+    // Inicia polling mais rápido enquanto o modal está aberto
+    if (state.pollTimer) clearInterval(state.pollTimer);
+    state.pollTimer = setInterval(async () => {
+      // busca apenas ATIVOS para detectar novos protocolos
+      const data = await fetchList('ativos');
+      // detecta novos protocolos (apenas com número)
+      const currentSet = new Set();
+      (data || []).forEach(it => {
+        const proto = String(it?.numerodeinscricao || '').trim();
+        if (proto) currentSet.add(proto);
+      });
+      // compara com o último snapshot
+      currentSet.forEach(proto => {
+        if (!state.lastAtivosIds.has(proto)) {
+          showToast(`Você tem uma nova inscrição ${proto}`);
+        }
+      });
+      state.ativosCache = data;
+      renderList(elAtivosList, elAtivosPager, data, 'ativos');
+      setNotif();
+      // atualiza snapshot ao final
+      state.lastAtivosIds = currentSet;
+    }, 8000); // 8s
   });
 
-  // Atualiza badge periodicamente quando autenticado (leve)
+  elMonitorModal?.addEventListener('hidden.bs.modal', () => {
+    if (state.pollTimer) {
+      clearInterval(state.pollTimer);
+      state.pollTimer = null;
+    }
+  });
+
+  // ======= Autologin neste navegador (sem vazar para outros) =======
+  // Se o admin já autenticou antes neste browser, reusa a sessão.
+  (async function bootstrapAdminSession() {
+    loadSavedSession();
+    if (!state.adminPass) return;
+    // valida rapidamente a senha salva; se falhar, limpa
+    try {
+      const q = new URLSearchParams({ perfil: 'Convidado', status: 'ativos', limit: '1' }).toString();
+      const res = await fetch(`${API}/api/inscricoes/listar?${q}`, { headers: headersAdmin() });
+      if (res.status === 401) throw new Error('invalid');
+      // ok: mantém a sessão e atualiza badges “silenciosamente”
+      const data = await res.json().catch(() => []);
+      state.ativosCache = data || [];
+      setNotif();
+    } catch {
+      clearSession();
+      setNotif(0);
+    }
+  })();
+
+  // ======= Badge “leve” (fora do modal) a cada 15s, se logado =======
   setInterval(async () => {
     if (!state.adminPass) return;
     try {
-      const q = new URLSearchParams({ perfil: state.perfil, status: 'ativos', limit: '1' }).toString();
+      const q = new URLSearchParams({ perfil: state.perfil, status: 'ativos', limit: '200', offset: '0' }).toString();
       const res = await fetch(`${API}/api/inscricoes/listar?${q}`, { headers: headersAdmin() });
       if (!res.ok) return;
       const data = await res.json();
-      // Não temos contagem total — usamos quantidade da lista carregada em memória quando modal está aberto;
-      // aqui usamos 1 só para manter "tem/notificações". Opcionalmente, poderíamos refazer a lista.
-      // Se o modal estiver aberto, a contagem será atualizada pelo refreshBoth().
-      if (!document.body.contains(elMonitorModal) || !elMonitorModal.classList.contains('show')) {
-        // Só indica que há algo (1) sem custo. Opcional.
-        setNotif((state.ativosCache || []).length);
+      if (Array.isArray(data)) {
+        // atualiza apenas o contador (sem re-render das listas)
+        const count = data.filter(it => String(it.numerodeinscricao || '').trim()).length;
+        setNotif(count);
       }
     } catch {}
   }, 15000); // 15s
