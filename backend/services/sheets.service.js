@@ -49,6 +49,7 @@ async function readAllCached(sheetName, ttlMs = CACHE_TTL_DEFAULT_MS) {
   return p;
 }
 
+
 const HEADER_ALIASES = {
   numerodeinscricao: "numerodeinscricao",
   cpf: "cpf",
@@ -206,6 +207,7 @@ export async function buscarPorCpf(cpf, perfil) {
   return null;
 }
 
+
 async function gerarNumeroInscricao(perfil) {
   const sheetName = sheetForPerfil(perfil);
   const sheets = await getSheets();
@@ -308,6 +310,7 @@ export async function cancelarInscricao(formData, perfil) {
   invalidateSheetCache(sheetName);
 }
 
+
 export async function getConselheiroSeats() {
   const sheetName = sheetForPerfil("Conselheiro");
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
@@ -326,6 +329,7 @@ export async function getConselheiroSeats() {
   });
   return seats;
 }
+
 
 export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0 } = {}) {
   const sheetName = sheetForPerfil(perfil);
@@ -416,3 +420,4 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
+

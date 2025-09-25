@@ -28,17 +28,52 @@ const PERFIS_OK = new Set([
 // Guard de administrador (usa header x-admin-pass)
 const adminGuard = (req, res, next) => {
   const required = cfg?.adminPass;
-  if (!required) return next(); // sem senha configurada, libera
+  if (!required) return next(); // sem senha configurada, libera (útil em dev)
   const got = String(req.headers["x-admin-pass"] || "");
   if (got === String(required)) return next();
   return res.status(401).json({ error: "Não autorizado" });
 };
 
+// Utilitário: traduz erros do Google (ex.: 429) para HTTP adequado
+function sendGoogleError(res, e, fallbackMessage = "Erro interno") {
+  const status =
+    Number(e?.status) ||
+    Number(e?.code) ||
+    Number(e?.response?.status) ||
+    500;
+
+  // Mensagem mais clara para rate limit
+  if (status === 429) {
+    return res.status(429).json({
+      error:
+        "Google Sheets: limite de leitura por minuto excedido. Tente novamente em alguns segundos.",
+    });
+  }
+
+  const msg =
+    e?.response?.data?.error?.message ||
+    e?.message ||
+    fallbackMessage;
+
+  return res.status(status >= 400 && status < 600 ? status : 500).json({
+    error: String(msg),
+  });
+}
+
+// helper para normalizar e tolerar exceptions pequenas
+async function buscarPorCpfSafe(cpf, perfil) {
+  try {
+    return await buscarPorCpf(cpf, perfil);
+  } catch (e) {
+    console.error("buscarPorCpfSafe:", e);
+    return null;
+  }
+}
+
 /**
  * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
  * Lista inscrições para acompanhamento administrativo.
- * Obs.: a ordenação “finalizados do MAIOR→MENOR protocolo” já está garantida no frontend.
- * Se quiser mover a ordenação para o backend, ajustamos em sheets.service.js (listarInscricoes).
+ * Observação: a ordenação de FINALIZADOS (MAIOR→MENOR por protocolo) já é feita no service.
  */
 r.get("/listar", adminGuard, async (req, res) => {
   try {
@@ -56,7 +91,7 @@ r.get("/listar", adminGuard, async (req, res) => {
     return res.json(Array.isArray(out) ? out : []);
   } catch (e) {
     console.error("[GET /inscricoes/listar]", e);
-    return res.status(500).json({ error: "Erro ao listar inscrições" });
+    return sendGoogleError(res, e, "Erro ao listar inscrições");
   }
 });
 
@@ -71,11 +106,11 @@ r.get("/buscar", async (req, res) => {
     if (perfil && !PERFIS_OK.has(perfil)) {
       return res.status(400).json({ error: "Perfil inválido" });
     }
-    const out = await buscarPorCpf(cpf, perfil);
+    const out = await buscarPorCpfSafe(cpf, perfil);
     return res.json(out);
   } catch (e) {
     console.error("[GET /inscricoes/buscar]", e);
-    return res.status(500).json({ error: "Erro ao buscar CPF" });
+    return sendGoogleError(res, e, "Erro ao buscar CPF");
   }
 });
 
@@ -95,19 +130,9 @@ r.post("/buscar", async (req, res) => {
     return res.json(out);
   } catch (e) {
     console.error("[POST /inscricoes/buscar]", e);
-    return res.status(500).json({ error: "Erro ao buscar CPF" });
+    return sendGoogleError(res, e, "Erro ao buscar CPF");
   }
 });
-
-// helper para normalizar e tolerar exceptions pequenas
-async function buscarPorCpfSafe(cpf, perfil) {
-  try {
-    return await buscarPorCpf(cpf, perfil);
-  } catch (e) {
-    console.error("buscarPorCpfSafe:", e);
-    return null;
-  }
-}
 
 /**
  * POST /api/inscricoes/criar
@@ -127,7 +152,7 @@ r.post("/criar", async (req, res) => {
     return res.status(201).json({ codigo });
   } catch (e) {
     console.error("[POST /inscricoes/criar]", e);
-    return res.status(500).json({ error: String(e.message || e) });
+    return sendGoogleError(res, e, "Erro ao criar inscrição");
   }
 });
 
@@ -149,7 +174,7 @@ r.post("/atualizar", async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error("[POST /inscricoes/atualizar]", e);
-    return res.status(500).json({ error: String(e.message || e) });
+    return sendGoogleError(res, e, "Erro ao atualizar inscrição");
   }
 });
 
@@ -176,7 +201,7 @@ r.post("/conferir", adminGuard, async (req, res) => {
     return res.json({ ok: !!ok });
   } catch (e) {
     console.error("[POST /inscricoes/conferir]", e);
-    return res.status(500).json({ error: "Erro ao marcar conferido" });
+    return sendGoogleError(res, e, "Erro ao marcar conferido");
   }
 });
 
@@ -209,7 +234,7 @@ r.post("/confirmar", async (req, res) => {
     return res.json({ codigo });
   } catch (e) {
     console.error("[POST /inscricoes/confirmar]", e);
-    return res.status(500).json({ error: String(e.message || e) });
+    return sendGoogleError(res, e, "Erro ao confirmar inscrição");
   }
 });
 
@@ -231,7 +256,7 @@ r.post("/cancelar", async (req, res) => {
     return res.json({ ok: true });
   } catch (e) {
     console.error("[POST /inscricoes/cancelar]", e);
-    return res.status(500).json({ error: String(e.message || e) });
+    return sendGoogleError(res, e, "Erro ao cancelar inscrição");
   }
 });
 
@@ -244,7 +269,8 @@ r.get("/assentos/conselheiros", async (_req, res) => {
     return res.json(Array.isArray(seats) ? seats : []);
   } catch (e) {
     console.error("[GET /inscricoes/assentos/conselheiros]", e);
-    return res.json([]); // vazio p/ não travar o front
+    // Para esse endpoint, preferimos não estourar erro no front:
+    return res.json([]);
   }
 });
 
