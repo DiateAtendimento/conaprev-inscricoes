@@ -399,6 +399,74 @@
   <!-- Toasts (Admin) -->
   <div id="adminToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
+  <!-- ========== MODAL: Emitir Certificado ========== -->
+  <div class="modal fade" id="emitirCertModal" tabindex="-1" aria-labelledby="emitirCertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="emitirCertModalLabel">
+            <i class="bi bi-award" aria-hidden="true"></i> Emitir certificado
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <label for="cpfCertInput" class="form-label">Informe seu CPF</label>
+          <input id="cpfCertInput" type="text" inputmode="numeric" autocomplete="off" class="form-control" placeholder="Somente nÇ§meros" />
+          <div class="form-text">Usaremos seu CPF para localizar sua inscriÇõÇœo confirmada.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+          <button id="emitirCertBtn" type="button" class="btn btn-primary">
+            <span id="emitirCertSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+            <span id="emitirCertBtnText">Emitir certificado</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de carregamento -->
+  <div class="modal fade" id="certLoadingModal" tabindex="-1" aria-hidden="true" aria-labelledby="certLoadingTitle">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content text-center py-4">
+        <div class="modal-body">
+          <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+          <div id="certLoadingTitle" class="fw-semibold">Gerando certificado...</div>
+          <div class="small text-muted">Isso leva apenas alguns segundos.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de temporizador -->
+  <div class="modal fade" id="certTimerModal" tabindex="-1" aria-hidden="true" aria-labelledby="certTimerModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="certTimerModalLabel" class="modal-title">Certificado disponÇ­vel em:</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="certTimer" class="display-6 fw-semibold"></div>
+          <div class="text-muted small mt-2">Assim que zerar, tente novamente para baixar o PDF.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de mensagens de certificado -->
+  <div class="modal fade" id="certMessageModal" tabindex="-1" aria-hidden="true" aria-labelledby="certMessageTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="certMessageTitle" class="modal-title">Aviso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div id="certMessageBody" class="modal-body"></div>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer">
     <div class="footer-links">
       <a class="footer-link" href="mailto:conaprev@previdencia.gov.br">
@@ -443,6 +511,8 @@
 
   <!-- Admin -->
   <script src="/src/js/admin.js" defer></script>
+  <!-- Certificados -->
+  <script src="/src/js/certs.js" defer></script>
 
   <script>
     (function () {
