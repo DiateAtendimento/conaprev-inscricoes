@@ -80,6 +80,9 @@ export async function emitirCertificadoPDF(cpf) {
   const { slides, drive } = await getSlides();
   const parents = process.env.DRIVE_PARENT_ID ? [process.env.DRIVE_PARENT_ID] : undefined;
 
+  console.log('DRIVE_PARENT_ID', process.env.DRIVE_PARENT_ID);
+  console.log('copy parents set?', parents);
+
   // 1) copiar o template para não alterarmos o original
   const copy = await drive.files.copy({
     fileId: cfg.slidesTplId,
