@@ -78,13 +78,16 @@ export async function emitirCertificadoPDF(cpf) {
 
   // === GERAÇÃO via Slides (copia template -> substitui -> exporta PDF) ===
   const { slides, drive } = await getSlides();
+  const parents = process.env.DRIVE_PARENT_ID ? [process.env.DRIVE_PARENT_ID] : undefined;
 
   // 1) copiar o template para não alterarmos o original
   const copy = await drive.files.copy({
     fileId: cfg.slidesTplId,
-    requestBody: { name: `certificado_temp_${Date.now()}` }
+    requestBody: {
+      name: `certificado_temp_${Date.now()}`,
+      ...(parents ? { parents } : {})
+    }
   });
-  const copyId = copy.data.id;
 
   // 2) substituir placeholders
   await slides.presentations.batchUpdate({
