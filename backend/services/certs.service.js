@@ -34,7 +34,7 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
 function montarPeriodoTexto(dias) {
   const inicio = new Date(cfg.event.inicio);
   const fim = new Date(cfg.event.fim);
-  const dd = n => String(n.getDate()).padStart(2,"0");
+  const dd = (n) => String(n.getDate()).padStart(2, "0");
   const mes = inicio.toLocaleDateString("pt-BR", { month: "long" });
   const ano = fim.getFullYear();
   if (dias.dia1 && dias.dia2) return `nos dias ${dd(inicio)} e ${dd(fim)} de ${mes} de ${ano}`;
@@ -88,6 +88,7 @@ export async function emitirCertificadoPDF(cpf) {
       ...(parents ? { parents } : {})
     }
   });
+  const copyId = copy.data.id;
 
   // 2) substituir placeholders
   await slides.presentations.batchUpdate({
@@ -108,7 +109,7 @@ export async function emitirCertificadoPDF(cpf) {
   const buffer = Buffer.from(pdfResp.data);
 
   // 4) limpar arquivo temporário
-  try { await drive.files.delete({ fileId: copyId }); } catch { /* ignore */ }
+  try { await drive.files.delete({ fileId: copyId }); } catch {}
 
   return { buffer, filename: "certificado_conaprev.pdf" };
 }
