@@ -3,6 +3,19 @@
 (() => {
   const apiBase = window.API_BASE || "";
   const evento = window.EVENTO || {};
+  const CERT_LIBERACAO = "2025-12-08T14:00:00-03:00"; // 08/12/2025 (Segunda-feira) 14h BRT
+  const CERT_DEV_FLAG = "certDevMode";
+  const releaseAt = new Date(CERT_LIBERACAO).getTime();
+
+  // Permite habilitar/desabilitar modo dev via query (?certdev=1 / ?certdev=0)
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("certdev") === "1") localStorage.setItem(CERT_DEV_FLAG, "1");
+    if (params.get("certdev") === "0") localStorage.removeItem(CERT_DEV_FLAG);
+  })();
+
+  const isCertDevMode = () => localStorage.getItem(CERT_DEV_FLAG) === "1" || window.CERT_DEV_MODE === true;
+  const isCertLiberado = () => isCertDevMode() || (releaseAt && Date.now() >= releaseAt);
 
   const btnAbrir = document.getElementById("btnEmitirCert");
   const modalEl = document.getElementById("emitirCertModal");
@@ -100,6 +113,13 @@
     URL.revokeObjectURL(url);
   }
 
+  function avisarLiberacao() {
+    showMessage(
+      "Certificado indisponível",
+      "O certificado estará disponível para emissão em <strong>08/12/2025 (Segunda-feira) às 14h</strong>, horário de Brasília."
+    );
+  }
+
   function tratarErro(raw) {
     const msg = String(raw || "").replace(/^Error:\s*/, "");
 
@@ -146,11 +166,19 @@
   btnAbrir.addEventListener("click", (e) => {
     e.preventDefault();
     if (cpfInput) cpfInput.value = "";
+    if (!isCertLiberado()) {
+      avisarLiberacao();
+      return;
+    }
     certModal.show();
     setTimeout(() => cpfInput?.focus(), 150);
   });
 
   emitirBtn?.addEventListener("click", async () => {
+    if (!isCertLiberado()) {
+      avisarLiberacao();
+      return;
+    }
     const cpf = String(cpfInput?.value || "").replace(/\D/g, "");
     if (cpf.length !== 11) {
       showMessage("CPF invÃ¡lido", "Digite um CPF vÃ¡lido (11 dÃ­gitos, somente nÃºmeros).");
