@@ -16,6 +16,7 @@
 
   // Exponha globalmente
   window.API_BASE = API_BASE;
+  window.VOTACAO_ADMIN_PASS = window.VOTACAO_ADMIN_PASS || '1234';
 
   /**
    * Rotas (opcional)

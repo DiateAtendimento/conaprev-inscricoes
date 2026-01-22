@@ -73,6 +73,10 @@
       </div>
       <div class="offcanvas-body">
         <nav class="menu-list">
+          <a href="#" id="liveVotingBtn" class="menu-item d-flex align-items-center gap-2">
+            <i class="bi bi-broadcast" aria-hidden="true"></i>
+            <span>VotaÇõÇœo Ao vivo</span>
+          </a>
           <a href="#" id="adminAccessBtn" class="menu-item d-flex align-items-center gap-2">
             <i class="bi bi-gear" aria-hidden="true"></i>
             <span>Acompanhar inscrições</span>
@@ -396,6 +400,86 @@
     </div>
   </div>
 
+  <!-- ========== MODAL: Acesso VotaÇõÇœo Ao vivo ========== -->
+  <div class="modal fade" id="votingAuthModal" tabindex="-1" aria-hidden="true" aria-labelledby="votingAuthTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="votingAuthForm" autocomplete="off">
+          <div class="modal-header">
+            <h5 class="modal-title" id="votingAuthTitle">
+              <i class="bi bi-shield-lock" aria-hidden="true"></i> VotaÇõÇœo Ao vivo
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="votingAuthPass" class="form-label">Senha</label>
+              <input id="votingAuthPass" type="password" class="form-control" required autocomplete="new-password" />
+              <div class="form-text">Informe a senha administrativa para continuar.</div>
+            </div>
+            <div id="votingAuthMsg" class="small text-danger d-none">Senha invÇ­lida.</div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: Dashboard VotaÇõÇœo Ao vivo ========== -->
+  <div class="modal fade" id="votingAdminModal" tabindex="-1" aria-hidden="true" aria-labelledby="votingAdminTitle">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="votingAdminTitle" class="modal-title d-flex align-items-center gap-2">
+            <i class="bi bi-broadcast" aria-hidden="true"></i>
+            VotaÇõÇœo Ao vivo
+          </h5>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button id="votingCreateBtn" type="button" class="btn btn-primary btn-sm">
+              <i class="bi bi-plus-circle" aria-hidden="true"></i> Criar nova votaÇõÇœo
+            </button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <div id="votingEmptyState" class="voting-empty-state d-none">
+            <div class="voting-empty-card">
+              <div class="voting-empty-icon">
+                <i class="bi bi-ballot-check" aria-hidden="true"></i>
+              </div>
+              <h6 class="mb-2">Nenhuma votaÇõÇœo criada</h6>
+              <p class="text-muted mb-3">Crie uma nova votaÇõÇœo para comeÇõar a coletar respostas em tempo real.</p>
+              <button id="votingEmptyCreateBtn" type="button" class="btn btn-primary">
+                Criar nova votaÇõÇœo
+              </button>
+            </div>
+          </div>
+
+          <div id="votingList" class="vstack gap-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL: VisÇœo Geral das Respostas ========== -->
+  <div class="modal fade" id="votingResultsModal" tabindex="-1" aria-hidden="true" aria-labelledby="votingResultsTitle">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="votingResultsTitle" class="modal-title">VisÇœo geral das respostas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="votingResultsMeta" class="voting-results-meta"></div>
+          <div id="votingResultsBody" class="vstack gap-3 mt-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toasts (Admin) -->
   <div id="adminToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
 
@@ -511,6 +595,8 @@
 
   <!-- Admin -->
   <script src="/src/js/admin.js" defer></script>
+  <!-- VotaÇõÇœo Ao vivo -->
+  <script src="/src/js/votacao.js" defer></script>
   <!-- Certificados -->
   <script src="/src/js/certs.js" defer></script>
 

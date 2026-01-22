@@ -1,0 +1,106 @@
+/* =========================
+   VOTACAO AO VIVO
+   ========================= */
+.voting-empty-state{
+  display:flex;
+  justify-content:center;
+  padding:28px 12px;
+}
+.voting-empty-card{
+  background:#f8fafc;
+  border:1px dashed #cbd5f0;
+  border-radius:18px;
+  padding:28px;
+  text-align:center;
+  max-width:460px;
+  box-shadow:0 12px 28px rgba(15,23,42,.08);
+}
+.voting-empty-icon{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  margin:0 auto 12px;
+  background:#e8f5f2;
+  color:#0b4d49;
+  font-size:24px;
+}
+.voting-card{
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.voting-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 26px rgba(15,23,42,.10);
+}
+.voting-card .card-body{
+  cursor:pointer;
+}
+.voting-card .voting-actions{
+  cursor:default;
+}
+.voting-results-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  padding:14px 16px;
+}
+.voting-meta-item{
+  min-width:140px;
+}
+.voting-question{
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:16px;
+  background:#fff;
+}
+.voting-question h6{
+  font-weight:700;
+}
+.voting-option-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:8px 10px;
+  background:#f8fafc;
+  border-radius:10px;
+  border:1px solid #e2e8f0;
+}
+.voting-option-count{
+  font-weight:600;
+  color:#0b4d49;
+}
+.vote-builder{
+  display:grid;
+  gap:18px;
+}
+.vote-question-card{
+  border-radius:18px;
+  border:1px solid #e2e8f0;
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+.vote-option-input{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.vote-option-input .form-control{
+  flex:1;
+}
+.vote-public-card{
+  border-radius:18px;
+  border:1px solid #e2e8f0;
+  box-shadow:0 12px 28px rgba(15,23,42,.08);
+}
+.vote-public-hero{
+  background:linear-gradient(135deg, rgba(11,77,73,.1), rgba(255,183,3,.15));
+  border-radius:18px;
+  padding:22px 24px;
+  border:1px solid rgba(11,77,73,.15);
+}
