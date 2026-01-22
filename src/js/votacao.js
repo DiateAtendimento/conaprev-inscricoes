@@ -79,6 +79,7 @@
     const elAuthPass = document.getElementById('votingAuthPass');
     const elAuthMsg = document.getElementById('votingAuthMsg');
     const elAdminModal = document.getElementById('votingAdminModal');
+    const elLogoutBtn = document.getElementById('votingLogoutBtn');
     const elCreateBtn = document.getElementById('votingCreateBtn');
     const elEmptyCreateBtn = document.getElementById('votingEmptyCreateBtn');
     const elEmptyState = document.getElementById('votingEmptyState');
@@ -98,6 +99,9 @@
     const authModal = getModal(elAuthModal);
     const adminModal = getModal(elAdminModal);
     const resultsModal = getModal(elResultsModal);
+    const shouldOpenOnLoad =
+      getSearchParam('votacao') === '1' ||
+      sessionStorage.getItem('votacao.modal.open') === '1';
 
     const openCreateTab = (id) => {
       const url = id ? `/votacao-criar.html?edit=${encodeURIComponent(id)}` : '/votacao-criar.html';
@@ -220,11 +224,21 @@
       adminModal?.show();
     });
 
+    elLogoutBtn?.addEventListener('click', () => {
+      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem('votacao.modal.open');
+      adminModal?.hide();
+    });
+
     elCreateBtn?.addEventListener('click', () => openCreateTab());
     elEmptyCreateBtn?.addEventListener('click', () => openCreateTab());
 
     elAdminModal?.addEventListener('shown.bs.modal', () => {
       renderList();
+      sessionStorage.setItem('votacao.modal.open', '1');
+    });
+    elAdminModal?.addEventListener('hidden.bs.modal', () => {
+      sessionStorage.removeItem('votacao.modal.open');
     });
 
     elList?.addEventListener('click', async (event) => {
@@ -259,6 +273,21 @@
       renderResults(vote);
       resultsModal?.show();
     });
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY) {
+        renderList();
+      }
+    });
+
+    if (shouldOpenOnLoad) {
+      if (localStorage.getItem(SESSION_KEY)) {
+        renderList();
+        adminModal?.show();
+      } else {
+        authModal?.show();
+      }
+    }
   };
 
   const initBuilderPage = () => {
@@ -266,14 +295,45 @@
     const builder = document.getElementById('voteBuilder');
     const titleInput = document.getElementById('voteTitle');
     const addQuestionBtn = document.getElementById('voteAddQuestion');
+    const addQuestionBtnBottom = document.getElementById('voteAddQuestionBottom');
     const saveBtn = document.getElementById('voteSaveBtn');
     const msg = document.getElementById('voteCreateMsg');
     const msgLink = document.getElementById('voteCreateLink');
+    const successModalEl = document.getElementById('voteCreateSuccessModal');
+    const successModalLink = document.getElementById('voteCreateModalLink');
 
     if (!form || !builder || !titleInput) return;
 
     const editId = getSearchParam('edit');
     let currentVote = editId ? getVoteById(editId) : null;
+    let isNewMode = !currentVote;
+    let isDirty = false;
+
+    const getModal = (root) => {
+      if (!root || !window.bootstrap) return null;
+      return bootstrap.Modal.getOrCreateInstance(root, { backdrop: 'static', keyboard: true });
+    };
+    const successModal = getModal(successModalEl);
+
+    const updateSaveBtn = () => {
+      if (!saveBtn) return;
+      if (isNewMode) {
+        saveBtn.classList.remove('d-none');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Iniciar votação';
+      } else {
+        saveBtn.textContent = 'Salvar';
+        saveBtn.classList.toggle('d-none', !isDirty);
+        saveBtn.disabled = !isDirty;
+      }
+    };
+
+    const markDirty = () => {
+      if (!isNewMode && !isDirty) {
+        isDirty = true;
+        updateSaveBtn();
+      }
+    };
 
     const createOptionEl = (option) => {
       const wrap = document.createElement('div');
@@ -327,12 +387,20 @@
       } else {
         addQuestion();
       }
-      if (saveBtn) saveBtn.textContent = currentVote ? 'Salvar' : 'Iniciar votação';
+      if (titleInput) titleInput.value = currentVote?.title || '';
+      updateSaveBtn();
     };
 
     hydrate();
 
-    addQuestionBtn?.addEventListener('click', () => addQuestion());
+    addQuestionBtn?.addEventListener('click', () => {
+      addQuestion();
+      markDirty();
+    });
+    addQuestionBtnBottom?.addEventListener('click', () => {
+      addQuestion();
+      markDirty();
+    });
 
     builder.addEventListener('click', (event) => {
       const addOptionBtn = event.target.closest('.vote-add-option');
@@ -342,6 +410,7 @@
         if (!optionsWrap) return;
         const option = { id: createId('o'), text: '' };
         optionsWrap.appendChild(createOptionEl(option));
+        markDirty();
       }
 
       const removeOptionBtn = event.target.closest('.vote-remove-option');
@@ -353,6 +422,7 @@
           return;
         }
         optionRow?.remove();
+        markDirty();
       }
 
       const removeQuestionBtn = event.target.closest('.vote-remove-question');
@@ -362,7 +432,12 @@
           return;
         }
         event.target.closest('.vote-question-card')?.remove();
+        markDirty();
       }
+    });
+
+    form.addEventListener('input', () => {
+      markDirty();
     });
 
     form.addEventListener('submit', (event) => {
@@ -400,6 +475,7 @@
       }
 
       const now = Date.now();
+      const wasNew = isNewMode;
       if (currentVote) {
         currentVote = {
           ...currentVote,
@@ -421,6 +497,10 @@
         upsertVote(currentVote);
       }
 
+      isNewMode = false;
+      isDirty = false;
+      updateSaveBtn();
+
       if (msg) {
         msg.classList.remove('d-none');
         msg.textContent = currentVote && currentVote.updatedAt && currentVote.createdAt === currentVote.updatedAt
@@ -431,7 +511,11 @@
         msgLink.href = buildVoteLink(currentVote.id);
         msgLink.textContent = buildVoteLink(currentVote.id);
       }
-      if (!editId && saveBtn) saveBtn.textContent = 'Salvar';
+      if (successModalLink && wasNew) {
+        successModalLink.href = buildVoteLink(currentVote.id);
+        successModalLink.textContent = buildVoteLink(currentVote.id);
+      }
+      if (wasNew) successModal?.show();
     });
   };
 
