@@ -487,7 +487,7 @@ body{ overflow-x:clip; }
 
   .container.container--narrow.py-5{
     padding-top: 1.2rem !important;
-    padding-bottom: 1.1rem !important;
+    padding-bottom: 0.6rem !important;
   }
   #home{ margin-top: -16px; }
   .cards-wrapper{
@@ -500,6 +500,7 @@ body{ overflow-x:clip; }
   .event-map{
     margin-top: 4px; /* compensa o margin-bottom dos cards */
     padding: 14px 14px 12px;
+    margin-bottom: 0; /* evita sobra no fim */
   }
   .event-map__frame iframe{
     height: clamp(170px, 22vh, 220px);
