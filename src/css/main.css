@@ -61,11 +61,19 @@ body::after{
 /* Guard-rail */
 body{ overflow-x:clip; }
 
+/* organiza o fluxo principal sem gerar scroll */
+#app{
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
 /* container com a largura do mock */
 .container--narrow{
   max-width: var(--content-max) !important;
   margin-inline: auto !important;
 }
+
 
 /* =========================
    TOPBAR
@@ -160,7 +168,7 @@ body{ overflow-x:clip; }
 /* =========================
    HERO (grid 2 colunas)
    ========================= */
-.hero{ position:relative; background:transparent; }
+.hero{ position:relative; background:transparent;}
 .hero::before{
   content:"";
   position:absolute;
@@ -471,8 +479,22 @@ body{ overflow-x:clip; }
     --badge-w: clamp(180px, 18vw, 260px);
   }
 
+  .hero{
+    margin-top: 0;
+    padding-top: 64px;
+  }
+  /* distribui o conteudo com respiro, sem alongar a pagina */
+  main.container.container--narrow.py-5{
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2vh, 22px);
+    padding-top: clamp(8px, 1.2vh, 14px) !important;
+    padding-bottom: clamp(8px, 1.2vh, 14px) !important;
+  }
+
   .hero-grid{
-    padding: 8px 0 6px;
+    padding: 30px 0 20px;
   }
   .hero h1{
     font-size: clamp(22px, 2.6vw, 36px);
@@ -480,30 +502,39 @@ body{ overflow-x:clip; }
   }
   .brand-title{
     font-size: clamp(26px, 3.4vw, 44px);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
-  .chips{ margin-top: 8px; gap: 10px; }
-  .chip{ padding: 6px 10px; }
+  .chips{ margin-top: 6px; gap: 8px; }
+  .chip{ padding: 5px 9px; }
 
-  .container.container--narrow.py-5{
-    padding-top: 1.2rem !important;
-    padding-bottom: 0.6rem !important;
+  #home{
+    margin-top: 70px !important;
+    margin-bottom: 0;
   }
-  #home{ margin-top: -16px; }
   .cards-wrapper{
-    padding: 10px 12px;
-    margin-bottom: 8px; /* cria respiro antes da localizacao sem aumentar altura */
+    margin-top: 32px;
   }
-  .profile-card{ height: 190px; }
-  .card-top{ min-height: 86px; }
+  .cards-wrapper{
+    padding: 8px 10px;
+    margin-bottom: 0;
+  }
+  .profile-card{ height: clamp(150px, 20vh, 185px); }
+  .card-top{ min-height: clamp(70px, 10vh, 90px); }
 
   .event-map{
-    margin-top: 4px; /* compensa o margin-bottom dos cards */
-    padding: 14px 14px 12px;
+    margin-top: 0;
+    padding: 10px 12px 10px;
     margin-bottom: 0; /* evita sobra no fim */
   }
   .event-map__frame iframe{
-    height: clamp(170px, 22vh, 220px);
+    height: clamp(130px, 17vh, 180px);
+  }
+  .event-map__info{
+    gap: 10px 14px;
+    margin-top: 10px;
+  }
+  .event-map__item{
+    font-size: 12px;
   }
 }
 
