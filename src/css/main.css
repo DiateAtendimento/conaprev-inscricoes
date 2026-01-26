@@ -108,6 +108,14 @@ body{ overflow-x:clip; }
   padding:0;
 }
 
+/* topbar ocupa toda a largura (remove margens laterais do .container) */
+.topbar .wrap.container{
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(12px, 2vw, 24px);
+}
+
 /* as 3 logos ocupam 3 colunas, e dentro viram um grid 3x1 */
 .brand-strip{
   grid-column: 1 / span 3;
@@ -477,6 +485,18 @@ body{ overflow-x:clip; }
   :root{
     --topbar-h: 84px;
     --badge-w: clamp(180px, 18vw, 260px);
+  }
+
+  /* topbar: melhor distribuicao no desktop */
+  .topbar .wrap{
+    column-gap: 24px;
+    padding: 0 18px;
+  }
+  .brand-strip{
+    column-gap: 24px;
+  }
+  .links{
+    column-gap: 24px;
   }
 
   .hero{
