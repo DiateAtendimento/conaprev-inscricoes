@@ -45,7 +45,7 @@ body::before{
   position:fixed;
   inset:0;
   z-index:-1;
-  background: url("/public/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
+  background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
 }
 
 /* camada escura por cima do bg */
@@ -620,7 +620,7 @@ body.gate-active .topbar{ display:none !important; }
   :root{ --content-max: 92vw; --topbar-h: 64px; }
 
   body::before{
-    background: url("/public/imagens/bg/bg-mobile.jpg") center top / cover no-repeat;
+    background: url("/imagens/bg/bg-mobile.jpg") center top / cover no-repeat;
   }
 
   /* Topbar em 1 coluna; só as logos + hambúrguer */
@@ -770,4 +770,3 @@ body.gate-active .topbar{ display:none !important; }
   overflow-x: auto;
 }
 #adminMonitorModal .nav-tabs::-webkit-scrollbar{ height: 6px; }
-
