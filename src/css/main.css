@@ -229,6 +229,11 @@ body{ overflow-x:clip; }
   color:#fff; text-decoration:none; backdrop-filter: blur(6px);
 }
 .chip:hover{ background:rgba(255,255,255,.16); }
+.chip.disabled{
+  opacity:.45;
+  pointer-events:none;
+  cursor:not-allowed;
+}
 
 /* =========================
    HOME (painel + cards)
