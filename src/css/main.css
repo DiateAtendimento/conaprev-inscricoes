@@ -547,7 +547,7 @@ body{ overflow-x:clip; }
   .card-top{ min-height: clamp(70px, 10vh, 90px); }
 
   .event-map{
-    margin-top: 0;
+    margin-top: -8px;
     padding: 10px 12px 10px;
     margin-bottom: 0; /* evita sobra no fim */
   }
