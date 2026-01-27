@@ -41,6 +41,16 @@
 .voting-card .voting-actions{
   cursor:default;
 }
+.voting-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.voting-actions .btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
 .voting-results-meta{
   display:flex;
   flex-wrap:wrap;
@@ -84,6 +94,23 @@
   border-radius:18px;
   border:1px solid #e2e8f0;
   box-shadow:0 10px 24px rgba(15,23,42,.06);
+}
+.vote-q-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+}
+.vote-q-number{
+  min-width:32px;
+  height:32px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.vote-question-text{
+  min-height:38px;
 }
 .vote-option-input{
   display:flex;

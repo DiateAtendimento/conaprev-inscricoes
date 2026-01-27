@@ -157,6 +157,50 @@ function parseJSON(val) {
   try { return JSON.parse(val); } catch { return null; }
 }
 
+function formatResponsesText(vote, answers = []) {
+  const questions = vote?.questions || [];
+  return questions.map((q, index) => {
+    const ans = (answers || []).find((a) => String(a.questionId) === String(q.id));
+    if (q.type === "text") {
+      const val = String(ans?.value || "").trim();
+      return `${index + 1}. ${q.text || "Pergunta"}\nResposta: ${val || "-"}`;
+    }
+    const ids = Array.isArray(ans?.optionIds) ? ans.optionIds : [];
+    const labels = ids.map((id) => {
+      const opt = (q.options || []).find((o) => String(o.id) === String(id));
+      return opt?.text || "";
+    }).filter(Boolean);
+    return `${index + 1}. ${q.text || "Pergunta"}\nResposta: ${labels.length ? labels.join(", ") : "-"}`;
+  }).join("\n\n");
+}
+
+function parseResponsesText(text, vote) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return [];
+  const questions = vote?.questions || [];
+  const blocks = normalized.split(/\n\s*\n/);
+  const parsed = [];
+  blocks.forEach((block) => {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) return;
+    const first = lines[0] || "";
+    const match = first.match(/^(\d+)\.\s*(.*)$/);
+    if (!match) return;
+    const index = parseInt(match[1], 10) - 1;
+    const q = questions[index];
+    if (!q) return;
+    const respLine = lines.find((l) => l.toLowerCase().startsWith("resposta:"));
+    const respText = respLine ? respLine.replace(/^resposta:\s*/i, "").trim() : "";
+    if (q.type === "text") {
+      parsed.push({ questionId: q.id, type: "text", value: respText });
+      return;
+    }
+    const parts = respText ? respText.split(",").map((p) => p.trim()).filter(Boolean) : [];
+    parsed.push({ questionId: q.id, type: "options", optionTexts: parts });
+  });
+  return parsed;
+}
+
 /* ===== presença Dia1/Dia2 ===== */
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
@@ -410,15 +454,9 @@ export async function submitVote({ voteId, cpf, answers, durationMs }) {
   if (!validation.ok) throw new Error("NAO_PERMITIDO");
 
   await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
-  const { date, time, iso } = nowBRParts();
-  const responses = {
-    voteId: vote.id,
-    submittedAt: iso,
-    durationMs: Number(durationMs || 0) || 0,
-    answers: answers || [],
-  };
-
+  const { date, time } = nowBRParts();
   const temaLabel = vote.title || vote.tema;
+  const responsesText = formatResponsesText(vote, answers || []);
   const sheets = await getSheets();
 
   const cacheKey = `votos:${vote.id}`;
@@ -427,9 +465,9 @@ export async function submitVote({ voteId, cpf, answers, durationMs }) {
 
   rows.forEach((r, idx) => {
     const numero = String(r[0] || "").trim();
+    const tema = String(r[4] || "").trim();
     if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
-    const json = parseJSON(r[5]);
-    if (json && json.voteId === vote.id) existingRowIndex = idx + 2;
+    if (tema === String(temaLabel).trim()) existingRowIndex = idx + 2;
   });
 
   const row = [
@@ -438,7 +476,7 @@ export async function submitVote({ voteId, cpf, answers, durationMs }) {
     date,
     time,
     temaLabel,
-    JSON.stringify(responses),
+    responsesText,
   ];
 
   if (existingRowIndex > 1) {
@@ -470,9 +508,29 @@ export async function getVoteResults(voteId) {
 
   const { rows } = await readAllCached(SHEET_VOTOS, `votos:${voteId}`);
   const responses = [];
+  const temaLabel = String(vote.title || vote.tema || "").trim();
   rows.forEach((r) => {
+    const tema = String(r[4] || "").trim();
+    if (tema !== temaLabel) return;
+    const parsed = parseResponsesText(r[5], vote);
+    if (parsed.length) {
+      responses.push(parsed);
+      return;
+    }
     const json = parseJSON(r[5]);
-    if (json && json.voteId === voteId) responses.push(json);
+    if (json && json.voteId === voteId) {
+      const mapped = (json.answers || []).map((ans) => {
+        if (ans.type === "text") {
+          return { questionId: ans.questionId, type: "text", value: String(ans.value || "") };
+        }
+        const optTexts = (ans.optionIds || []).map((oid) => {
+          const opt = (vote.questions || []).flatMap((q) => q.options || []).find((o) => o.id === oid);
+          return opt?.text || "";
+        }).filter(Boolean);
+        return { questionId: ans.questionId, type: "options", optionTexts: optTexts };
+      });
+      responses.push(mapped);
+    }
   });
 
   const stats = (vote.questions || []).map((q) => {
@@ -482,26 +540,23 @@ export async function getVoteResults(voteId) {
     const counts = {};
     (q.options || []).forEach((opt) => { counts[opt.id] = 0; });
     responses.forEach((resp) => {
-      const ans = (resp.answers || []).find((a) => a.questionId === q.id);
+      const ans = (resp || []).find((a) => a.questionId === q.id);
       if (!ans) return;
-      const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [ans.optionId || ans.value].filter(Boolean);
-      ids.forEach((oid) => {
-        if (counts.hasOwnProperty(oid)) counts[oid] += 1;
+      const texts = Array.isArray(ans.optionTexts) ? ans.optionTexts : [];
+      texts.forEach((text) => {
+        const opt = (q.options || []).find((o) => normalize(o.text) === normalize(text));
+        if (opt && counts.hasOwnProperty(opt.id)) counts[opt.id] += 1;
       });
     });
     return { questionId: q.id, type: "options", counts };
   });
 
-  const durations = responses.map((r) => Number(r.durationMs || 0)).filter((n) => Number.isFinite(n) && n > 0);
-  const avgMs = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-
   return {
     voteId,
     title: vote.title,
     total: responses.length,
-    avgDurationMs: avgMs,
+    avgDurationMs: 0,
     questions: vote.questions || [],
     stats,
   };
 }
-

@@ -1,4 +1,4 @@
-// /src/js/votacao.js
+Ôªø// /src/js/votacao.js
 (() => {
   const API = window.API_BASE || ((location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:3000'
@@ -11,9 +11,9 @@
   const THEMES = [
     { id: 'membros-rotativos', name: 'MEMBROS ROTATIVOS', title: 'Membros rotativos', icon: 'bi-arrow-repeat' },
     { id: 'membros-cnrpps', name: 'MEMBROS CNRPPS', title: 'Membros CNRPPS', icon: 'bi-people' },
-    { id: 'comite-compensacao', name: 'COMIT  DA COMPENSA«√O PREVIDENCI¡RIA', title: 'ComitÍ da compensaÁ„o previdenci·ria', icon: 'bi-shield-check' },
-    { id: 'certificacao-profissional', name: 'CERTIFICA«√O PROFISSIONAL', title: 'CertificaÁ„o profissional', icon: 'bi-award' },
-    { id: 'pro-gestao', name: 'PR” GEST√O', title: 'PrÛ Gest„o', icon: 'bi-patch-check' },
+    { id: 'comite-compensacao', name: 'COMIT√ä DA COMPENSA√á√ÉO PREVIDENCI√ÅRIA', title: 'Comit√™ da compensa√ß√£o previdenci√°ria', icon: 'bi-shield-check' },
+    { id: 'certificacao-profissional', name: 'CERTIFICA√á√ÉO PROFISSIONAL', title: 'Certifica√ß√£o profissional', icon: 'bi-award' },
+    { id: 'pro-gestao', name: 'PR√ì GEST√ÉO', title: 'Pr√≥ Gest√£o', icon: 'bi-patch-check' },
   ];
 
   const getAdminPass = () => sessionStorage.getItem(ADMIN_PASS_KEY) || '';
@@ -122,7 +122,7 @@
 
     const fetchVotes = async (themeId) => {
       const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
-      if (!res.ok) throw new Error('Falha ao carregar votaÁıes');
+      if (!res.ok) throw new Error('Falha ao carregar vota√ß√µes');
       return res.json();
     };
 
@@ -131,19 +131,31 @@
       elEmptyState.classList.toggle('d-none', votes.length > 0);
       elList.innerHTML = votes.map((vote) => {
         const status = vote.active ? 'Ativa' : 'Inativa';
+        const linkUrl = `${location.origin}/votacao.html`;
+        const toggleClass = vote.active ? 'btn-success' : 'btn-danger';
+        const toggleLabel = vote.active ? 'Desativar' : 'Ativar';
         return `
           <div class="card voting-card" data-id="${vote.id}">
             <div class="card-body d-flex flex-wrap align-items-center gap-3">
               <div class="flex-grow-1">
                 <div class="text-muted small">${status}</div>
-                <div class="h6 mb-1">${vote.title || 'Sem tÌtulo'}</div>
+                <div class="h6 mb-1">${vote.title || 'Sem t√≠tulo'}</div>
                 <div class="small text-muted">Atualizada em ${formatDate(vote.updatedAt || vote.createdAt)}</div>
               </div>
-              <div class="btn-group btn-group-sm voting-actions" role="group" aria-label="AÁıes">
-                <button type="button" class="btn btn-outline-secondary" data-action="edit">Editar</button>
-                <button type="button" class="btn btn-outline-danger" data-action="delete">Excluir</button>
-                <button type="button" class="btn btn-outline-primary" data-action="results"><i class="bi bi-eye"></i></button>
-                <button type="button" class="btn btn-outline-success" data-action="toggle" data-active="${vote.active ? '1' : '0'}">${vote.active ? 'Desativar' : 'Ativar'}</button>
+              <div class="voting-actions" role="group" aria-label="A√ß√µes">
+                <button type="button" class="btn btn-warning btn-sm" data-action="edit">
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" data-action="delete">
+                  <i class="bi bi-trash" aria-hidden="true"></i> Excluir
+                </button>
+                <button type="button" class="btn btn-info btn-sm" data-action="link" data-link="${linkUrl}">
+                  <i class="bi bi-link-45deg" aria-hidden="true"></i> Link
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" data-action="results">
+                  <i class="bi bi-eye" aria-hidden="true"></i> Ver
+                </button>
+                <button type="button" class="btn ${toggleClass} btn-sm" data-action="toggle" data-active="${vote.active ? '1' : '0'}">${toggleLabel}</button>
               </div>
             </div>
           </div>
@@ -153,14 +165,14 @@
 
     const renderResults = (payload) => {
       if (!payload || !elResultsMeta || !elResultsBody || !elResultsTitle) return;
-      elResultsTitle.textContent = payload.title || 'Vis„o geral das respostas';
+      elResultsTitle.textContent = payload.title || 'Vis√£o geral das respostas';
       elResultsMeta.innerHTML = `
         <div class="voting-meta-item">
           <div class="small text-muted">Total de respostas</div>
           <div class="fw-semibold">${payload.total}</div>
         </div>
         <div class="voting-meta-item">
-          <div class="small text-muted">Tempo mÈdio</div>
+          <div class="small text-muted">Tempo m√©dio</div>
           <div class="fw-semibold">${msToTime(payload.avgDurationMs)}</div>
         </div>
       `;
@@ -179,7 +191,7 @@
         const counts = stat.counts || {};
         const rows = (q.options || []).map((opt) => `
           <div class="voting-option-row">
-            <span>${opt.text || 'OpÁ„o'}</span>
+            <span>${opt.text || 'Op√ß√£o'}</span>
             <span class="voting-option-count">${counts[opt.id] || 0}</span>
           </div>
         `).join('');
@@ -187,7 +199,7 @@
           <div class="voting-question">
             <h6>${index + 1}. ${q.text || 'Pergunta'}</h6>
             <div class="vstack gap-2 mt-2">
-              ${rows || '<div class="text-muted">Sem opÁıes cadastradas.</div>'}
+              ${rows || '<div class="text-muted">Sem op√ß√µes cadastradas.</div>'}
             </div>
           </div>
         `;
@@ -234,7 +246,7 @@
       const res = await adminFetch('/api/votacao/admin/temas');
       if (!res.ok) {
         elAuthMsg?.classList.remove('d-none');
-        elAuthMsg.textContent = 'Senha inv·lida.';
+        elAuthMsg.textContent = 'Senha inv√°lida.';
         sessionStorage.removeItem(ADMIN_PASS_KEY);
         return;
       }
@@ -282,7 +294,7 @@
         const action = actionBtn.dataset.action;
         if (action === 'edit') openEditTab(voteId);
         if (action === 'delete') {
-          const ok = confirm('Tem certeza que deseja excluir esta votaÁ„o?');
+          const ok = confirm('Tem certeza que deseja excluir esta vota√ß√£o?');
           if (ok) {
             await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(voteId)}`, { method: 'DELETE' });
             const votes = await fetchVotes(selectedTheme?.id || '');
@@ -306,8 +318,26 @@
             resultsModal?.show();
           }
         }
+        if (action === 'link') {
+          const link = actionBtn.dataset.link || `${location.origin}/votacao.html`;
+          try {
+            await navigator.clipboard.writeText(link);
+            alert('Link copiado com sucesso.');
+          } catch {
+            window.prompt('Copie o link:', link);
+          }
+        }
       }
     });
+
+    const shouldOpen = new URLSearchParams(window.location.search).get('votacao') === '1';
+    if (shouldOpen) {
+      if (sessionStorage.getItem(SESSION_KEY)) {
+        loadAdminView().then(() => adminModal?.show());
+      } else {
+        authModal?.show();
+      }
+    }
   };
 
   // ===== Builder =====
@@ -316,6 +346,7 @@
     const builder = document.getElementById('voteBuilder');
     const titleInput = document.getElementById('voteTitle');
     const addQuestionBtn = document.getElementById('voteAddQuestion');
+    const saveBtn = document.getElementById('voteSaveBtn');
     const msg = document.getElementById('voteCreateMsg');
     const msgLink = document.getElementById('voteCreateLink');
     const successModalEl = document.getElementById('voteCreateSuccessModal');
@@ -358,10 +389,8 @@
       wrap.className = 'vote-option-input';
       wrap.dataset.oid = option.id;
       wrap.innerHTML = `
-        <input type="text" class="form-control vote-option-text" placeholder="OpÁ„o" value="${option.text || ''}" />
-        <button type="button" class="btn btn-outline-secondary btn-sm vote-remove-option" aria-label="Remover opÁ„o">
-          <i class="bi bi-x"></i>
-        </button>
+        <input type="text" class="form-control vote-option-text" placeholder="Op√ß√£o" value="${option.text || ''}" />
+        <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
       `;
       return wrap;
     };
@@ -375,10 +404,10 @@
       const isOptions = question.type === 'options';
       const optionsHtml = isOptions ? `
         <div class="vote-options vstack gap-2 mt-3"></div>
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-3 vote-add-option">Adicionar opÁ„o</button>
+        <button type="button" class="btn btn-success btn-sm mt-3 vote-add-option">Adicionar op√ß√£o</button>
         <div class="form-check form-switch mt-3">
           <input class="form-check-input vote-multi-toggle" type="checkbox" ${question.allowMultiple ? 'checked' : ''}>
-          <label class="form-check-label">Permitir v·rias respostas</label>
+          <label class="form-check-label">Permitir v√°rias respostas</label>
         </div>
         <div class="vote-multi-limits mt-2 ${question.allowMultiple ? '' : 'd-none'}">
           <div class="row g-2 align-items-end">
@@ -387,7 +416,7 @@
               <select class="form-select vote-limit-type">
                 <option value="none">Sem limite</option>
                 <option value="equal">Igual a</option>
-                <option value="max">No m·ximo</option>
+                <option value="max">No m√°ximo</option>
               </select>
             </div>
             <div class="col-12 col-md-6">
@@ -402,7 +431,7 @@
 
       card.innerHTML = `
         <div class="card-body">
-          <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="vote-q-row">
             <span class="badge text-bg-light vote-q-number">1.</span>
             <input type="text" class="form-control flex-grow-1 vote-question-text" placeholder="Digite a pergunta" value="${question.text || ''}" />
             <button type="button" class="btn btn-outline-danger btn-sm vote-remove-question" aria-label="Remover pergunta">
@@ -452,6 +481,7 @@
           currentVote = await res.json();
           isEdit = true;
           titleInput.value = currentVote.title || '';
+          if (saveBtn) saveBtn.textContent = 'Salvar';
           (currentVote.questions || []).forEach((q) => addQuestion(q.type || 'options'));
           const cards = Array.from(builder.querySelectorAll('.vote-question-card'));
           cards.forEach((card, idx) => {
@@ -510,7 +540,7 @@
         const optionRow = event.target.closest('.vote-option-input');
         const optionsWrap = event.target.closest('.vote-options');
         if (optionsWrap && optionsWrap.children.length <= 2) {
-          alert('Cada pergunta precisa ter pelo menos duas opÁıes.');
+          alert('Cada pergunta precisa ter pelo menos duas op√ß√µes.');
           return;
         }
         optionRow?.remove();
@@ -519,7 +549,7 @@
       const removeQuestionBtn = event.target.closest('.vote-remove-question');
       if (removeQuestionBtn) {
         if (builder.children.length <= 1) {
-          alert('… necess·rio manter ao menos uma pergunta.');
+          alert('√â necess√°rio manter ao menos uma pergunta.');
           return;
         }
         event.target.closest('.vote-question-card')?.remove();
@@ -554,7 +584,7 @@
           id: optEl.dataset.oid || createId('o'),
           text: (optEl.querySelector('.vote-option-text')?.value || '').trim(),
         })).filter((opt) => opt.text);
-        if (options.length < 2) return alert('Cada pergunta precisa ter ao menos duas opÁıes preenchidas.');
+        if (options.length < 2) return alert('Cada pergunta precisa ter ao menos duas op√ß√µes preenchidas.');
 
         const allowMultiple = !!card.querySelector('.vote-multi-toggle')?.checked;
         const limitType = card.querySelector('.vote-limit-type')?.value || 'none';
@@ -578,13 +608,21 @@
         });
         if (!res.ok) return alert('Erro ao salvar.');
       } else {
-        if (!themeId) return alert('Tema n„o encontrado.');
+        if (!themeId) return alert('Tema n√£o encontrado.');
         const res = await adminFetch('/api/votacao/admin/votacoes', {
           method: 'POST',
           body: JSON.stringify({ tema: themeId, questions }),
         });
-        if (!res.ok) return alert('Erro ao criar votaÁ„o.');
+        if (!res.ok) return alert('Erro ao criar vota√ß√£o.');
         currentVote = await res.json();
+      }
+
+      if (isEdit) {
+        if (msg) {
+          msg.textContent = 'Informa√ß√µes atualizadas com sucesso.';
+          msg.classList.remove('d-none');
+        }
+        return;
       }
 
       if (msg) msg.classList.remove('d-none');
@@ -597,10 +635,13 @@
         successModalLink.textContent = `${location.origin}/votacao.html`;
       }
       successModal?.show();
+      successModalEl?.addEventListener('hidden.bs.modal', () => {
+        window.location.href = '/index.html?votacao=1';
+      }, { once: true });
     });
   };
 
-  // ===== P˙blico =====
+  // ===== P√∫blico =====
   const initPublicPage = () => {
     const container = document.getElementById('votePublicContainer');
     const loginForm = document.getElementById('voteLoginForm');
@@ -640,7 +681,7 @@
               <div class="voting-theme-icon"><i class="bi ${theme.icon || 'bi-ballot-check'}" aria-hidden="true"></i></div>
               <div>
                 <div class="voting-theme-text">${t.name}</div>
-                <div class="voting-theme-sub">${isDisabled ? 'IndisponÌvel' : 'Ativo'}</div>
+                <div class="voting-theme-sub">${isDisabled ? 'Indispon√≠vel' : 'Ativo'}</div>
               </div>
             </div>
           </div>
@@ -663,7 +704,7 @@
     };
 
     const showDenied = (msg) => {
-      if (deniedBody) deniedBody.textContent = msg || 'Desculpe! AÁ„o n„o permitida.';
+      if (deniedBody) deniedBody.textContent = msg || 'Desculpe! A√ß√£o n√£o permitida.';
       deniedModal?.show();
     };
 
@@ -672,7 +713,7 @@
       const cpf = String(cpfInput?.value || '').replace(/\D/g, '');
       if (cpf.length !== 11) {
         loginMsg.classList.remove('d-none');
-        loginMsg.textContent = 'CPF inv·lido.';
+        loginMsg.textContent = 'CPF inv√°lido.';
         return;
       }
       const res = await apiFetch('/api/votacao/login', {
@@ -681,7 +722,7 @@
       });
       const data = await res.json();
       if (!data.ok) {
-        showDenied('Desculpe! AÁ„o n„o permitida');
+        showDenied('Desculpe! A√ß√£o n√£o permitida');
         return;
       }
       currentUser = data.user;
@@ -722,7 +763,7 @@
         const options = (q.options || []).map((opt) => `
           <div class="form-check">
             <input class="form-check-input" type="${inputType}" name="${q.id}" id="${q.id}_${opt.id}" value="${opt.id}">
-            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'OpÁ„o'}</label>
+            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Op√ß√£o'}</label>
           </div>
         `).join('');
         return `
@@ -732,11 +773,30 @@
           </div>
         `;
       }).join('');
-      if (formTitle) formTitle.textContent = currentVote.title || 'Question·rio';
+      if (formTitle) formTitle.textContent = currentVote.title || 'Question√°rio';
     });
 
     backBtn?.addEventListener('click', () => {
       formWrap?.classList.add('d-none');
+    });
+
+    questionsWrap?.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.type !== 'checkbox') return;
+      const card = target.closest('.vote-public-card');
+      if (!card) return;
+      const limitType = card.dataset.limitType || 'none';
+      const limitValue = parseInt(card.dataset.limitValue || '0', 10) || 0;
+      if (limitType === 'none' || limitValue <= 0) return;
+      const checked = card.querySelectorAll('input[type="checkbox"]:checked').length;
+      if (checked > limitValue) {
+        target.checked = false;
+        const msg = limitType === 'equal'
+          ? `Selecione exatamente ${limitValue} op√ß√£o(√µes).`
+          : `Selecione no m√°ximo ${limitValue} op√ß√£o(√µes).`;
+        alert(msg);
+      }
     });
 
     form?.addEventListener('submit', async (event) => {
@@ -763,10 +823,10 @@
 
         if (isMulti && limitType !== 'none' && limitValue > 0) {
           if (limitType === 'equal' && selected.length !== limitValue) {
-            return alert(`Selecione exatamente ${limitValue} opÁ„o(ıes).`);
+            return alert(`Selecione exatamente ${limitValue} op√ß√£o(√µes).`);
           }
           if (limitType === 'max' && selected.length > limitValue) {
-            return alert(`Selecione no m·ximo ${limitValue} opÁ„o(ıes).`);
+            return alert(`Selecione no m√°ximo ${limitValue} op√ß√£o(√µes).`);
           }
         }
 
@@ -786,7 +846,7 @@
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) return unavailableModal?.show();
-        return showDenied('Desculpe! AÁ„o n„o permitida');
+        return showDenied('Desculpe! A√ß√£o n√£o permitida');
       }
 
       const data = await res.json();
@@ -811,3 +871,4 @@
   initBuilderPage();
   initPublicPage();
 })();
+

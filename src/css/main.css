@@ -36,25 +36,16 @@ html, body{
 body{
   font-family: var(--font);
   color:#0d1b2a;
-  background:#0b4d49;                 /* fallback */
+  background: linear-gradient(180deg, #0b4d49 0%, #0a3f3b 55%, #0b4d49 100%);
 }
 
-/* BG real do site inteiro */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:-1;
-  background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
-}
-
-/* camada escura por cima do bg */
+/* camada suave por cima do bg */
 body::after{
   content:"";
   position:fixed;
   inset:0;
   z-index:-1;
-  background: rgba(0,0,0,.34);
+  background: rgba(0,0,0,.18);
   pointer-events:none;
 }
 
@@ -733,8 +724,8 @@ body.gate-active .topbar{ display:none !important; }
 
   :root{ --content-max: 92vw; --topbar-h: 64px; }
 
-  body::before{
-    background: url("/imagens/bg/bg-mobile.jpg") center top / cover no-repeat;
+  body{
+    background: linear-gradient(180deg, #0b4d49 0%, #093a36 55%, #0b4d49 100%);
   }
 
   /* Topbar em 1 coluna; só as logos + hambúrguer */
