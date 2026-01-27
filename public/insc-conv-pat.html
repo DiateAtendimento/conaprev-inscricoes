@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CONAPREV 83 — Inscrições (Convidados & Patrocinadores)</title>
-  <meta name="description" content="Inscrições de Convidados e Patrocinadores para a 83ª Reunião Ordinária do CONAPREV. Informações, hospedagem e ofício de convocação." />
+  <title>CONAPREV 84 — Inscrições (Convidados & Patrocinadores)</title>
+  <meta name="description" content="Inscrições de Convidados e Patrocinadores para a 84ª Reunião Ordinária do CONAPREV. Informações, hospedagem e ofício de convocação." />
 
   <!-- Tipografia + Bootstrap + Ícones -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,32 +92,32 @@
     <!-- HERO -->
     <section class="hero">
       <div class="hero-grid container container--narrow">
-        <img class="amapa-badge" src="imagens/logos/amapa-badge.svg" alt="Amapá">
+        <img class="amapa-badge" src="imagens/logos/goias-badge.svg" alt="Amapá">
         <div class="inner">
-          <h1>83ª Reunião Ordinária do</h1>
+          <h1>84ª Reunião Ordinária do</h1>
           <div class="brand-title">CONAPREV</div>
 
-          <div class="info-line">
-            <i class="bi bi-geo-alt" aria-hidden="true"></i>
-            <span>Av. Ernestino Borges, 740 – Julião Ramos, Macapá – AP, CEP 68908-198</span>
+                    <div class="info-line">
+            <!-- <i class="bi bi-geo-alt" aria-hidden="true"></i> -->
+            <!-- <span>K Hotel Goiânia - Av. Deputado Jamel Cecílio, nº 2550 Jardim Goiás, 74810-100 Goiânia - GO</span> -->
           </div>
           <div class="info-line">
             <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>Terça-feira, 02 de Dezembro de 2025 — das 8h30 às 17h30</span>
+            <span>Quarta-feira, 01 de Abril de 2026 — das 8h30 às 17h30</span>
           </div>
           <div class="info-line">
             <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>Quarta-feira, 03 de Dezembro de 2025 — das 8h30 às 13h</span>
+            <span>Quinta-feira, 02 de Abril de 2026 — das 8h30 às 13h</span>
           </div>
 
           <div class="chips" role="navigation" aria-label="Atalhos">
-            <a class="chip" href="#" id="btnEmitirCert">
+            <a class="chip" href="#" aria-disabled="true" tabindex="-1" id="btnEmitirCert">
               <img class="icon-20" src="imagens/icones/certificado.svg" alt=""> Emitir certificado
             </a>
-            <a class="chip" href="/hospedagem.html" target="_blank" id="btnHospedagem">
+            <a class="chip disabled" href="#" aria-disabled="true" tabindex="-1" id="btnHospedagem">
               <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
             </a>
-            <a class="chip" href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener">
+            <a class="chip disabled" href="#" aria-disabled="true" tabindex="-1">
               <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
             </a>
           </div>
@@ -126,31 +126,93 @@
     </section>
 
     <!-- HOME -->
-    <main class="container container--narrow py-5">
-      <section id="home" class="mb-5" aria-label="Selecione seu perfil">
+        <main class="container container--narrow py-5">
+      <section id="home" class="mb-5 cards-wrapper" aria-label="Selecione seu perfil">
         <!-- Aqui mostramos APENAS Convidado e Patrocinador -->
         <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-2">
 
           <div class="col">
-            <div class="card h-100 profile-card" data-profile="Convidado">
-              <img src="imagens/cards/convidado.svg" class="card-img-top" alt="Convidado">
-              <div class="card-body d-flex flex-column text-center">
+            <div class="card profile-card" data-profile="Convidado">
+              <div class="card-top">
+                <img src="imagens/cards/convidado.svg" class="card-icon" alt="Convidado">
+              </div>
+              <div class="divider" aria-hidden="true"></div>
+              <div class="card-bottom">
                 <h5 class="card-title">Convidado</h5>
-                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+                <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
           </div>
 
           <div class="col">
-            <div class="card h-100 profile-card" data-profile="Patrocinador">
-              <img src="imagens/cards/patrocinador.svg" class="card-img-top" alt="Patrocinador">
-              <div class="card-body d-flex flex-column text-center">
+            <div class="card profile-card" data-profile="Patrocinador">
+              <div class="card-top">
+                <img src="imagens/cards/patrocinador.svg" class="card-icon" alt="Patrocinador">
+              </div>
+              <div class="divider" aria-hidden="true"></div>
+              <div class="card-bottom">
                 <h5 class="card-title">Patrocinador</h5>
-                <button class="btn btn-outline-primary mt-auto select-profile">Selecionar</button>
+                <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
           </div>
 
+        </div>
+      </section>
+
+      <section class="event-map" aria-label="Localização do evento">
+        <div class="event-map__header">
+          <div class="event-map__title">
+            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
+            <div>
+              <h2>Localização do Evento</h2>
+              <p>Goiânia, Estado de Goiás</p>
+            </div>
+          </div>
+          <div class="event-map__cta">
+            <a href="https://www.google.com/maps/search/?api=1&query=K%20Hotel%20Goiania" target="_blank" rel="noopener">Ver mapa ampliado</a>
+          </div>
+        </div>
+
+        <div class="event-map__frame">
+          <!-- <iframe
+            title="Mapa do K Hotel GoiÃ¢nia"
+            src="https://www.google.com/maps?q=K%20Hotel%20Goiania&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen>
+          </iframe> -->
+        </div>
+
+        <div class="event-map__info">
+          <div class="event-map__item">
+            <i class="bi bi-building" aria-hidden="true"></i>
+            <div>
+              <strong>Hotel</strong>
+              <span>K Hotel Goiânia</span>
+            </div>
+          </div>
+          <div class="event-map__item">
+            <i class="bi bi-geo" aria-hidden="true"></i>
+            <div>
+              <strong>Endereço</strong>
+              <span>Av. Deputado Jamel Cecílio, 2550</span>
+            </div>
+          </div>
+          <div class="event-map__item">
+            <i class="bi bi-map" aria-hidden="true"></i>
+            <div>
+              <strong>Bairro</strong>
+              <span>Jardim Goiás</span>
+            </div>
+          </div>
+          <div class="event-map__item">
+            <i class="bi bi-envelope-open" aria-hidden="true"></i>
+            <div>
+              <strong>CEP</strong>
+              <span>74810-100</span>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -377,9 +439,9 @@
   <script>
     window.API_BASE = window.API_BASE || 'http://localhost:3000';
     window.EVENTO = window.EVENTO || {
-      INICIO: '2025-12-02T08:30:00-03:00',
-      FIM:    '2025-12-03T13:00:00-03:00',
-      LOCAL:  'Macapá/AP'
+      INICIO: '2026-04-01T08:30:00-03:00',
+      FIM:    '2026-04-02T13:00:00-03:00',
+      LOCAL:  'Goiânia/GO'
     };
   </script>
 
@@ -417,3 +479,6 @@
 
 </body>
 </html>
+
+
+
