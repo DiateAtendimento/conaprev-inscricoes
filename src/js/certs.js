@@ -1,8 +1,8 @@
 // /src/js/certs.js
-// Fluxo: trava até 08/12/2025 14h (salvo modo dev) e, quando liberado, redireciona para o Apps Script.
+// Fluxo: trava até 03/04/2026 14h (salvo modo dev) e, quando liberado, redireciona para o Apps Script.
 
 (() => {
-  const CERT_LIBERACAO = "2025-12-08T14:00:00-03:00"; // 08/12/2025 14h BRT
+  const CERT_LIBERACAO = "2026-04-03T14:00:00-03:00"; // 03/04/2026 14h BRT
   const CERT_DEV_FLAG = "certDevMode";
   const releaseAt = new Date(CERT_LIBERACAO).getTime();
 
@@ -42,7 +42,7 @@
   function avisarLiberacao() {
     showMessage(
       "Certificado indisponível",
-      "O certificado estará disponível para emissão em <strong>08/12/2025 (segunda-feira) às 14h</strong>, horário de Brasília."
+      "O certificado estará disponível para emissão em <strong>03/04/2026 (sexta-feira) às 14h</strong>, horário de Brasília."
     );
   }
 
@@ -60,3 +60,4 @@
       "https://script.google.com/macros/s/AKfycbz0_BIDWG_ZCx3SieUkWEzHyh4Xf_VHXI3nA0kjkjyKZhDWqyPA7xn2vtzZjWmn97ycYg/exec";
   });
 })();
+
