@@ -104,3 +104,54 @@
   padding:22px 24px;
   border:1px solid rgba(11,77,73,.15);
 }
+
+/* ===== THEMES (admin + público) ===== */
+.voting-theme-card{
+  border-radius:18px;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  padding:14px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  cursor:pointer;
+}
+.voting-theme-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 26px rgba(15,23,42,.10);
+  border-color:#cbd5f0;
+}
+.voting-theme-card.is-active{
+  border-color:#0b4d49;
+  box-shadow:0 10px 24px rgba(11,77,73,.18);
+}
+.voting-theme-card.is-disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.voting-theme-icon{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:#e8f5f2;
+  color:#0b4d49;
+  font-size:22px;
+  flex:0 0 auto;
+}
+.voting-theme-text{
+  font-weight:700;
+  font-size:14px;
+  line-height:1.2;
+}
+.voting-theme-sub{
+  font-size:12px;
+  color:#64748b;
+}
+
+.vote-public-card.is-disabled{
+  opacity:.55;
+  pointer-events:none;
+}

@@ -17,7 +17,7 @@
   <link href="/src/css/components.css" rel="stylesheet">
 </head>
 <body>
-  <main class="container container--narrow py-5">
+    <main class="container container--narrow py-5">
     <div class="vote-public-hero mb-4">
       <div class="d-flex align-items-center gap-3 flex-wrap">
         <div class="voting-empty-icon">
@@ -25,7 +25,7 @@
         </div>
         <div>
           <h1 class="h3 fw-bold mb-1">Criar votação ao vivo</h1>
-          <p class="text-muted mb-0">Defina o título, perguntas e opções antes de iniciar.</p>
+          <p class="text-muted mb-0">Defina as perguntas antes de gerar a votação.</p>
         </div>
       </div>
     </div>
@@ -33,7 +33,7 @@
     <form id="voteCreateForm" class="vstack gap-4">
       <div>
         <label for="voteTitle" class="form-label">Título da votação</label>
-        <input id="voteTitle" type="text" class="form-control" placeholder="Ex.: Eleição da pauta prioritária" required>
+        <input id="voteTitle" type="text" class="form-control" readonly>
       </div>
 
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -45,11 +45,8 @@
 
       <div id="voteBuilder" class="vote-builder"></div>
 
-
       <div class="d-flex flex-wrap align-items-center gap-3">
-        <button id="voteSaveBtn" type="submit" class="btn btn-primary">
-          Iniciar votação
-        </button>
+        <button id="voteSaveBtn" type="submit" class="btn btn-primary">Gerar votação</button>
         <a href="/index.html?votacao=1" class="btn btn-outline-secondary">Voltar ao painel</a>
       </div>
     </form>
@@ -82,8 +79,26 @@
     </div>
   </div>
 
+  <div class="modal fade" id="voteTypeModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteTypeTitle">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="voteTypeTitle">Adicionar pergunta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="vstack gap-2">
+            <button type="button" class="btn btn-outline-primary vote-type-btn" data-type="options">OpÃ§Ãµes</button>
+            <button type="button" class="btn btn-outline-secondary vote-type-btn" data-type="text">Texto</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
   <script src="/src/js/config.js" defer></script>
   <script src="/src/js/votacao.js" defer></script>
 </body>
 </html>
+

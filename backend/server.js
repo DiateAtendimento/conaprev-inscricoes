@@ -11,6 +11,7 @@ import healthRoutes from "./routes/health.routes.js";
 import inscricoesRoutes from "./routes/inscricoes.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import certsRoutes from "./routes/certs.routes.js";
+import votacaoRoutes from "./routes/votacao.routes.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api", healthRoutes);
 app.use("/api/inscricoes", inscricoesRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/certificado", certsRoutes);
+app.use("/api/votacao", votacaoRoutes);
 
 // rota raiz amigável (evita 404 no "/")
 app.get("/", (_req, res) => {
