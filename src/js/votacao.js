@@ -231,6 +231,18 @@
     modal?.hide();
   };
 
+  const startLoading = (message) => {
+    let shown = false;
+    const timer = setTimeout(() => {
+      shown = true;
+      showLoading(message);
+    }, 3000);
+    return () => {
+      clearTimeout(timer);
+      if (shown) hideLoading();
+    };
+  };
+
   // ===== Admin =====
   const initAdminModule = () => {
     const elButton = document.getElementById('liveVotingBtn');
@@ -288,17 +300,17 @@
     };
 
     const fetchThemes = async () => {
-      showLoading('Carregando temas...');
+      const stop = startLoading('Carregando temas...');
       const res = await adminFetch('/api/votacao/admin/temas');
-      hideLoading();
+      stop();
       if (!res.ok) throw new Error('Falha ao carregar temas');
       return res.json();
     };
 
     const fetchVotes = async (themeId) => {
-      showLoading('Carregando votações...');
+      const stop = startLoading('Carregando votações...');
       const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
-      hideLoading();
+      stop();
       if (!res.ok) throw new Error('Falha ao carregar votações');
       return res.json();
     };
@@ -818,12 +830,12 @@
       }
 
       if (isEdit && currentVote?.id) {
-        showLoading('Salvando votação...');
+        const stop = startLoading('Salvando votação...');
         const res = await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(currentVote.id)}`, {
           method: 'PUT',
           body: JSON.stringify({ questions }),
         });
-        hideLoading();
+        stop();
         if (!res.ok) {
           await showUiModal({ title: 'Erro', message: 'Erro ao salvar.', variant: 'danger' });
           return;
@@ -833,12 +845,12 @@
           await showUiModal({ title: 'Erro', message: 'Tema não encontrado.', variant: 'danger' });
           return;
         }
-        showLoading('Gerando votação...');
+        const stop = startLoading('Gerando votação...');
         const res = await adminFetch('/api/votacao/admin/votacoes', {
           method: 'POST',
           body: JSON.stringify({ tema: themeId, questions }),
         });
-        hideLoading();
+        stop();
         if (!res.ok) {
           await showUiModal({ title: 'Erro', message: 'Erro ao criar votação.', variant: 'danger' });
           return;
@@ -885,6 +897,9 @@
     const successMsg = document.getElementById('votePublicMsg');
     const backBtn = document.getElementById('voteBackBtn');
     const formTitle = document.getElementById('voteFormTitle');
+    const userMenu = document.getElementById('voteUserMenu');
+    const userName = document.getElementById('voteUserName');
+    const userLogout = document.getElementById('voteUserLogout');
     const deniedModalEl = document.getElementById('voteDeniedModal');
     const deniedBody = document.getElementById('voteDeniedBody');
     const unavailableModalEl = document.getElementById('voteUnavailableModal');
@@ -898,6 +913,17 @@
     let currentVote = null;
     let startedAt = 0;
     let pollTimer = null;
+
+    const setUserMenu = (user) => {
+      if (!userMenu || !userName) return;
+      if (!user) {
+        userMenu.classList.add('d-none');
+        userName.textContent = '';
+        return;
+      }
+      userName.textContent = user.nome || 'Usuário';
+      userMenu.classList.remove('d-none');
+    };
 
     const formatCpf = (value) => {
       const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
@@ -965,12 +991,12 @@
         loginMsg.textContent = 'CPF inválido. Verifique e tente novamente.';
         return;
       }
-      showLoading('Validando CPF...');
+      const stop = startLoading('Validando CPF...');
       const res = await apiFetch('/api/votacao/login', {
         method: 'POST',
         body: JSON.stringify({ cpf }),
       });
-      hideLoading();
+      stop();
       const data = await res.json();
       if (!data.ok) {
         await showDenied('Desculpe! Ação não permitida');
@@ -980,6 +1006,7 @@
       loginMsg.textContent = '';
       currentUser = data.user;
       sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+      setUserMenu(currentUser);
       loginCard?.classList.add('d-none');
       modules?.classList.remove('d-none');
       startPolling();
@@ -994,9 +1021,9 @@
         return;
       }
       const themeId = card.dataset.theme;
-      showLoading('Carregando questionário...');
+      const stop = startLoading('Carregando questionário...');
       const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
-      hideLoading();
+      stop();
       if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       const data = await res.json();
       if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
@@ -1047,6 +1074,18 @@
 
     backBtn?.addEventListener('click', () => {
       formWrap?.classList.add('d-none');
+    });
+
+    userLogout?.addEventListener('click', () => {
+      sessionStorage.removeItem(USER_KEY);
+      currentUser = null;
+      currentVote = null;
+      setUserMenu(null);
+      loginCard?.classList.remove('d-none');
+      modules?.classList.add('d-none');
+      formWrap?.classList.add('d-none');
+      successMsg?.classList.add('d-none');
+      if (cpfInput) cpfInput.value = '';
     });
 
     questionsWrap?.addEventListener('change', async (event) => {
@@ -1110,7 +1149,7 @@
         answers.push({ questionId: qid, type: 'options', optionIds: selected });
       }
 
-      showLoading('Enviando voto...');
+      const stop = startLoading('Enviando voto...');
       const res = await apiFetch('/api/votacao/votar', {
         method: 'POST',
         body: JSON.stringify({
@@ -1120,7 +1159,7 @@
           durationMs: Date.now() - startedAt,
         }),
       });
-      hideLoading();
+      stop();
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -1133,7 +1172,6 @@
       }
 
       const data = await res.json();
-      formWrap?.classList.add('d-none');
       successMsg.textContent = `${data.nome || currentUser.nome}, seu voto foi enviado com sucesso!`;
       successMsg?.classList.remove('d-none');
       await showUiModal({
@@ -1147,6 +1185,7 @@
       const cached = JSON.parse(sessionStorage.getItem(USER_KEY) || 'null');
       if (cached?.cpf) {
         currentUser = cached;
+        setUserMenu(currentUser);
         loginCard?.classList.add('d-none');
         modules?.classList.remove('d-none');
         startPolling();
