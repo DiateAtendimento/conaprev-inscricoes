@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CONAPREV 84ª Inscrições</title>
-  <meta name="description" content="Inscri??es da 83? Reuni?o Ordin?ria do CONAPREV. Informa??es, hospedagem, of?cio de convoca??o e emiss?o de certificado." />
+  <meta name="description" content="Inscrições da 84ª Reunião Ordinária do CONAPREV. Informações, hospedagem, ofício de convocação e emissão de certificado." />
 
-  <!-- Tipografia + Bootstrap + ?cones -->
+  <!-- Tipografia + Bootstrap + Ícones -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
     </div>
   </noscript>
 
-  <!-- ============== GATE (cron?metro) ============== -->
+  <!-- ============== GATE (cronômetro) ============== -->
   <div id="gate-root"></div>
 
   <!-- ============== APP ============== -->
@@ -49,7 +49,7 @@
           <!-- <img class="logo logo-amprev"   src="imagens/logos/logo-amprev.svg"   alt="AMPREV"> -->
         </div>
 
-        <nav class="links" aria-label="Contatos e administra??o">
+        <nav class="links" aria-label="Contatos e administração">
           <a href="mailto:conaprev@previdencia.gov.br">
             <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
             conaprev@previdencia.gov.br
@@ -89,14 +89,14 @@
     <!-- HERO -->
     <section class="hero">
       <div class="hero-grid container container--narrow">
-        <img class="amapa-badge reveal d1" src="imagens/logos/goias-badge.svg" alt="Amap?">
+        <img class="amapa-badge reveal d1" src="imagens/logos/goias-badge.svg" alt="Goiás">
         <div class="inner reveal d2">
           <h1>84ª Reunião Ordinária do</h1>
           <div class="brand-title">CONAPREV</div>
 
           <div class="info-line">
             <!-- <i class="bi bi-geo-alt" aria-hidden="true"></i> -->
-            <!-- <span>K Hotel Goi?nia - Av. Deputado Jamel Cec?lio, n? 2550 Jardim Goi?s, 74810-100 Goi?nia - GO</span> -->
+            <!-- <span>K Hotel Goiânia - Av. Deputado Jamel Cecílio, nº 2550 Jardim Goiás, 74810-100 Goiânia - GO</span> -->
           </div>
           <div class="info-line">
             <i class="bi bi-calendar-event" aria-hidden="true"></i>
@@ -114,7 +114,7 @@
             <a class="chip disabled" href="#" aria-disabled="true" tabindex="-1" id="btnHospedagem">
               <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
             </a>
-            <a class="chip" href="#" aria-disabled="true" tabindex="-1">
+            <a class="chip" href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener">
               <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
             </a>
           </div>
@@ -195,7 +195,7 @@
         </div>
       </section>
 
-      <section class="event-map reveal d5" aria-label="Localiza??o do evento">
+      <section class="event-map reveal d5" aria-label="Localização do evento">
         <div class="event-map__header">
           <div class="event-map__title">
             <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
@@ -230,7 +230,7 @@
           <div class="event-map__item">
             <i class="bi bi-geo" aria-hidden="true"></i>
             <div>
-              <strong>Endere?o</strong>
+              <strong>Endereço</strong>
               <span>Av. Deputado Jamel Cecíio, 2550</span>
             </div>
           </div>
@@ -253,7 +253,7 @@
     </main>
   </div>
 
-  <!-- Modal de Inscri??o -->
+  <!-- Modal de Inscrição -->
   <div class="modal fade" id="modalInscricao" tabindex="-1" aria-labelledby="miTitle" aria-hidden="true" role="dialog">
     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
       <div class="modal-content">
@@ -264,11 +264,11 @@
         </div>
 
         <div class="modal-body">
-          <div class="mi-stepper d-flex gap-2 mb-3" aria-label="Etapas da inscri??o">
+          <div class="mi-stepper d-flex gap-2 mb-3" aria-label="Etapas da Inscrição">
             <div class="mi-step" data-step="1">CPF</div>
             <div class="mi-step" data-step="2">Dados</div>
             <div class="mi-step" data-step="3">Perfil</div>
-            <div class="mi-step" data-step="4">Revis?o</div>
+            <div class="mi-step" data-step="4">Revisão</div>
             <div class="mi-step" data-step="5">Enviar</div>
             <div class="mi-step" data-step="6">Protocolo</div>
           </div>
@@ -279,7 +279,7 @@
                 <div class="col-12 col-md-4">
                   <label class="form-label" for="miCpf">CPF *</label>
                   <input id="miCpf" name="cpf" class="form-control" inputmode="numeric" autocomplete="off" required>
-                  <div class="invalid-feedback">Informe um CPF v?lido.</div>
+                  <div class="invalid-feedback">Informe um CPF válido.</div>
                 </div>
               </div>
             </div>
@@ -303,7 +303,7 @@
             <div class="mi-pane" data-step="6">
               <div class="alert alert-success">
                 <div class="fw-bold">Inscrição confirmada!</div>
-                Protocolo: <span id="miProtocolo">?</span>
+                Protocolo: <span id="miProtocolo">—</span>
               </div>
             </div>
           </form>
@@ -336,7 +336,7 @@
         </div>
         <div class="modal-body text-center">
           <p class="mb-1">Sua inscrição na <strong>84ª Reunião Ordinária do CONAPREV</strong> foi realizada com sucesso.</p>
-          <div class="fw-bold">Protocolo: <span id="miOkProtocolo">?</span></div>
+          <div class="fw-bold">Protocolo: <span id="miOkProtocolo">—</span></div>
         </div>
       </div>
     </div>
@@ -369,7 +369,7 @@
     </div>
   </div>
 
-  <!-- ========== MODAL: Acompanhar Inscri??es ========== -->
+  <!-- ========== MODAL: Acompanhar Inscrições ========== -->
   <div class="modal fade" id="adminMonitorModal" tabindex="-1" aria-hidden="true" aria-labelledby="adminMonitorTitle">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
@@ -409,7 +409,7 @@
             <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
               <div class="input-group input-group-sm" style="min-width: 260px">
                 <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
-                <input id="adminSearch" type="search" class="form-control" placeholder="Buscar por CPF ou Nome?" />
+                <input id="adminSearch" type="search" class="form-control" placeholder="Buscar por CPF ou Nome…" />
               </div>
               <button id="adminRefreshBtn" type="button" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Atualizar
@@ -420,7 +420,7 @@
             </div>
           </div>
 
-          <!-- ABAS: Ativos / Finalizados (INSERIR AQUI, ap?s a toolbar) -->
+          <!-- ABAS: Ativos / Finalizados (INSERIR AQUI, após a toolbar) -->
           <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <button
@@ -471,7 +471,7 @@
     </div>
   </div>
 
-  <!-- ========== MODAL: Acesso Vota??o ao vivo ========== -->
+  <!-- ========== MODAL: Acesso Votação ao vivo ========== -->
   <div class="modal fade" id="votingAuthModal" tabindex="-1" aria-hidden="true" aria-labelledby="votingAuthTitle">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -498,7 +498,7 @@
     </div>
   </div>
 
-  <!-- ========== MODAL: Dashboard Vota??o ao vivo ========== -->
+  <!-- ========== MODAL: Dashboard Votação ao vivo ========== -->
   <div class="modal fade" id="votingAdminModal" tabindex="-1" aria-hidden="true" aria-labelledby="votingAdminTitle">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
@@ -523,7 +523,7 @@
               <div id="votingThemeTitle" class="h6 mb-0">Selecione um tema</div>
             </div>
             <button id="votingCreateBtn" type="button" class="btn btn-primary btn-sm">
-              <i class="bi bi-plus-circle" aria-hidden="true"></i> Criar uma vota??o
+              <i class="bi bi-plus-circle" aria-hidden="true"></i> Criar uma Votação
             </button>
           </div>
 
@@ -578,7 +578,7 @@
         <div class="modal-body">
           <label for="cpfCertInput" class="form-label">Informe seu CPF</label>
           <input id="cpfCertInput" type="text" inputmode="numeric" autocomplete="off" class="form-control" placeholder="Somente ngmeros" />
-          <div class="form-text">Usaremos seu CPF para localizar sua inscri??uo confirmada.</div>
+          <div class="form-text">Usaremos seu CPF para localizar sua inscrição confirmada.</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -650,7 +650,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" defer></script>
 
-  <!-- Fallback r?pido -->
+  <!-- Fallback rápido -->
   <script>
     window.API_BASE = window.API_BASE || 'http://localhost:3000';
     window.EVENTO = window.EVENTO || {
@@ -677,7 +677,7 @@
 
   <!-- Admin -->
   <script src="/src/js/admin.js" defer></script>
-  <!-- Vota??uo Ao vivo -->
+  <!-- votação Ao vivo -->
   <script src="/src/js/votacao.js" defer></script>
   <!-- Certificados -->
   <script src="/src/js/certs.js" defer></script>
@@ -696,6 +696,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
