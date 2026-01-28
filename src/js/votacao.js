@@ -67,7 +67,7 @@
     const markup = `
       <div class="modal fade" id="voteUiModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteUiTitle">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
+          <div class="modal-content vote-ui-modal">
             <div class="modal-header">
               <h5 class="modal-title" id="voteUiTitle">Aviso</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -76,7 +76,7 @@
               <div class="vote-ui-lottie" id="voteUiLottie"></div>
               <div id="voteUiBody" class="mt-3"></div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer vote-ui-footer">
               <button type="button" class="btn btn-outline-secondary d-none" id="voteUiCancel">Cancelar</button>
               <button type="button" class="btn btn-primary" id="voteUiOk" data-bs-dismiss="modal">Ok</button>
             </div>
@@ -104,6 +104,8 @@
     okBtn.classList.toggle('btn-danger', variant === 'danger');
     okBtn.classList.toggle('btn-primary', variant !== 'danger');
     cancelBtn.classList.toggle('d-none', !confirm);
+    const footerEl = modalEl.querySelector('.vote-ui-footer');
+    footerEl?.classList.toggle('is-dual', !!confirm);
 
     let lottieInstance = null;
     if (lottieEl) {
@@ -151,6 +153,82 @@
       modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
       modal?.show();
     });
+  };
+
+  const showToast = (message) => {
+    if (!message) return;
+    const containerId = 'voteToastContainer';
+    let container = document.getElementById(containerId);
+    if (!container) {
+      container = document.createElement('div');
+      container.id = containerId;
+      container.className = 'toast-container position-fixed top-0 end-0 p-3';
+      container.style.zIndex = '2000';
+      document.body.appendChild(container);
+    }
+    const toastEl = document.createElement('div');
+    toastEl.className = 'toast align-items-center text-bg-success border-0';
+    toastEl.setAttribute('role', 'status');
+    toastEl.setAttribute('aria-live', 'polite');
+    toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+      </div>
+    `;
+    container.appendChild(toastEl);
+    if (window.bootstrap) {
+      const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 2200 });
+      toast.show();
+      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove(), { once: true });
+    } else {
+      setTimeout(() => toastEl.remove(), 2400);
+    }
+  };
+
+  const showLoading = (message = 'Carregando...') => {
+    if (document.getElementById('voteLoadingModal')) {
+      const msgEl = document.getElementById('voteLoadingMsg');
+      if (msgEl) msgEl.textContent = message;
+      const modalEl = document.getElementById('voteLoadingModal');
+      const modal = window.bootstrap ? bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: false }) : null;
+      modal?.show();
+      return;
+    }
+    const markup = `
+      <div class="modal fade" id="voteLoadingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content vote-ui-modal">
+            <div class="modal-body text-center">
+              <div class="vote-ui-lottie" id="voteLoadingLottie"></div>
+              <div id="voteLoadingMsg" class="mt-2">${message}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', markup);
+    const modalEl = document.getElementById('voteLoadingModal');
+    const modal = window.bootstrap ? bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: false }) : null;
+    const lottieEl = document.getElementById('voteLoadingLottie');
+    if (lottieEl && window.lottie) {
+      window.lottie.loadAnimation({
+        container: lottieEl,
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: '/animacoes/lottie_search_loading.json',
+      });
+    }
+    modal?.show();
+  };
+
+  const hideLoading = () => {
+    const modalEl = document.getElementById('voteLoadingModal');
+    if (!modalEl || !window.bootstrap) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal?.hide();
   };
 
   // ===== Admin =====
@@ -210,13 +288,17 @@
     };
 
     const fetchThemes = async () => {
+      showLoading('Carregando temas...');
       const res = await adminFetch('/api/votacao/admin/temas');
+      hideLoading();
       if (!res.ok) throw new Error('Falha ao carregar temas');
       return res.json();
     };
 
     const fetchVotes = async (themeId) => {
+      showLoading('Carregando votações...');
       const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
+      hideLoading();
       if (!res.ok) throw new Error('Falha ao carregar votações');
       return res.json();
     };
@@ -438,9 +520,9 @@
           const link = actionBtn.dataset.link || `${location.origin}/votacao.html`;
           try {
             await navigator.clipboard.writeText(link);
-            await showUiModal({ title: 'Link copiado', message: 'Link copiado com sucesso.', variant: 'success' });
+            showToast('Link copiado com sucesso.');
           } catch {
-            await showUiModal({ title: 'Link', message: `Copie o link: ${link}`, variant: 'info' });
+            showToast(`Copie o link: ${link}`);
           }
         }
       }
@@ -736,10 +818,12 @@
       }
 
       if (isEdit && currentVote?.id) {
+        showLoading('Salvando votação...');
         const res = await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(currentVote.id)}`, {
           method: 'PUT',
           body: JSON.stringify({ questions }),
         });
+        hideLoading();
         if (!res.ok) {
           await showUiModal({ title: 'Erro', message: 'Erro ao salvar.', variant: 'danger' });
           return;
@@ -749,10 +833,12 @@
           await showUiModal({ title: 'Erro', message: 'Tema não encontrado.', variant: 'danger' });
           return;
         }
+        showLoading('Gerando votação...');
         const res = await adminFetch('/api/votacao/admin/votacoes', {
           method: 'POST',
           body: JSON.stringify({ tema: themeId, questions }),
         });
+        hideLoading();
         if (!res.ok) {
           await showUiModal({ title: 'Erro', message: 'Erro ao criar votação.', variant: 'danger' });
           return;
@@ -879,10 +965,12 @@
         loginMsg.textContent = 'CPF inválido. Verifique e tente novamente.';
         return;
       }
+      showLoading('Validando CPF...');
       const res = await apiFetch('/api/votacao/login', {
         method: 'POST',
         body: JSON.stringify({ cpf }),
       });
+      hideLoading();
       const data = await res.json();
       if (!data.ok) {
         await showDenied('Desculpe! Ação não permitida');
@@ -906,7 +994,9 @@
         return;
       }
       const themeId = card.dataset.theme;
+      showLoading('Carregando questionário...');
       const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
+      hideLoading();
       if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       const data = await res.json();
       if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
@@ -1020,6 +1110,7 @@
         answers.push({ questionId: qid, type: 'options', optionIds: selected });
       }
 
+      showLoading('Enviando voto...');
       const res = await apiFetch('/api/votacao/votar', {
         method: 'POST',
         body: JSON.stringify({
@@ -1029,6 +1120,7 @@
           durationMs: Date.now() - startedAt,
         }),
       });
+      hideLoading();
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));

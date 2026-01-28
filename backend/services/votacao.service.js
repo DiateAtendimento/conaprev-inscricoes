@@ -61,6 +61,13 @@ function normalize(str) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function cleanAnswerText(value) {
+  return String(value || "")
+    .trim()
+    .replace(/[.;]+$/g, "")
+    .replace(/\s+/g, " ");
+}
+
 function resolveTheme(input) {
   const norm = normalize(input);
   return THEMES.find((t) => normalize(t.id) === norm || normalize(t.name) === norm) || null;
@@ -169,7 +176,7 @@ function formatResponsesText(vote, answers = [], durationMs = 0) {
     const labels = ids.map((id) => {
       const opt = (q.options || []).find((o) => String(o.id) === String(id));
       return opt?.text || "";
-    }).filter(Boolean);
+    }).filter(Boolean).map(cleanAnswerText);
     return `${index + 1}. ${q.text || "Pergunta"}\nResposta: ${labels.length ? labels.join(", ") : "-"}`;
   }).join("\n\n");
   const secs = Math.max(0, Math.round((Number(durationMs || 0) || 0) / 1000));
@@ -199,12 +206,14 @@ function parseResponsesText(text, vote) {
     const q = questions[index];
     if (!q) return;
     const respLine = lines.find((l) => l.toLowerCase().startsWith("resposta:"));
-    const respText = respLine ? respLine.replace(/^resposta:\s*/i, "").trim() : "";
+    const respText = respLine ? cleanAnswerText(respLine.replace(/^resposta:\s*/i, "")) : "";
     if (q.type === "text") {
       parsed.push({ questionId: q.id, type: "text", value: respText });
       return;
     }
-    const parts = respText ? respText.split(",").map((p) => p.trim()).filter(Boolean) : [];
+    const parts = respText
+      ? respText.split(/[;,]/).map((p) => cleanAnswerText(p)).filter(Boolean)
+      : [];
     parsed.push({ questionId: q.id, type: "options", optionTexts: parts });
   });
   return { answers: parsed, durationMs };
@@ -492,7 +501,7 @@ export async function getUserResponseForVote(vote, cpf) {
       if (ans.type === "text") return ans;
       const optionIds = (ans.optionTexts || []).map((text) => {
         const q = (vote.questions || []).find((qq) => qq.id === ans.questionId);
-        const opt = (q?.options || []).find((o) => normalize(o.text) === normalize(text));
+        const opt = (q?.options || []).find((o) => normalize(o.text) === normalize(cleanAnswerText(text)));
         return opt?.id;
       }).filter(Boolean);
       return { questionId: ans.questionId, type: "options", optionIds };
@@ -604,7 +613,7 @@ export async function getVoteResults(voteId) {
       if (!ans) return;
       const texts = Array.isArray(ans.optionTexts) ? ans.optionTexts : [];
       texts.forEach((text) => {
-        const opt = (q.options || []).find((o) => normalize(o.text) === normalize(text));
+        const opt = (q.options || []).find((o) => normalize(o.text) === normalize(cleanAnswerText(text)));
         if (opt && counts.hasOwnProperty(opt.id)) counts[opt.id] += 1;
       });
     });
