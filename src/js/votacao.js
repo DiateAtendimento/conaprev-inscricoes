@@ -161,6 +161,7 @@
     const elAuthPass = document.getElementById('votingAuthPass');
     const elAuthMsg = document.getElementById('votingAuthMsg');
     const elAdminModal = document.getElementById('votingAdminModal');
+    const elOffcanvas = document.getElementById('menuOffcanvas');
     const elLogoutBtn = document.getElementById('votingLogoutBtn');
     const elCreateBtn = document.getElementById('votingCreateBtn');
     const elEmptyCreateBtn = document.getElementById('votingEmptyCreateBtn');
@@ -183,6 +184,9 @@
     const authModal = getModal(elAuthModal);
     const adminModal = getModal(elAdminModal);
     const resultsModal = getModal(elResultsModal);
+    const offcanvas = (elOffcanvas && window.bootstrap)
+      ? bootstrap.Offcanvas.getOrCreateInstance(elOffcanvas)
+      : null;
 
     let selectedTheme = null;
 
@@ -322,6 +326,17 @@
 
     elButton.addEventListener('click', (event) => {
       event.preventDefault();
+      if (elOffcanvas?.classList.contains('show')) {
+        offcanvas?.hide();
+        setTimeout(() => {
+          if (sessionStorage.getItem(SESSION_KEY)) {
+            loadAdminView().then(() => adminModal?.show());
+          } else {
+            authModal?.show();
+          }
+        }, 250);
+        return;
+      }
       if (sessionStorage.getItem(SESSION_KEY)) {
         loadAdminView().then(() => adminModal?.show());
       } else {
