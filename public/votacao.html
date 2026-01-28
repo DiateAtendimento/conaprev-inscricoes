@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Votação Ao vivo - CONAPREV</title>
-  <meta name="description" content="Participe da votação ao vivo do CONAPREV." />
+  <title>VotaÃ§Ã£o Ao vivo - CONAPREV</title>
+  <meta name="description" content="Participe da votaÃ§Ã£o ao vivo do CONAPREV." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,38 +16,45 @@
   <link href="/src/css/main.css" rel="stylesheet">
   <link href="/src/css/components.css" rel="stylesheet">
 </head>
-<body>
-    <main class="container container--narrow py-5" id="votePublicContainer">
-    <div class="vote-public-hero mb-4">
-      <h1 id="votePublicTitle" class="h3 fw-bold mb-1">Votação Ao vivo</h1>
-      <p class="text-muted mb-0">Acesse com seu CPF para votar.</p>
-    </div>
+<body class="vote-login-page">
+  <main id="votePublicContainer" class="vote-login-shell">
+    <section id="voteLoginCard" class="vote-login-card">
+      <div class="vote-login-left">
+        <div class="vote-login-brand">CONAPREV 2026</div>
+        <h1 class="vote-login-title">VotaÃ§Ã£o ao vivo</h1>
+        <p class="vote-login-subtitle">Acesse com seu CPF para votar.</p>
 
-    <div id="voteLoginCard" class="card p-4 mb-4">
-      <form id="voteLoginForm" class="row g-3 align-items-end">
-        <div class="col-12 col-md-6">
+        <form id="voteLoginForm" class="vote-login-form">
           <label for="voteCpf" class="form-label">CPF</label>
-          <input id="voteCpf" class="form-control" inputmode="numeric" autocomplete="off" placeholder="Somente números">
-        </div>
-        <div class="col-12 col-md-6 d-flex gap-2">
-          <button id="voteLoginBtn" type="submit" class="btn btn-primary">Entrar</button>
-          <span id="voteLoginMsg" class="text-danger small align-self-center d-none"></span>
-        </div>
-      </form>
-    </div>
-
-    <section id="voteModules" class="d-none">
-      <h2 class="h5 mb-3">Módulos de votação</h2>
-      <div id="voteModuleGrid" class="row g-3"></div>
-    </section>
-
-    <section id="voteFormWrap" class="d-none mt-4">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <h2 id="voteFormTitle" class="h5 mb-0">Questionário</h2>
-        <button id="voteBackBtn" class="btn btn-outline-secondary btn-sm" type="button">Voltar aos módulos</button>
+          <input id="voteCpf" class="form-control vote-login-input" inputmode="numeric" autocomplete="off" placeholder="Digite seu CPF">
+          <span id="voteLoginMsg" class="vote-login-msg d-none"></span>
+          <button id="voteLoginBtn" type="submit" class="btn btn-success vote-login-btn">Entrar</button>
+        </form>
       </div>
 
-      <form id="votePublicForm" class="vstack gap-3">
+      <div class="vote-login-right">
+        <img src="/imagens/logos/tela-login-CONAPREV84.svg" alt="CONAPREV 2026" />
+      </div>
+    </section>
+
+    <section id="voteModules" class="vote-public-section d-none">
+      <div class="vote-public-hero">
+        <h2 class="mb-1">MÃ³dulos de votaÃ§Ã£o</h2>
+        <p>Escolha o mÃ³dulo disponÃ­vel para votar.</p>
+      </div>
+      <div id="voteModuleGrid" class="row g-3 mt-2"></div>
+    </section>
+
+    <section id="voteFormWrap" class="vote-public-section d-none">
+      <div class="vote-form-header">
+        <div>
+          <h2 id="voteFormTitle" class="mb-1">QuestionÃ¡rio</h2>
+          <p class="mb-0">Responda todas as perguntas para enviar seu voto.</p>
+        </div>
+        <button id="voteBackBtn" class="btn btn-success btn-sm" type="button">Voltar aos mÃ³dulos</button>
+      </div>
+
+      <form id="votePublicForm" class="vstack gap-3 mt-3">
         <div id="votePublicQuestions" class="vstack gap-3"></div>
         <button type="submit" class="btn btn-primary">Enviar</button>
       </form>
@@ -56,33 +63,11 @@
     <div id="votePublicMsg" class="alert alert-success d-none mt-4" role="alert"></div>
   </main>
 
-  <div class="modal fade" id="voteDeniedModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteDeniedTitle">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="voteDeniedTitle">Aviso</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body" id="voteDeniedBody">Desculpe! Ação não permitida.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="voteUnavailableModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteUnavailableTitle">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="voteUnavailableTitle">Aviso</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">Votação indisponível.</div>
-      </div>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js" defer></script>
   <script src="/src/js/config.js" defer></script>
   <script src="/src/js/votacao.js" defer></script>
 </body>
 </html>
+
 

@@ -13,6 +13,7 @@ import {
   submitVote,
   getVoteResults,
   getVoteById,
+  getUserResponseForVote,
 } from "../services/votacao.service.js";
 
 const r = Router();
@@ -55,11 +56,21 @@ r.get("/temas", async (_req, res) => {
 r.get("/temas/:tema/latest", async (req, res) => {
   try {
     const tema = String(req.params.tema || "");
+    const cpf = String(req.query?.cpf || "").replace(/\D/g, "");
     const vote = await getLatestVoteForTema(tema);
     if (!vote) return res.json({ active: false });
+    let previousAnswers = null;
+    if (cpf) {
+      const valid = await validateVoter(cpf);
+      if (valid.ok) {
+        const prev = await getUserResponseForVote(vote, cpf);
+        if (prev?.answers?.length) previousAnswers = prev.answers;
+      }
+    }
     return res.json({
       active: !!vote.active,
       vote: vote.active ? vote : null,
+      previousAnswers,
     });
   } catch (e) {
     return sendError(res, e, "Erro ao buscar votação");

@@ -62,6 +62,97 @@
     return min > 0 ? `${min}m ${sec}s` : `${sec}s`;
   };
 
+  const ensureUiModal = () => {
+    if (document.getElementById('voteUiModal')) return;
+    const markup = `
+      <div class="modal fade" id="voteUiModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteUiTitle">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="voteUiTitle">Aviso</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+              <div class="vote-ui-lottie" id="voteUiLottie"></div>
+              <div id="voteUiBody" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary d-none" id="voteUiCancel">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="voteUiOk" data-bs-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', markup);
+  };
+
+  const showUiModal = ({ title = 'Aviso', message = '', variant = 'info', confirm = false } = {}) => {
+    ensureUiModal();
+    const modalEl = document.getElementById('voteUiModal');
+    const titleEl = document.getElementById('voteUiTitle');
+    const bodyEl = document.getElementById('voteUiBody');
+    const okBtn = document.getElementById('voteUiOk');
+    const cancelBtn = document.getElementById('voteUiCancel');
+    const lottieEl = document.getElementById('voteUiLottie');
+
+    if (!modalEl || !titleEl || !bodyEl || !okBtn || !cancelBtn) return Promise.resolve(false);
+
+    titleEl.textContent = title;
+    bodyEl.textContent = message;
+
+    okBtn.classList.toggle('btn-danger', variant === 'danger');
+    okBtn.classList.toggle('btn-primary', variant !== 'danger');
+    cancelBtn.classList.toggle('d-none', !confirm);
+
+    let lottieInstance = null;
+    if (lottieEl) {
+      lottieEl.innerHTML = '';
+      const map = {
+        success: '/animacoes/lottie_success_check.json',
+        danger: '/animacoes/lottie_error_generic.json',
+        warning: '/animacoes/lottie_timeout_hourglass.json',
+        denied: '/animacoes/lottie_lock_unauthorized.json',
+        info: '/animacoes/lottie_empty_state.json',
+      };
+      const src = map[variant] || map.info;
+      if (window.lottie && src) {
+        lottieInstance = window.lottie.loadAnimation({
+          container: lottieEl,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: src,
+        });
+      }
+    }
+
+    const modal = window.bootstrap ? bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: true }) : null;
+    return new Promise((resolve) => {
+      const clean = () => {
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+        modalEl.removeEventListener('hidden.bs.modal', onHidden);
+        if (lottieInstance) lottieInstance.destroy();
+      };
+      const onHidden = () => {
+        clean();
+        resolve(false);
+      };
+      okBtn.onclick = () => {
+        clean();
+        resolve(true);
+      };
+      cancelBtn.onclick = () => {
+        clean();
+        modal?.hide();
+        resolve(false);
+      };
+      modalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+      modal?.show();
+    });
+  };
+
   // ===== Admin =====
   const initAdminModule = () => {
     const elButton = document.getElementById('liveVotingBtn');
@@ -264,12 +355,18 @@
       adminModal?.hide();
     });
 
-    elCreateBtn?.addEventListener('click', () => {
-      if (!selectedTheme) return alert('Selecione um tema.');
+    elCreateBtn?.addEventListener('click', async () => {
+      if (!selectedTheme) {
+        await showUiModal({ title: 'Aviso', message: 'Selecione um tema.', variant: 'warning' });
+        return;
+      }
       openCreateTab(selectedTheme.id);
     });
-    elEmptyCreateBtn?.addEventListener('click', () => {
-      if (!selectedTheme) return alert('Selecione um tema.');
+    elEmptyCreateBtn?.addEventListener('click', async () => {
+      if (!selectedTheme) {
+        await showUiModal({ title: 'Aviso', message: 'Selecione um tema.', variant: 'warning' });
+        return;
+      }
       openCreateTab(selectedTheme.id);
     });
 
@@ -294,12 +391,16 @@
         const action = actionBtn.dataset.action;
         if (action === 'edit') openEditTab(voteId);
         if (action === 'delete') {
-          const ok = confirm('Tem certeza que deseja excluir esta votação?');
-          if (ok) {
-            await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(voteId)}`, { method: 'DELETE' });
-            const votes = await fetchVotes(selectedTheme?.id || '');
-            renderList(votes);
-          }
+          const ok = await showUiModal({
+            title: 'Confirmar exclusão',
+            message: 'Tem certeza que deseja excluir esta votação?',
+            variant: 'danger',
+            confirm: true,
+          });
+          if (!ok) return;
+          await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(voteId)}`, { method: 'DELETE' });
+          const votes = await fetchVotes(selectedTheme?.id || '');
+          renderList(votes);
         }
         if (action === 'toggle') {
           const active = actionBtn.dataset.active === '1';
@@ -322,9 +423,9 @@
           const link = actionBtn.dataset.link || `${location.origin}/votacao.html`;
           try {
             await navigator.clipboard.writeText(link);
-            alert('Link copiado com sucesso.');
+            await showUiModal({ title: 'Link copiado', message: 'Link copiado com sucesso.', variant: 'success' });
           } catch {
-            window.prompt('Copie o link:', link);
+            await showUiModal({ title: 'Link', message: `Copie o link: ${link}`, variant: 'info' });
           }
         }
       }
@@ -525,7 +626,7 @@
       typeModal?.hide();
     });
 
-    builder.addEventListener('click', (event) => {
+    builder.addEventListener('click', async (event) => {
       const addOptionBtn = event.target.closest('.vote-add-option');
       if (addOptionBtn) {
         const questionCard = event.target.closest('.vote-question-card');
@@ -540,7 +641,11 @@
         const optionRow = event.target.closest('.vote-option-input');
         const optionsWrap = event.target.closest('.vote-options');
         if (optionsWrap && optionsWrap.children.length <= 2) {
-          alert('Cada pergunta precisa ter pelo menos duas opções.');
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Cada pergunta precisa ter pelo menos duas opções.',
+            variant: 'warning',
+          });
           return;
         }
         optionRow?.remove();
@@ -549,7 +654,11 @@
       const removeQuestionBtn = event.target.closest('.vote-remove-question');
       if (removeQuestionBtn) {
         if (builder.children.length <= 1) {
-          alert('É necessário manter ao menos uma pergunta.');
+          await showUiModal({
+            title: 'Aviso',
+            message: 'É necessário manter ao menos uma pergunta.',
+            variant: 'warning',
+          });
           return;
         }
         event.target.closest('.vote-question-card')?.remove();
@@ -572,7 +681,10 @@
       for (const card of cards) {
         const qText = (card.querySelector('.vote-question-text')?.value || '').trim();
         const qType = card.dataset.type || 'options';
-        if (!qText) return alert('Preencha todas as perguntas.');
+        if (!qText) {
+          await showUiModal({ title: 'Aviso', message: 'Preencha todas as perguntas.', variant: 'warning' });
+          return;
+        }
 
         if (qType === 'text') {
           questions.push({ id: card.dataset.qid || createId('q'), type: 'text', text: qText });
@@ -584,7 +696,14 @@
           id: optEl.dataset.oid || createId('o'),
           text: (optEl.querySelector('.vote-option-text')?.value || '').trim(),
         })).filter((opt) => opt.text);
-        if (options.length < 2) return alert('Cada pergunta precisa ter ao menos duas opções preenchidas.');
+        if (options.length < 2) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Cada pergunta precisa ter ao menos duas opções preenchidas.',
+            variant: 'warning',
+          });
+          return;
+        }
 
         const allowMultiple = !!card.querySelector('.vote-multi-toggle')?.checked;
         const limitType = card.querySelector('.vote-limit-type')?.value || 'none';
@@ -606,14 +725,23 @@
           method: 'PUT',
           body: JSON.stringify({ questions }),
         });
-        if (!res.ok) return alert('Erro ao salvar.');
+        if (!res.ok) {
+          await showUiModal({ title: 'Erro', message: 'Erro ao salvar.', variant: 'danger' });
+          return;
+        }
       } else {
-        if (!themeId) return alert('Tema não encontrado.');
+        if (!themeId) {
+          await showUiModal({ title: 'Erro', message: 'Tema não encontrado.', variant: 'danger' });
+          return;
+        }
         const res = await adminFetch('/api/votacao/admin/votacoes', {
           method: 'POST',
           body: JSON.stringify({ tema: themeId, questions }),
         });
-        if (!res.ok) return alert('Erro ao criar votação.');
+        if (!res.ok) {
+          await showUiModal({ title: 'Erro', message: 'Erro ao criar votação.', variant: 'danger' });
+          return;
+        }
         currentVote = await res.json();
       }
 
@@ -670,6 +798,23 @@
     let startedAt = 0;
     let pollTimer = null;
 
+    const formatCpf = (value) => {
+      const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+      const parts = [];
+      if (digits.length > 0) parts.push(digits.slice(0, 3));
+      if (digits.length >= 4) parts.push(digits.slice(3, 6));
+      if (digits.length >= 7) parts.push(digits.slice(6, 9));
+      let formatted = parts.join('.');
+      if (digits.length >= 10) formatted += `-${digits.slice(9, 11)}`;
+      return formatted;
+    };
+
+    cpfInput?.addEventListener('input', () => {
+      cpfInput.value = formatCpf(cpfInput.value);
+      loginMsg.classList.add('d-none');
+      loginMsg.textContent = '';
+    });
+
     const renderModules = (themes) => {
       if (!moduleGrid) return;
       moduleGrid.innerHTML = themes.map((t) => {
@@ -703,9 +848,12 @@
       }, 2000);
     };
 
-    const showDenied = (msg) => {
-      if (deniedBody) deniedBody.textContent = msg || 'Desculpe! Ação não permitida.';
-      deniedModal?.show();
+    const showDenied = async (msg) => {
+      await showUiModal({
+        title: 'Aviso',
+        message: msg || 'Desculpe! Ação não permitida.',
+        variant: 'denied',
+      });
     };
 
     loginForm.addEventListener('submit', async (event) => {
@@ -713,7 +861,7 @@
       const cpf = String(cpfInput?.value || '').replace(/\D/g, '');
       if (cpf.length !== 11) {
         loginMsg.classList.remove('d-none');
-        loginMsg.textContent = 'CPF inválido.';
+        loginMsg.textContent = 'CPF inválido. Verifique e tente novamente.';
         return;
       }
       const res = await apiFetch('/api/votacao/login', {
@@ -722,9 +870,11 @@
       });
       const data = await res.json();
       if (!data.ok) {
-        showDenied('Desculpe! Ação não permitida');
+        await showDenied('Desculpe! Ação não permitida');
         return;
       }
+      loginMsg.classList.add('d-none');
+      loginMsg.textContent = '';
       currentUser = data.user;
       sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser));
       loginCard?.classList.add('d-none');
@@ -737,14 +887,14 @@
     moduleGrid.addEventListener('click', async (event) => {
       const card = event.target.closest('.voting-theme-card');
       if (!card || card.classList.contains('is-disabled')) {
-        if (card) unavailableModal?.show();
+        if (card) await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
         return;
       }
       const themeId = card.dataset.theme;
-      const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest`);
-      if (!res.ok) return unavailableModal?.show();
+      const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
+      if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       const data = await res.json();
-      if (!data.active || !data.vote) return unavailableModal?.show();
+      if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       currentVote = data.vote;
       startedAt = Date.now();
       formWrap?.classList.remove('d-none');
@@ -774,6 +924,20 @@
         `;
       }).join('');
       if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
+      if (Array.isArray(data.previousAnswers)) {
+        data.previousAnswers.forEach((ans) => {
+          if (ans.type === 'text') {
+            const area = questionsWrap.querySelector(`textarea[name="${ans.questionId}"]`);
+            if (area) area.value = ans.value || '';
+            return;
+          }
+          const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+          ids.forEach((oid) => {
+            const input = document.getElementById(`${ans.questionId}_${oid}`);
+            if (input) input.checked = true;
+          });
+        });
+      }
     });
 
     backBtn?.addEventListener('click', () => {
@@ -795,7 +959,7 @@
         const msg = limitType === 'equal'
           ? `Selecione exatamente ${limitValue} opção(ões).`
           : `Selecione no máximo ${limitValue} opção(ões).`;
-        alert(msg);
+        await showUiModal({ title: 'Aviso', message: msg, variant: 'warning' });
       }
     });
 
@@ -813,20 +977,28 @@
 
         if (card.querySelector('textarea')) {
           const val = (card.querySelector('textarea')?.value || '').trim();
-          if (!val) return alert('Responda todas as perguntas.');
+          if (!val) {
+            await showUiModal({ title: 'Aviso', message: 'Responda todas as perguntas.', variant: 'warning' });
+            return;
+          }
           answers.push({ questionId: qid, type: 'text', value: val });
           continue;
         }
 
         const selected = Array.from(card.querySelectorAll('input:checked')).map((el) => el.value);
-        if (!selected.length) return alert('Responda todas as perguntas.');
+        if (!selected.length) {
+          await showUiModal({ title: 'Aviso', message: 'Responda todas as perguntas.', variant: 'warning' });
+          return;
+        }
 
         if (isMulti && limitType !== 'none' && limitValue > 0) {
           if (limitType === 'equal' && selected.length !== limitValue) {
-            return alert(`Selecione exatamente ${limitValue} opção(ões).`);
+            await showUiModal({ title: 'Aviso', message: `Selecione exatamente ${limitValue} opção(ões).`, variant: 'warning' });
+            return;
           }
           if (limitType === 'max' && selected.length > limitValue) {
-            return alert(`Selecione no máximo ${limitValue} opção(ões).`);
+            await showUiModal({ title: 'Aviso', message: `Selecione no máximo ${limitValue} opção(ões).`, variant: 'warning' });
+            return;
           }
         }
 
@@ -845,14 +1017,23 @@
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) return unavailableModal?.show();
-        return showDenied('Desculpe! Ação não permitida');
+        if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
+          await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+          return;
+        }
+        await showDenied('Desculpe! Ação não permitida');
+        return;
       }
 
       const data = await res.json();
       formWrap?.classList.add('d-none');
       successMsg.textContent = `${data.nome || currentUser.nome}, seu voto foi enviado com sucesso!`;
       successMsg?.classList.remove('d-none');
+      await showUiModal({
+        title: 'Sucesso',
+        message: successMsg.textContent,
+        variant: 'success',
+      });
     });
 
     try {

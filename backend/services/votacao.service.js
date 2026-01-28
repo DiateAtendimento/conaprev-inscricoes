@@ -157,9 +157,9 @@ function parseJSON(val) {
   try { return JSON.parse(val); } catch { return null; }
 }
 
-function formatResponsesText(vote, answers = []) {
+function formatResponsesText(vote, answers = [], durationMs = 0) {
   const questions = vote?.questions || [];
-  return questions.map((q, index) => {
+  const body = questions.map((q, index) => {
     const ans = (answers || []).find((a) => String(a.questionId) === String(q.id));
     if (q.type === "text") {
       const val = String(ans?.value || "").trim();
@@ -172,18 +172,27 @@ function formatResponsesText(vote, answers = []) {
     }).filter(Boolean);
     return `${index + 1}. ${q.text || "Pergunta"}\nResposta: ${labels.length ? labels.join(", ") : "-"}`;
   }).join("\n\n");
+  const secs = Math.max(0, Math.round((Number(durationMs || 0) || 0) / 1000));
+  return `${body}\n\nTempo de resposta (s): ${secs}`;
 }
 
 function parseResponsesText(text, vote) {
   const normalized = String(text || "").trim();
-  if (!normalized) return [];
+  if (!normalized) return { answers: [], durationMs: 0 };
   const questions = vote?.questions || [];
   const blocks = normalized.split(/\n\s*\n/);
   const parsed = [];
+  let durationMs = 0;
   blocks.forEach((block) => {
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
     if (!lines.length) return;
     const first = lines[0] || "";
+    if (/^tempo de resposta/i.test(first)) {
+      const val = first.split(":")[1] || "";
+      const secs = parseInt(String(val).replace(/\D/g, ""), 10);
+      if (Number.isFinite(secs)) durationMs = secs * 1000;
+      return;
+    }
     const match = first.match(/^(\d+)\.\s*(.*)$/);
     if (!match) return;
     const index = parseInt(match[1], 10) - 1;
@@ -198,7 +207,7 @@ function parseResponsesText(text, vote) {
     const parts = respText ? respText.split(",").map((p) => p.trim()).filter(Boolean) : [];
     parsed.push({ questionId: q.id, type: "options", optionTexts: parts });
   });
-  return parsed;
+  return { answers: parsed, durationMs };
 }
 
 /* ===== presença Dia1/Dia2 ===== */
@@ -442,6 +451,57 @@ export async function validateVoter(cpf) {
   };
 }
 
+export async function getUserResponseForVote(vote, cpf) {
+  if (!vote) return null;
+  const clean = String(cpf || "").replace(/\D/g, "");
+  if (!/^\d{11}$/.test(clean)) return null;
+
+  const user = await buscarPorCpf(clean, "Conselheiro");
+  if (!user || !user.numerodeinscricao) return null;
+
+  await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
+  const temaLabel = String(vote.title || vote.tema || "").trim();
+  const { rows } = await readAllCached(SHEET_VOTOS, `votos:${vote.id}`);
+
+  let found = null;
+  rows.forEach((r) => {
+    const numero = String(r[0] || "").trim();
+    const tema = String(r[4] || "").trim();
+    if (numero !== String(user.numerodeinscricao || "").trim()) return;
+    if (tema !== temaLabel) return;
+    found = r[5];
+  });
+  if (!found) return null;
+
+  const parsed = parseResponsesText(found, vote);
+  let answers = parsed.answers || [];
+
+  if (!answers.length) {
+    const json = parseJSON(found);
+    if (json && json.answers) {
+      answers = json.answers.map((ans) => {
+        if (ans.type === "text") {
+          return { questionId: ans.questionId, type: "text", value: String(ans.value || "") };
+        }
+        const optionIds = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+        return { questionId: ans.questionId, type: "options", optionIds };
+      });
+    }
+  } else {
+    answers = answers.map((ans) => {
+      if (ans.type === "text") return ans;
+      const optionIds = (ans.optionTexts || []).map((text) => {
+        const q = (vote.questions || []).find((qq) => qq.id === ans.questionId);
+        const opt = (q?.options || []).find((o) => normalize(o.text) === normalize(text));
+        return opt?.id;
+      }).filter(Boolean);
+      return { questionId: ans.questionId, type: "options", optionIds };
+    });
+  }
+
+  return { answers };
+}
+
 export async function submitVote({ voteId, cpf, answers, durationMs }) {
   const vote = await getVoteById(voteId);
   if (!vote) throw new Error("Votação não encontrada");
@@ -456,7 +516,7 @@ export async function submitVote({ voteId, cpf, answers, durationMs }) {
   await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
   const { date, time } = nowBRParts();
   const temaLabel = vote.title || vote.tema;
-  const responsesText = formatResponsesText(vote, answers || []);
+  const responsesText = formatResponsesText(vote, answers || [], durationMs);
   const sheets = await getSheets();
 
   const cacheKey = `votos:${vote.id}`;
@@ -513,7 +573,7 @@ export async function getVoteResults(voteId) {
     const tema = String(r[4] || "").trim();
     if (tema !== temaLabel) return;
     const parsed = parseResponsesText(r[5], vote);
-    if (parsed.length) {
+    if (parsed.answers.length) {
       responses.push(parsed);
       return;
     }
@@ -529,7 +589,7 @@ export async function getVoteResults(voteId) {
         }).filter(Boolean);
         return { questionId: ans.questionId, type: "options", optionTexts: optTexts };
       });
-      responses.push(mapped);
+      responses.push({ answers: mapped, durationMs: Number(json.durationMs || 0) || 0 });
     }
   });
 
@@ -540,7 +600,7 @@ export async function getVoteResults(voteId) {
     const counts = {};
     (q.options || []).forEach((opt) => { counts[opt.id] = 0; });
     responses.forEach((resp) => {
-      const ans = (resp || []).find((a) => a.questionId === q.id);
+      const ans = (resp.answers || []).find((a) => a.questionId === q.id);
       if (!ans) return;
       const texts = Array.isArray(ans.optionTexts) ? ans.optionTexts : [];
       texts.forEach((text) => {
@@ -551,11 +611,14 @@ export async function getVoteResults(voteId) {
     return { questionId: q.id, type: "options", counts };
   });
 
+  const durations = responses.map((r) => Number(r.durationMs || 0)).filter((n) => Number.isFinite(n) && n > 0);
+  const avgMs = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
+
   return {
     voteId,
     title: vote.title,
     total: responses.length,
-    avgDurationMs: 0,
+    avgDurationMs: avgMs,
     questions: vote.questions || [],
     stats,
   };

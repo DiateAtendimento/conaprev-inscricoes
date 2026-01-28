@@ -132,6 +132,165 @@
   border:1px solid rgba(11,77,73,.15);
 }
 
+.vote-ui-lottie{
+  width:140px;
+  height:140px;
+  margin:0 auto;
+}
+
+/* ===== LOGIN VOTACAO ===== */
+.vote-login-page{
+  background:#f8fafc;
+  min-height:100vh;
+}
+body.vote-login-page::after{
+  display:none;
+}
+.vote-login-shell{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:24px;
+}
+.vote-login-card{
+  width:min(980px, 100%);
+  display:grid;
+  grid-template-columns: 42% 58%;
+  background:#fff;
+  border-radius:26px;
+  box-shadow:0 24px 60px rgba(15,23,42,.12);
+  overflow:hidden;
+  border:1px solid rgba(15,23,42,.08);
+}
+.vote-login-left{
+  position:relative;
+  padding:clamp(24px, 4vw, 42px);
+  background:linear-gradient(160deg, rgba(14,122,74,.18), rgba(14,116,144,.22));
+}
+.vote-login-left::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at top left, rgba(255,204,0,.18), transparent 55%);
+  pointer-events:none;
+}
+.vote-login-brand{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:.6px;
+  color:#0b4d49;
+  margin-bottom:8px;
+}
+.vote-login-title{
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:6px;
+  color:#0f172a;
+}
+.vote-login-subtitle{
+  color:#334155;
+  margin-bottom:22px;
+}
+.vote-login-form{
+  display:grid;
+  gap:12px;
+}
+.vote-login-input{
+  border-radius:999px;
+  padding:12px 18px;
+  border:1px solid rgba(15,23,42,.15);
+}
+.vote-login-input:focus{
+  border-color:#0b4d49;
+  box-shadow:0 0 0 3px rgba(14,122,74,.2);
+}
+.vote-login-btn{
+  border-radius:999px;
+  padding:10px 18px;
+  font-weight:700;
+}
+.vote-login-msg{
+  color:#b91c1c;
+  font-size:12.5px;
+  display:block;
+}
+.vote-login-right{
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:#fff;
+}
+.vote-login-right img{
+  max-width:80%;
+  height:auto;
+}
+
+.vote-public-section{
+  width:min(1100px, 100%);
+  margin:20px auto 0;
+}
+.vote-public-hero{
+  background:linear-gradient(135deg, rgba(11,77,73,.18), rgba(8,145,178,.12));
+  color:#0f172a;
+  border-radius:18px;
+  padding:18px 22px;
+  border:1px solid rgba(11,77,73,.2);
+}
+.vote-public-hero h2{
+  font-weight:800;
+}
+.vote-public-hero p{
+  margin:0;
+  color:#1f2937;
+}
+.vote-form-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px 20px;
+  border-radius:16px;
+  background:linear-gradient(135deg, rgba(11,77,73,.22), rgba(255,204,0,.18));
+  border:1px solid rgba(11,77,73,.2);
+}
+.vote-form-header h2{
+  font-weight:800;
+}
+.vote-form-header p{
+  color:#1f2937;
+}
+
+@media (max-width: 900px){
+  .vote-login-card{
+    grid-template-columns: 1fr;
+  }
+  .vote-login-right{
+    order:2;
+  }
+  .vote-login-left{
+    order:1;
+  }
+  .vote-login-right img{
+    max-width:60%;
+  }
+}
+
+@media (max-width: 576px){
+  .vote-login-shell{
+    padding:16px;
+  }
+  .vote-login-title{
+    font-size:24px;
+  }
+  .vote-public-section{
+    margin-top:16px;
+  }
+  .vote-form-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+
 /* ===== THEMES (admin + público) ===== */
 .voting-theme-card{
   border-radius:18px;
