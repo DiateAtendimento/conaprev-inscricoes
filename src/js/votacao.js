@@ -959,7 +959,7 @@
       formWrap?.classList.add('d-none');
     });
 
-    questionsWrap?.addEventListener('change', (event) => {
+    questionsWrap?.addEventListener('change', async (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) return;
       if (target.type !== 'checkbox') return;
