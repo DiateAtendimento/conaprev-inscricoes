@@ -1,8 +1,8 @@
-import cfg from "../config/env.js";
+﻿import cfg from "../config/env.js";
 import { getSheets, getSlides } from "./google.service.js";
 import { buscarPorCpf } from "./sheets.service.js";
 
-// checa presença nas abas Dia1/Dia2
+// checa presen�a nas abas Dia1/Dia2
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
   const abas = ["Dia1", "Dia2"];
@@ -26,7 +26,7 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
           break;
         }
       }
-    } catch (_e) { /* aba pode não existir */ }
+    } catch (_e) { /* aba pode n�o existir */ }
   }
   return { dia1, dia2 };
 }
@@ -50,13 +50,13 @@ export async function emitirCertificadoPDF(cpf) {
     const u = await buscarPorCpf(cpf, p);
     if (u) { user = u; perfilEncontrado = p; break; }
   }
-  if (!user) throw new Error("CPF não encontrado.");
+  if (!user) throw new Error("CPF n�o encontrado.");
   if (!user.numerodeinscricao || String(user.numerodeinscricao).trim() === "")
-    throw new Error("Certificado disponível apenas para inscritos confirmados (com número de inscrição).");
+    throw new Error("Certificado dispon�vel apenas para inscritos confirmados (com n�mero de inscri��o).");
 
   const dias = await checarPresencaDias(user.numerodeinscricao, user.nome);
   if (!dias.dia1 && !dias.dia2)
-    throw new Error("NAO_CONSTA_PRESENCA|O seu número de inscrição não consta nas listas Dia1/Dia2.");
+    throw new Error("NAO_CONSTA_PRESENCA|O seu n�mero de inscri��o n�o consta nas listas Dia1/Dia2.");
 
   const agora = new Date();
   const eventoFim = new Date(cfg.event.fim);
@@ -76,13 +76,13 @@ export async function emitirCertificadoPDF(cpf) {
   const funcao = perfilEncontrado.toLowerCase();
   const periodoTexto = montarPeriodoTexto(dias);
 
-  // === GERAÇÃO via Slides (copia template -> substitui -> exporta PDF) ===
+  // === GERA��O via Slides (copia template -> substitui -> exporta PDF) ===
   const { slides, drive } = await getSlides();
   const parents = process.env.DRIVE_PARENT_ID ? [process.env.DRIVE_PARENT_ID] : undefined;
 
 
 
-  // 1) copiar o template para não alterarmos o original
+  // 1) copiar o template para n�o alterarmos o original
   const copy = await drive.files.copy({
     fileId: cfg.slidesTplId,
     requestBody: {
@@ -110,8 +110,9 @@ export async function emitirCertificadoPDF(cpf) {
   );
   const buffer = Buffer.from(pdfResp.data);
 
-  // 4) limpar arquivo temporário
+  // 4) limpar arquivo tempor�rio
   try { await drive.files.delete({ fileId: copyId }); } catch {}
 
   return { buffer, filename: "certificado_conaprev.pdf" };
 }
+

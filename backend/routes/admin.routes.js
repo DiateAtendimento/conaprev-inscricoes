@@ -1,4 +1,4 @@
-// backend/routes/admin.routes.js
+﻿// backend/routes/admin.routes.js
 import { Router } from "express";
 import cfg from "../config/env.js";
 import { exportSpreadsheetToXlsx } from "../services/excel.service.js";
@@ -8,13 +8,13 @@ const r = Router();
 // Mesmo guard usado no restante do admin: header X-Admin-Pass
 const adminGuard = (req, res, next) => {
   const required = cfg?.adminPass;
-  if (!required) return next(); // se não configurar senha, libera (útil em dev)
+  if (!required) return next(); // se n�o configurar senha, libera (�til em dev)
   const got = String(req.headers["x-admin-pass"] || "");
   if (got === String(required)) return next();
-  return res.status(401).json({ error: "Não autorizado" });
+  return res.status(401).json({ error: "N�o autorizado" });
 };
 
-// GET /api/export/xlsx  → baixa a planilha completa (todas as abas válidas) em XLSX
+// GET /api/export/xlsx  ? baixa a planilha completa (todas as abas v�lidas) em XLSX
 r.get("/xlsx", adminGuard, async (_req, res) => {
   try {
     const { buffer, filename, mime } = await exportSpreadsheetToXlsx();
@@ -43,3 +43,4 @@ r.get("/exportar", adminGuard, async (_req, res) => {
 });
 
 export default r;
+

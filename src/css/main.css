@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
    VARS / RESET
    ========================= */
 :root{
@@ -12,7 +12,7 @@
   --glass-shadow: 0 18px 40px rgba(2,25,22,.35);
   --glass-blur:   14px;
 
-  /* ↑ aumentei para caber logos maiores */
+  /* ? aumentei para caber logos maiores */
   --topbar-h: 100px;
   --content-max: 1100px;   /* + largo p/ caber 5 cards */
   --badge-w: clamp(220px, 24vw, 340px);
@@ -36,7 +36,16 @@ html, body{
 body{
   font-family: var(--font);
   color:#0d1b2a;
-  background: linear-gradient(180deg, #0b4d49 0%, #0a3f3b 55%, #0b4d49 100%);
+  background:#0b4d49;                 /* fallback */
+}
+
+/* BG real do site inteiro */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
 }
 
 /* camada suave por cima do bg */
@@ -52,7 +61,7 @@ body::after{
 /* Guard-rail */
 body{ overflow-x:clip; }
 
-/* ===== ENTRADA EM SEQUÊNCIA (stagger) ===== */
+/* ===== ENTRADA EM SEQU�NCIA (stagger) ===== */
 @keyframes fadeUp{
   from{ opacity:0; transform: translateY(4px); }
   to{ opacity:1; transform: translateY(0); }
@@ -143,7 +152,7 @@ body{ overflow-x:clip; }
 .logo-govbr{    height:155px !important; }
 .logo-amprev{   height:84px !important; }
 
-/* os 3 links ocupam as 3 últimas colunas e ficam centralizados */
+/* os 3 links ocupam as 3 �ltimas colunas e ficam centralizados */
 .links{
   grid-column: 4 / span 3;
   display:grid;
@@ -160,7 +169,7 @@ body{ overflow-x:clip; }
 .icon-phone{ width:32px; height:32px; }
 .icon-admin{ width:32px; height:32px; }
 
-/* Hambúrguer “puro” (sem caixa) */
+/* Hamb�rguer �puro� (sem caixa) */
 .menu-icon{ all: unset; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; line-height:1; padding:0; color:#eef6f6; }
 .menu-icon .bi{ font-size:28px; }
 .menu-icon:hover .bi{ opacity:.75; }
@@ -245,7 +254,7 @@ body{ overflow-x:clip; }
    HOME (painel + cards)
    ========================= */
 #home{
-  margin-top:-54px; /* “encaixa” sobre a hero */
+  margin-top:-54px; /* �encaixa� sobre a hero */
 }
 
 .cards-wrapper{
@@ -589,7 +598,7 @@ body{ overflow-x:clip; }
 .mi-pane{ display:none; }
 .mi-pane.active{ display:block; }
 
-/* Botão pulso (realça confirmação) */
+/* Bot�o pulso (real�a confirma��o) */
 @keyframes pulseRing{
   0%{ box-shadow:0 0 0 0 rgba(13,110,253,.55); }
   70%{ box-shadow:0 0 0 12px rgba(13,110,253,0); }
@@ -598,9 +607,9 @@ body{ overflow-x:clip; }
 .btn-pulse{ animation:pulseRing 1.6s infinite; }
 
 /* =========================
-   GRID DE ASSENTOS (Conselheiro) — RESPONSIVO
+   GRID DE ASSENTOS (Conselheiro) � RESPONSIVO
    ========================= */
-/* base (≥1200px): 19 colunas, largura total */
+/* base (=1200px): 19 colunas, largura total */
 .mi-seat-grid{
   display:grid;
   grid-template-columns: repeat(19, minmax(40px, 1fr));
@@ -623,15 +632,15 @@ body{ overflow-x:clip; }
 .mi-seat.available{ background:#16a34a; }  /* verde */
 .mi-seat.occupied{  background:#dc2626; }  /* vermelho */
 
-/* ≥992px e <1200px -> 12 colunas */
+/* =992px e <1200px -> 12 colunas */
 @media (max-width: 1199.98px){
   .mi-seat-grid{ grid-template-columns: repeat(12, minmax(40px, 1fr)); }
 }
-/* ≥768px e <992px -> 9 colunas */
+/* =768px e <992px -> 9 colunas */
 @media (max-width: 991.98px){
   .mi-seat-grid{ grid-template-columns: repeat(9, minmax(38px, 1fr)); }
 }
-/* ≥576px e <768px -> 8 colunas */
+/* =576px e <768px -> 8 colunas */
 @media (max-width: 767.98px){
   .mi-seat-grid{ grid-template-columns: repeat(8, minmax(36px, 1fr)); }
 }
@@ -671,9 +680,9 @@ body{ overflow-x:clip; }
   61%, 100% { box-shadow: 0 0 0 6px rgba(13,110,253,.15); }
 }
 
-/* Modal footer: voltar à esquerda, avançar à direita */
+/* Modal footer: voltar � esquerda, avan�ar � direita */
 .modal-footer{
-  justify-content: space-between;   /* separa os botões */
+  justify-content: space-between;   /* separa os bot�es */
 }
 #miBtnVoltar.d-none{ display:none !important; }
 
@@ -684,7 +693,7 @@ body{ overflow-x:clip; }
 #miLottieOverlay.d-none{ display:none; }
 .mi-lottie-backdrop{
   position:absolute; inset:0;
-  background:rgba(0,0,0,.38);   /* só o backdrop escuro */
+  background:rgba(0,0,0,.38);   /* s� o backdrop escuro */
 }
 .mi-lottie-card{
   position:absolute; top:50%; left:50%;
@@ -717,18 +726,18 @@ body.gate-active .topbar{ display:none !important; }
 .gate-sep{ font-weight:900; font-size:clamp(28px, 5.2vw, 48px); line-height:1; color:#fff; transform:translateY(-4px); user-select:none; }
 
 /* =========================
-   RESPONSIVO — adicional
+   RESPONSIVO � adicional
    ========================= */
-/* ===== MOBILE (≤768px) — topbar só com logos, links vão para o footer ===== */
+/* ===== MOBILE (=768px) � topbar s� com logos, links v�o para o footer ===== */
 @media (max-width: 768px){
 
   :root{ --content-max: 92vw; --topbar-h: 64px; }
 
-  body{
-    background: linear-gradient(180deg, #0b4d49 0%, #093a36 55%, #0b4d49 100%);
+  body::before{
+    background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
   }
 
-  /* Topbar em 1 coluna; só as logos + hambúrguer */
+  /* Topbar em 1 coluna; s� as logos + hamb�rguer */
   .topbar{ min-height:auto; }
   .topbar .wrap{
     grid-template-columns: 1fr;
@@ -748,15 +757,15 @@ body.gate-active .topbar{ display:none !important; }
   .logo-govbr{    height: 80px !important; }
   .logo-amprev{   height: 48px !important; }
 
-  /* Esconde e-mail/telefone na topbar; mantém só o hambúrguer */
+  /* Esconde e-mail/telefone na topbar; mant�m s� o hamb�rguer */
   .links{
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 1fr;   /* só para posicionar o hambúrguer */
+    grid-template-columns: 1fr;   /* s� para posicionar o hamb�rguer */
   }
   .links a{ display: none !important; }          /* <- some no mobile */
   .links .menu-icon{
-    justify-self: center;          /* hambúrguer centralizado */
+    justify-self: center;          /* hamb�rguer centralizado */
   }
 
   /* Hero sem o selo */
@@ -783,7 +792,7 @@ body.gate-active .topbar{ display:none !important; }
     min-width: clamp(220px, 80vw, 280px);
   }
 
-  /* Footer mobile visível */
+  /* Footer mobile vis�vel */
   .site-footer{ display: block !important; }
 }
 
@@ -792,7 +801,7 @@ body.gate-active .topbar{ display:none !important; }
   .site-footer{ display: none !important; }
 }
 
-/* ===== Footer mobile (ícone acima do texto) ===== */
+/* ===== Footer mobile (�cone acima do texto) ===== */
 .site-footer{
   background: #f7f7f9;
   border-top:1px solid #e9e9ef;
@@ -830,7 +839,7 @@ body.gate-active .topbar{ display:none !important; }
 }
 
 
-/* telas médias também reduzem um pouco a badge */
+/* telas m�dias tamb�m reduzem um pouco a badge */
 @media (max-width: 1200px){
   .amapa-badge{ width: clamp(190px, 22vw, 260px); }
 }
@@ -839,7 +848,7 @@ body.gate-active .topbar{ display:none !important; }
   .amapa-badge{ width: clamp(190px, 22vw, 260px); }
 }
 
-/* Garante que as abas do modal admin apareçam sempre */
+/* Garante que as abas do modal admin apare�am sempre */
 #adminMonitorModal .nav-tabs{
   display: flex !important;
   border-bottom: 1px solid var(--bs-border-color, #dee2e6);
@@ -848,19 +857,19 @@ body.gate-active .topbar{ display:none !important; }
 #adminMonitorModal .nav-tabs .nav-link{
   display: inline-block !important;
 }
-/* Header do modal admin alinhado: título à esquerda, ações à direita */
+/* Header do modal admin alinhado: t�tulo � esquerda, a��es � direita */
 #adminMonitorModal .modal-header{
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: .5rem;
 }
-/* Evita o título ocupar 100% da linha */
+/* Evita o t�tulo ocupar 100% da linha */
 #adminMonitorModal .modal-header h5{
   margin: 0;
   flex: 0 1 auto;
 }
-/* Mantém o grupo de ações grudado à direita */
+/* Mant�m o grupo de a��es grudado � direita */
 #adminMonitorModal .modal-header > .d-flex{
   margin-left: auto;
 }
@@ -875,3 +884,4 @@ body.gate-active .topbar{ display:none !important; }
   overflow-x: auto;
 }
 #adminMonitorModal .nav-tabs::-webkit-scrollbar{ height: 6px; }
+

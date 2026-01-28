@@ -11,9 +11,9 @@
   const THEMES = [
     { id: 'membros-rotativos', name: 'MEMBROS ROTATIVOS', title: 'Membros rotativos', icon: 'bi-arrow-repeat' },
     { id: 'membros-cnrpps', name: 'MEMBROS CNRPPS', title: 'Membros CNRPPS', icon: 'bi-people' },
-    { id: 'comite-compensacao', name: 'COMITÊ DA COMPENSAÇÃO PREVIDENCIÁRIA', title: 'Comitê da compensação previdenciária', icon: 'bi-shield-check' },
-    { id: 'certificacao-profissional', name: 'CERTIFICAÇÃO PROFISSIONAL', title: 'Certificação profissional', icon: 'bi-award' },
-    { id: 'pro-gestao', name: 'PRÓ GESTÃO', title: 'Pró Gestão', icon: 'bi-patch-check' },
+    { id: 'comite-compensacao', name: 'COMIT� DA COMPENSA��O PREVIDENCI�RIA', title: 'Comit� da compensa��o previdenci�ria', icon: 'bi-shield-check' },
+    { id: 'certificacao-profissional', name: 'CERTIFICA��O PROFISSIONAL', title: 'Certifica��o profissional', icon: 'bi-award' },
+    { id: 'pro-gestao', name: 'PR� GEST�O', title: 'Pr� Gest�o', icon: 'bi-patch-check' },
   ];
 
   const getAdminPass = () => sessionStorage.getItem(ADMIN_PASS_KEY) || '';
@@ -308,10 +308,10 @@
     };
 
     const fetchVotes = async (themeId) => {
-      const stop = startLoading('Carregando votações...');
+      const stop = startLoading('Carregando vota��es...');
       const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
       stop();
-      if (!res.ok) throw new Error('Falha ao carregar votações');
+      if (!res.ok) throw new Error('Falha ao carregar vota��es');
       return res.json();
     };
 
@@ -328,10 +328,10 @@
             <div class="card-body d-flex flex-wrap align-items-center gap-3">
               <div class="flex-grow-1">
                 <div class="text-muted small">${status}</div>
-                <div class="h6 mb-1">${vote.title || 'Sem título'}</div>
+                <div class="h6 mb-1">${vote.title || 'Sem t�tulo'}</div>
                 <div class="small text-muted">Atualizada em ${formatDate(vote.updatedAt || vote.createdAt)}</div>
               </div>
-              <div class="voting-actions" role="group" aria-label="Ações">
+              <div class="voting-actions" role="group" aria-label="A��es">
                 <button type="button" class="btn btn-warning btn-sm" data-action="edit">
                   <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
                 </button>
@@ -354,14 +354,14 @@
 
     const renderResults = (payload) => {
       if (!payload || !elResultsMeta || !elResultsBody || !elResultsTitle) return;
-      elResultsTitle.textContent = payload.title || 'Visão geral das respostas';
+      elResultsTitle.textContent = payload.title || 'Vis�o geral das respostas';
       elResultsMeta.innerHTML = `
         <div class="voting-meta-item">
           <div class="small text-muted">Total de respostas</div>
           <div class="fw-semibold">${payload.total}</div>
         </div>
         <div class="voting-meta-item">
-          <div class="small text-muted">Tempo médio</div>
+          <div class="small text-muted">Tempo m�dio</div>
           <div class="fw-semibold">${msToTime(payload.avgDurationMs)}</div>
         </div>
       `;
@@ -380,7 +380,7 @@
         const counts = stat.counts || {};
         const rows = (q.options || []).map((opt) => `
           <div class="voting-option-row">
-            <span>${opt.text || 'Opção'}</span>
+            <span>${opt.text || 'Op��o'}</span>
             <span class="voting-option-count">${counts[opt.id] || 0}</span>
           </div>
         `).join('');
@@ -388,7 +388,7 @@
           <div class="voting-question">
             <h6>${index + 1}. ${q.text || 'Pergunta'}</h6>
             <div class="vstack gap-2 mt-2">
-              ${rows || '<div class="text-muted">Sem opções cadastradas.</div>'}
+              ${rows || '<div class="text-muted">Sem op��es cadastradas.</div>'}
             </div>
           </div>
         `;
@@ -446,7 +446,7 @@
       const res = await adminFetch('/api/votacao/admin/temas');
       if (!res.ok) {
         elAuthMsg?.classList.remove('d-none');
-        elAuthMsg.textContent = 'Senha inválida.';
+        elAuthMsg.textContent = 'Senha inv�lida.';
         sessionStorage.removeItem(ADMIN_PASS_KEY);
         return;
       }
@@ -501,8 +501,8 @@
         if (action === 'edit') openEditTab(voteId);
         if (action === 'delete') {
           const ok = await showUiModal({
-            title: 'Confirmar exclusão',
-            message: 'Tem certeza que deseja excluir esta votação?',
+            title: 'Confirmar exclus�o',
+            message: 'Tem certeza que deseja excluir esta vota��o?',
             variant: 'danger',
             confirm: true,
           });
@@ -599,7 +599,7 @@
       wrap.className = 'vote-option-input';
       wrap.dataset.oid = option.id;
       wrap.innerHTML = `
-        <input type="text" class="form-control vote-option-text" placeholder="Opção" value="${option.text || ''}" />
+        <input type="text" class="form-control vote-option-text" placeholder="Op��o" value="${option.text || ''}" />
         <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
       `;
       return wrap;
@@ -614,10 +614,10 @@
       const isOptions = question.type === 'options';
       const optionsHtml = isOptions ? `
         <div class="vote-options vstack gap-2 mt-3"></div>
-        <button type="button" class="btn btn-success btn-sm mt-3 vote-add-option">Adicionar opção</button>
+        <button type="button" class="btn btn-success btn-sm mt-3 vote-add-option">Adicionar op��o</button>
         <div class="form-check form-switch mt-3">
           <input class="form-check-input vote-multi-toggle" type="checkbox" ${question.allowMultiple ? 'checked' : ''}>
-          <label class="form-check-label">Permitir várias respostas</label>
+          <label class="form-check-label">Permitir v�rias respostas</label>
         </div>
         <div class="vote-multi-limits mt-2 ${question.allowMultiple ? '' : 'd-none'}">
           <div class="row g-2 align-items-end">
@@ -626,7 +626,7 @@
               <select class="form-select vote-limit-type">
                 <option value="none">Sem limite</option>
                 <option value="equal">Igual a</option>
-                <option value="max">No máximo</option>
+                <option value="max">No m�ximo</option>
               </select>
             </div>
             <div class="col-12 col-md-6">
@@ -752,7 +752,7 @@
         if (optionsWrap && optionsWrap.children.length <= 2) {
           await showUiModal({
             title: 'Aviso',
-            message: 'Cada pergunta precisa ter pelo menos duas opções.',
+            message: 'Cada pergunta precisa ter pelo menos duas op��es.',
             variant: 'warning',
           });
           return;
@@ -765,7 +765,7 @@
         if (builder.children.length <= 1) {
           await showUiModal({
             title: 'Aviso',
-            message: 'É necessário manter ao menos uma pergunta.',
+            message: '� necess�rio manter ao menos uma pergunta.',
             variant: 'warning',
           });
           return;
@@ -808,7 +808,7 @@
         if (options.length < 2) {
           await showUiModal({
             title: 'Aviso',
-            message: 'Cada pergunta precisa ter ao menos duas opções preenchidas.',
+            message: 'Cada pergunta precisa ter ao menos duas op��es preenchidas.',
             variant: 'warning',
           });
           return;
@@ -830,7 +830,7 @@
       }
 
       if (isEdit && currentVote?.id) {
-        const stop = startLoading('Salvando votação...');
+        const stop = startLoading('Salvando vota��o...');
         const res = await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(currentVote.id)}`, {
           method: 'PUT',
           body: JSON.stringify({ questions }),
@@ -842,17 +842,17 @@
         }
       } else {
         if (!themeId) {
-          await showUiModal({ title: 'Erro', message: 'Tema não encontrado.', variant: 'danger' });
+          await showUiModal({ title: 'Erro', message: 'Tema n�o encontrado.', variant: 'danger' });
           return;
         }
-        const stop = startLoading('Gerando votação...');
+        const stop = startLoading('Gerando vota��o...');
         const res = await adminFetch('/api/votacao/admin/votacoes', {
           method: 'POST',
           body: JSON.stringify({ tema: themeId, questions }),
         });
         stop();
         if (!res.ok) {
-          await showUiModal({ title: 'Erro', message: 'Erro ao criar votação.', variant: 'danger' });
+          await showUiModal({ title: 'Erro', message: 'Erro ao criar vota��o.', variant: 'danger' });
           return;
         }
         currentVote = await res.json();
@@ -860,7 +860,7 @@
 
       if (isEdit) {
         if (msg) {
-          msg.textContent = 'Informações atualizadas com sucesso.';
+          msg.textContent = 'Informa��es atualizadas com sucesso.';
           msg.classList.remove('d-none');
         }
         return;
@@ -882,7 +882,7 @@
     });
   };
 
-  // ===== Público =====
+  // ===== P�blico =====
   const initPublicPage = () => {
     const container = document.getElementById('votePublicContainer');
     const loginForm = document.getElementById('voteLoginForm');
@@ -921,7 +921,7 @@
         userName.textContent = '';
         return;
       }
-      userName.textContent = user.nome || 'Usuário';
+      userName.textContent = user.nome || 'Usu�rio';
       userMenu.classList.remove('d-none');
     };
 
@@ -953,7 +953,7 @@
               <div class="voting-theme-icon"><i class="bi ${theme.icon || 'bi-ballot-check'}" aria-hidden="true"></i></div>
               <div>
                 <div class="voting-theme-text">${t.name}</div>
-                <div class="voting-theme-sub">${isDisabled ? 'Indisponível' : 'Ativo'}</div>
+                <div class="voting-theme-sub">${isDisabled ? 'Indispon�vel' : 'Ativo'}</div>
               </div>
             </div>
           </div>
@@ -978,7 +978,7 @@
     const showDenied = async (msg) => {
       await showUiModal({
         title: 'Aviso',
-        message: msg || 'Desculpe! Ação não permitida.',
+        message: msg || 'Desculpe! A��o n�o permitida.',
         variant: 'denied',
       });
     };
@@ -988,7 +988,7 @@
       const cpf = String(cpfInput?.value || '').replace(/\D/g, '');
       if (cpf.length !== 11) {
         loginMsg.classList.remove('d-none');
-        loginMsg.textContent = 'CPF inválido. Verifique e tente novamente.';
+        loginMsg.textContent = 'CPF inv�lido. Verifique e tente novamente.';
         return;
       }
       const stop = startLoading('Validando CPF...');
@@ -999,7 +999,7 @@
       stop();
       const data = await res.json();
       if (!data.ok) {
-        await showDenied('Desculpe! Ação não permitida');
+        await showDenied('Desculpe! A��o n�o permitida');
         return;
       }
       loginMsg.classList.add('d-none');
@@ -1017,16 +1017,16 @@
     moduleGrid.addEventListener('click', async (event) => {
       const card = event.target.closest('.voting-theme-card');
       if (!card || card.classList.contains('is-disabled')) {
-        if (card) await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+        if (card) await showUiModal({ title: 'Aviso', message: 'Vota��o indispon�vel.', variant: 'warning' });
         return;
       }
       const themeId = card.dataset.theme;
-      const stop = startLoading('Carregando questionário...');
+      const stop = startLoading('Carregando question�rio...');
       const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
       stop();
-      if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+      if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Vota��o indispon�vel.', variant: 'warning' });
       const data = await res.json();
-      if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+      if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Vota��o indispon�vel.', variant: 'warning' });
       currentVote = data.vote;
       startedAt = Date.now();
       formWrap?.classList.remove('d-none');
@@ -1045,7 +1045,7 @@
         const options = (q.options || []).map((opt) => `
           <div class="form-check">
             <input class="form-check-input" type="${inputType}" name="${q.id}" id="${q.id}_${opt.id}" value="${opt.id}">
-            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Opção'}</label>
+            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Op��o'}</label>
           </div>
         `).join('');
         return `
@@ -1055,7 +1055,7 @@
           </div>
         `;
       }).join('');
-      if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
+      if (formTitle) formTitle.textContent = currentVote.title || 'Question�rio';
       if (Array.isArray(data.previousAnswers)) {
         data.previousAnswers.forEach((ans) => {
           if (ans.type === 'text') {
@@ -1101,8 +1101,8 @@
       if (checked > limitValue) {
         target.checked = false;
         const msg = limitType === 'equal'
-          ? `Selecione exatamente ${limitValue} opção(ões).`
-          : `Selecione no máximo ${limitValue} opção(ões).`;
+          ? `Selecione exatamente ${limitValue} op��o(�es).`
+          : `Selecione no m�ximo ${limitValue} op��o(�es).`;
         await showUiModal({ title: 'Aviso', message: msg, variant: 'warning' });
       }
     });
@@ -1137,11 +1137,11 @@
 
         if (isMulti && limitType !== 'none' && limitValue > 0) {
           if (limitType === 'equal' && selected.length !== limitValue) {
-            await showUiModal({ title: 'Aviso', message: `Selecione exatamente ${limitValue} opção(ões).`, variant: 'warning' });
+            await showUiModal({ title: 'Aviso', message: `Selecione exatamente ${limitValue} op��o(�es).`, variant: 'warning' });
             return;
           }
           if (limitType === 'max' && selected.length > limitValue) {
-            await showUiModal({ title: 'Aviso', message: `Selecione no máximo ${limitValue} opção(ões).`, variant: 'warning' });
+            await showUiModal({ title: 'Aviso', message: `Selecione no m�ximo ${limitValue} op��o(�es).`, variant: 'warning' });
             return;
           }
         }
@@ -1164,10 +1164,10 @@
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
-          await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+          await showUiModal({ title: 'Aviso', message: 'Vota��o indispon�vel.', variant: 'warning' });
           return;
         }
-        await showDenied('Desculpe! Ação não permitida');
+        await showDenied('Desculpe! A��o n�o permitida');
         return;
       }
 
@@ -1198,4 +1198,5 @@
   initBuilderPage();
   initPublicPage();
 })();
+
 

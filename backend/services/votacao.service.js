@@ -1,16 +1,16 @@
-// backend/services/votacao.service.js
+﻿// backend/services/votacao.service.js
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
 import { buscarPorCpf } from "./sheets.service.js";
 
-const SHEET_VOTOS = "Votação";
+const SHEET_VOTOS = "Vota��o";
 const SHEET_VOTACOES = "Votacoes";
 
 const VOTOS_HEADERS = [
-  "NUMERO DE INSCRIÇÃO",
+  "NUMERO DE INSCRI��O",
   "NOME",
   "DATA",
-  "HORÁRIO",
+  "HOR�RIO",
   "TEMA",
   "RESPOSTAS",
 ];
@@ -29,12 +29,12 @@ const VOTACOES_HEADERS = [
 const THEMES = [
   { id: "membros-rotativos", name: "MEMBROS ROTATIVOS", title: "Membros rotativos" },
   { id: "membros-cnrpps", name: "MEMBROS CNRPPS", title: "Membros CNRPPS" },
-  { id: "comite-compensacao", name: "COMITÊ DA COMPENSAÇÃO PREVIDENCIÁRIA", title: "Comitê da compensação previdenciária" },
-  { id: "certificacao-profissional", name: "CERTIFICAÇÃO PROFISSIONAL", title: "Certificação profissional" },
-  { id: "pro-gestao", name: "PRÓ GESTÃO", title: "Pró Gestão" },
+  { id: "comite-compensacao", name: "COMIT� DA COMPENSA��O PREVIDENCI�RIA", title: "Comit� da compensa��o previdenci�ria" },
+  { id: "certificacao-profissional", name: "CERTIFICA��O PROFISSIONAL", title: "Certifica��o profissional" },
+  { id: "pro-gestao", name: "PR� GEST�O", title: "Pr� Gest�o" },
 ];
 
-/* ===== cache leve em memória ===== */
+/* ===== cache leve em mem�ria ===== */
 const CACHE_TTL_MS = 1_500;
 const _cache = new Map(); // key -> { expires, data }
 function getCache(key) {
@@ -219,7 +219,7 @@ function parseResponsesText(text, vote) {
   return { answers: parsed, durationMs };
 }
 
-/* ===== presença Dia1/Dia2 ===== */
+/* ===== presen�a Dia1/Dia2 ===== */
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
   const abas = ["Dia1", "Dia2"];
@@ -244,7 +244,7 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
         }
       }
     } catch {
-      // aba pode não existir
+      // aba pode n�o existir
     }
   }
   return { dia1, dia2 };
@@ -281,7 +281,7 @@ export async function listThemesWithLatest() {
 
 export async function listVotesByTema(temaInput) {
   const tema = resolveTheme(temaInput);
-  if (!tema) throw new Error("Tema inválido");
+  if (!tema) throw new Error("Tema inv�lido");
   await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
   const { rows } = await readAllCached(SHEET_VOTACOES, "votacoes:all");
   return rows.map((r, idx) => ({
@@ -326,7 +326,7 @@ export async function getLatestVoteForTema(temaInput) {
 
 export async function createVote({ temaInput, questions }) {
   const tema = resolveTheme(temaInput);
-  if (!tema) throw new Error("Tema inválido");
+  if (!tema) throw new Error("Tema inv�lido");
   await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
 
   const now = nowBRParts();
@@ -360,7 +360,7 @@ export async function createVote({ temaInput, questions }) {
 
 export async function updateVote(id, { questions }) {
   const vote = await getVoteById(id);
-  if (!vote) throw new Error("Votação não encontrada");
+  if (!vote) throw new Error("Vota��o n�o encontrada");
 
   const now = nowBRParts();
   const sheets = await getSheets();
@@ -389,10 +389,10 @@ export async function updateVote(id, { questions }) {
 
 export async function deleteVote(id) {
   const vote = await getVoteById(id);
-  if (!vote) throw new Error("Votação não encontrada");
+  if (!vote) throw new Error("Vota��o n�o encontrada");
   const meta = await getSpreadsheetMeta();
   const sh = meta.sheets.find((s) => s.title === SHEET_VOTACOES);
-  if (!sh) throw new Error(`Aba não existe: ${SHEET_VOTACOES}`);
+  if (!sh) throw new Error(`Aba n�o existe: ${SHEET_VOTACOES}`);
   const sheets = await getSheets();
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: cfg.sheetId,
@@ -411,7 +411,7 @@ export async function deleteVote(id) {
 
 export async function setVoteActive(id, active) {
   const vote = await getVoteById(id);
-  if (!vote) throw new Error("Votação não encontrada");
+  if (!vote) throw new Error("Vota��o n�o encontrada");
   const now = nowBRParts();
 
   const sheets = await getSheets();
@@ -439,7 +439,7 @@ export async function setVoteActive(id, active) {
 
 export async function validateVoter(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
-  if (!/^\d{11}$/.test(clean)) throw new Error("CPF inválido");
+  if (!/^\d{11}$/.test(clean)) throw new Error("CPF inv�lido");
 
   const user = await buscarPorCpf(clean, "Conselheiro");
   if (!user) return { ok: false, reason: "NAO_CONSELHEIRO" };
@@ -513,7 +513,7 @@ export async function getUserResponseForVote(vote, cpf) {
 
 export async function submitVote({ voteId, cpf, answers, durationMs }) {
   const vote = await getVoteById(voteId);
-  if (!vote) throw new Error("Votação não encontrada");
+  if (!vote) throw new Error("Vota��o n�o encontrada");
   const latest = await getLatestVoteForTema(vote.tema);
   if (!latest || latest.id !== vote.id || !vote.active) {
     throw new Error("VOTACAO_INDISPONIVEL");
@@ -572,7 +572,7 @@ export async function submitVote({ voteId, cpf, answers, durationMs }) {
 
 export async function getVoteResults(voteId) {
   const vote = await getVoteById(voteId);
-  if (!vote) throw new Error("Votação não encontrada");
+  if (!vote) throw new Error("Vota��o n�o encontrada");
   await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
 
   const { rows } = await readAllCached(SHEET_VOTOS, `votos:${voteId}`);
@@ -632,3 +632,4 @@ export async function getVoteResults(voteId) {
     stats,
   };
 }
+

@@ -1,4 +1,4 @@
-// frontend/src/js/main.js
+﻿// frontend/src/js/main.js
 import {
   buscarInscricao,
   criarInscricao,
@@ -20,16 +20,16 @@ function downloadBlob(blob, filename) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // ===== Botão "Emitir certificado" (id alinhado ao HTML) =====
+  // ===== Bot�o "Emitir certificado" (id alinhado ao HTML) =====
   document.getElementById('btnEmitirCert')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    const cpf = prompt('Informe seu CPF (somente números)');
+    const cpf = prompt('Informe seu CPF (somente n�meros)');
     if (!cpf) return;
     try {
       const pdf = await emitirCertificado(cpf);
       downloadBlob(pdf, 'certificado_conaprev.pdf');
     } catch (err) {
-      alert(err?.message || 'Não foi possível emitir o certificado.');
+      alert(err?.message || 'N�o foi poss�vel emitir o certificado.');
     }
   });
 
@@ -40,12 +40,12 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // IMPORTANTE:
-  // O botão #adminAccessBtn é tratado por /src/js/admin.js (modal + senha).
-  // Não adicionamos listeners aqui para evitar conflitos.
+  // O bot�o #adminAccessBtn � tratado por /src/js/admin.js (modal + senha).
+  // N�o adicionamos listeners aqui para evitar conflitos.
 });
 
 /* =========================
-   TESTES RÁPIDOS NO CONSOLE
+   TESTES R�PIDOS NO CONSOLE
    ========================= */
 window.testBuscar = async () => {
   try {
@@ -84,3 +84,4 @@ window.testCancelar = async () => {
     console.log('cancelar:', r);
   } catch (e) { console.error(e); }
 };
+

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VotaÃ§Ã£o Ao vivo - CONAPREV</title>
-  <meta name="description" content="CriaÃ§Ã£o de votaÃ§Ã£o ao vivo para o CONAPREV." />
+  <title>Vota��o Ao vivo - CONAPREV</title>
+  <meta name="description" content="Cria��o de vota��o ao vivo para o CONAPREV." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,19 +21,16 @@
     <div class="vote-admin-card">
     <div class="vote-public-hero mb-4">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <div class="voting-empty-icon">
-          <i class="bi bi-ballot-check" aria-hidden="true"></i>
-        </div>
         <div>
-          <h1 class="h3 fw-bold mb-1">Criar votaÃ§Ã£o ao vivo</h1>
-          <p class="text-muted mb-0">Defina as perguntas antes de gerar a votaÃ§Ã£o.</p>
+          <h1 class="h3 fw-bold mb-1">Criar vota��o ao vivo</h1>
+          <p class="text-muted mb-0">Defina as perguntas antes de gerar a vota��o.</p>
         </div>
       </div>
     </div>
 
     <form id="voteCreateForm" class="vstack gap-4">
       <div>
-        <label for="voteTitle" class="form-label">TÃ­tulo da votaÃ§Ã£o</label>
+        <label for="voteTitle" class="form-label">T�tulo da vota��o</label>
         <input id="voteTitle" type="text" class="form-control" readonly>
       </div>
 
@@ -47,15 +44,15 @@
       <div id="voteBuilder" class="vote-builder"></div>
 
       <div class="d-flex flex-wrap align-items-center gap-3">
-        <button id="voteSaveBtn" type="submit" class="btn btn-primary">Gerar votaÃ§Ã£o</button>
+        <button id="voteSaveBtn" type="submit" class="btn btn-primary">Gerar vota��o</button>
         <a href="/index.html?votacao=1" class="btn btn-warning">Voltar ao painel</a>
       </div>
     </form>
 
     <div id="voteCreateMsg" class="alert alert-success d-none mt-4" role="alert">
-      VotaÃ§Ã£o criada com sucesso.
+      Vota��o criada com sucesso.
       <div class="small mt-2">
-        Link pÃºblico: <a id="voteCreateLink" href="#" target="_blank" rel="noopener"></a>
+        Link p�blico: <a id="voteCreateLink" href="#" target="_blank" rel="noopener"></a>
       </div>
     </div>
     </div>
@@ -65,13 +62,13 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="voteCreateSuccessTitle">VotaÃ§Ã£o criada</h5>
+          <h5 class="modal-title" id="voteCreateSuccessTitle">Vota��o criada</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
-          VotaÃ§Ã£o criada com sucesso.
+          Vota��o criada com sucesso.
           <div class="small mt-2">
-            Link pÃºblico: <a id="voteCreateModalLink" href="#" target="_blank" rel="noopener"></a>
+            Link p�blico: <a id="voteCreateModalLink" href="#" target="_blank" rel="noopener"></a>
           </div>
         </div>
         <div class="modal-footer">
@@ -90,7 +87,7 @@
         </div>
         <div class="modal-body">
           <div class="vstack gap-2">
-            <button type="button" class="btn btn-outline-primary vote-type-btn" data-type="options">OpÃƒÂ§ÃƒÂµes</button>
+            <button type="button" class="btn btn-outline-primary vote-type-btn" data-type="options">Opções</button>
             <button type="button" class="btn btn-outline-secondary vote-type-btn" data-type="text">Texto</button>
           </div>
         </div>
@@ -104,5 +101,7 @@
   <script src="/src/js/votacao.js" defer></script>
 </body>
 </html>
+
+
 
 

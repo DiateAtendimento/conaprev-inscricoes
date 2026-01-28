@@ -1,4 +1,4 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 
 function list(str) {
   return (str || "")
@@ -26,17 +26,18 @@ export default {
   sheetId:     process.env.SHEET_ID,            // planilha principal
   slidesTplId: process.env.SLIDES_TEMPLATE_ID,  // template do certificado (Slides)
 
-  // Datas do evento (TZ São Paulo)
+  // Datas do evento (TZ S�o Paulo)
   event: {
     inicio:         process.env.EVENTO_INICIO_DATETIME,
     fim:            process.env.EVENTO_FIM_DATETIME,
     certAfterHours: Number(process.env.CERT_LIBERA_APOS_HORAS || 24),
   },
 
-  // Chaves de segurança
+  // Chaves de seguran�a
   apiKey:    process.env.API_KEY,                               // legado (se ainda usar em algum lugar)
   adminPass: process.env.ADMIN_PASS || process.env.API_KEY,     // senha do admin (fallback p/ API_KEY)
 
   // Credenciais do Service Account
   google: getGoogleCredentials(),
 };
+

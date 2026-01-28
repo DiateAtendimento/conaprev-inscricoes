@@ -1,4 +1,4 @@
-// backend/routes/inscricoes.routes.js
+﻿// backend/routes/inscricoes.routes.js
 import { Router } from "express";
 import cfg from "../config/env.js";
 import {
@@ -14,7 +14,7 @@ import {
 
 const r = Router();
 
-// Perfis válidos para todas as operações
+// Perfis v�lidos para todas as opera��es
 const PERFIS_OK = new Set([
   "Conselheiro",
   "CNRPPS",
@@ -28,13 +28,13 @@ const PERFIS_OK = new Set([
 // Guard de administrador (usa header x-admin-pass)
 const adminGuard = (req, res, next) => {
   const required = cfg?.adminPass;
-  if (!required) return next(); // sem senha configurada, libera (útil em dev)
+  if (!required) return next(); // sem senha configurada, libera (�til em dev)
   const got = String(req.headers["x-admin-pass"] || "");
   if (got === String(required)) return next();
-  return res.status(401).json({ error: "Não autorizado" });
+  return res.status(401).json({ error: "N�o autorizado" });
 };
 
-// Utilitário: traduz erros do Google (ex.: 429) para HTTP adequado
+// Utilit�rio: traduz erros do Google (ex.: 429) para HTTP adequado
 function sendGoogleError(res, e, fallbackMessage = "Erro interno") {
   const status =
     Number(e?.status) ||
@@ -72,8 +72,8 @@ async function buscarPorCpfSafe(cpf, perfil) {
 
 /**
  * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
- * Lista inscrições para acompanhamento administrativo.
- * Observação: a ordenação de FINALIZADOS (MAIOR→MENOR por protocolo) já é feita no service.
+ * Lista inscri��es para acompanhamento administrativo.
+ * Observa��o: a ordena��o de FINALIZADOS (MAIOR?MENOR por protocolo) j� � feita no service.
  */
 r.get("/listar", adminGuard, async (req, res) => {
   try {
@@ -84,14 +84,14 @@ r.get("/listar", adminGuard, async (req, res) => {
     const offset = Math.max(parseInt(req.query.offset || "0", 10) || 0, 0);
 
     if (!PERFIS_OK.has(perfil)) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
     const out = await listarInscricoes(perfil, status, q, { limit, offset });
     return res.json(Array.isArray(out) ? out : []);
   } catch (e) {
     console.error("[GET /inscricoes/listar]", e);
-    return sendGoogleError(res, e, "Erro ao listar inscrições");
+    return sendGoogleError(res, e, "Erro ao listar inscri��es");
   }
 });
 
@@ -102,9 +102,9 @@ r.get("/buscar", async (req, res) => {
   try {
     const cpf = String(req.query.cpf || "").replace(/\D/g, "");
     const perfil = String(req.query.perfil || "");
-    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inválido" });
+    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inv�lido" });
     if (perfil && !PERFIS_OK.has(perfil)) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
     const out = await buscarPorCpfSafe(cpf, perfil);
     return res.json(out);
@@ -122,9 +122,9 @@ r.post("/buscar", async (req, res) => {
   try {
     const cpf = String(req.body?.cpf || "").replace(/\D/g, "");
     const perfil = String(req.body?.perfil || "");
-    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inválido" });
+    if (cpf.length !== 11) return res.status(400).json({ error: "CPF inv�lido" });
     if (perfil && !PERFIS_OK.has(perfil)) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
     const out = await buscarPorCpfSafe(cpf, perfil);
     return res.json(out);
@@ -145,14 +145,14 @@ r.post("/criar", async (req, res) => {
       return res.status(400).json({ error: "Dados incompletos" });
     }
     if (!PERFIS_OK.has(String(perfil))) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
     const codigo = await inscreverDados(formData, String(perfil));
     return res.status(201).json({ codigo });
   } catch (e) {
     console.error("[POST /inscricoes/criar]", e);
-    return sendGoogleError(res, e, "Erro ao criar inscrição");
+    return sendGoogleError(res, e, "Erro ao criar inscri��o");
   }
 });
 
@@ -167,14 +167,14 @@ r.post("/atualizar", async (req, res) => {
       return res.status(400).json({ error: "Dados incompletos" });
     }
     if (!PERFIS_OK.has(String(perfil))) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
     await atualizarDados(formData, String(perfil));
     return res.json({ ok: true });
   } catch (e) {
     console.error("[POST /inscricoes/atualizar]", e);
-    return sendGoogleError(res, e, "Erro ao atualizar inscrição");
+    return sendGoogleError(res, e, "Erro ao atualizar inscri��o");
   }
 });
 
@@ -186,10 +186,10 @@ r.post("/conferir", adminGuard, async (req, res) => {
   try {
     const { _rowIndex, perfil, conferido, conferidoPor } = req.body || {};
     if (!_rowIndex || Number(_rowIndex) < 2 || !perfil) {
-      return res.status(400).json({ error: "Dados incompletos (_rowIndex e perfil são obrigatórios)" });
+      return res.status(400).json({ error: "Dados incompletos (_rowIndex e perfil s�o obrigat�rios)" });
     }
     if (!PERFIS_OK.has(String(perfil))) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
     const ok = await marcarConferido({
@@ -214,27 +214,27 @@ r.post("/confirmar", async (req, res) => {
     const { formData = {}, perfil } = req.body || {};
     if (!perfil) return res.status(400).json({ error: "Dados incompletos" });
     if (!PERFIS_OK.has(String(perfil))) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
-    // Fallback: se não veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
+    // Fallback: se n�o veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
     if ((!formData._rowIndex || Number(formData._rowIndex) < 2) && formData.cpf) {
       const achado = await buscarPorCpf(String(formData.cpf), String(perfil));
       if (!achado) {
-        return res.status(404).json({ error: "Registro não encontrado para confirmar (CPF não localizado nesse perfil)." });
+        return res.status(404).json({ error: "Registro n�o encontrado para confirmar (CPF n�o localizado nesse perfil)." });
       }
       formData._rowIndex = achado._rowIndex;
     }
 
     if (!formData._rowIndex || Number(formData._rowIndex) < 2) {
-      return res.status(400).json({ error: "Linha inválida (faltou _rowIndex)." });
+      return res.status(400).json({ error: "Linha inv�lida (faltou _rowIndex)." });
     }
 
     const codigo = await confirmarInscricao(formData, String(perfil));
     return res.json({ codigo });
   } catch (e) {
     console.error("[POST /inscricoes/confirmar]", e);
-    return sendGoogleError(res, e, "Erro ao confirmar inscrição");
+    return sendGoogleError(res, e, "Erro ao confirmar inscri��o");
   }
 });
 
@@ -249,14 +249,14 @@ r.post("/cancelar", async (req, res) => {
       return res.status(400).json({ error: "Dados incompletos" });
     }
     if (!PERFIS_OK.has(String(perfil))) {
-      return res.status(400).json({ error: "Perfil inválido" });
+      return res.status(400).json({ error: "Perfil inv�lido" });
     }
 
     await cancelarInscricao({ _rowIndex }, String(perfil));
     return res.json({ ok: true });
   } catch (e) {
     console.error("[POST /inscricoes/cancelar]", e);
-    return sendGoogleError(res, e, "Erro ao cancelar inscrição");
+    return sendGoogleError(res, e, "Erro ao cancelar inscri��o");
   }
 });
 
@@ -269,7 +269,7 @@ r.get("/assentos/conselheiros", async (_req, res) => {
     return res.json(Array.isArray(seats) ? seats : []);
   } catch (e) {
     console.error("[GET /inscricoes/assentos/conselheiros]", e);
-    // Para esse endpoint, preferimos não estourar erro no front:
+    // Para esse endpoint, preferimos n�o estourar erro no front:
     return res.json([]);
   }
 });
@@ -282,8 +282,8 @@ r.get("/:id/comprovante.pdf", async (req, res) => {
     const { id } = req.params;
     // TODO: gerar/streamar PDF com base no id/codigo
     return res.status(404).type("application/json").send({
-      error: "Geração de PDF não implementada",
-      hint: `Implemente a geração do comprovante do id=${id} no controller/service.`,
+      error: "Gera��o de PDF n�o implementada",
+      hint: `Implemente a gera��o do comprovante do id=${id} no controller/service.`,
     });
   } catch (e) {
     console.error("[GET /inscricoes/:id/comprovante.pdf]", e);
@@ -292,3 +292,4 @@ r.get("/:id/comprovante.pdf", async (req, res) => {
 });
 
 export default r;
+

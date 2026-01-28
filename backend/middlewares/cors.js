@@ -1,4 +1,4 @@
-// backend/middlewares/cors.js
+﻿// backend/middlewares/cors.js
 import cors from "cors";
 import cfg from "../config/env.js";
 
@@ -11,23 +11,23 @@ function norm(url = "") {
 // Base vinda do .env (CORS_ALLOW)
 const allowed = new Set((cfg.corsAllow || []).map(norm));
 
-// Extras úteis do projeto (dev + produção)
+// Extras �teis do projeto (dev + produ��o)
 const extraAllow = [
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://conaprev-inscricoes.netlify.app",      // 🔸 frontend (Netlify)
-  "https://conaprev-inscricoes.onrender.com",     // 🔸 backend (Render)
+  "https://conaprev-inscricoes.netlify.app",      // ?? frontend (Netlify)
+  "https://conaprev-inscricoes.onrender.com",     // ?? backend (Render)
 ];
 extraAllow.forEach(o => allowed.add(o));
 
-// Permite também “deploy previews” do Netlify (*.netlify.app)
+// Permite tamb�m �deploy previews� do Netlify (*.netlify.app)
 function isAllowed(origin) {
   const o = norm(origin);
   if (allowed.size === 0) return true;
   if (allowed.has(o)) return true;
-  if (o.endsWith(".netlify.app")) return true;    // opcional, útil p/ previews
+  if (o.endsWith(".netlify.app")) return true;    // opcional, �til p/ previews
   return false;
 }
 
@@ -37,20 +37,21 @@ const corsMw = cors({
     return isAllowed(origin) ? cb(null, true) : cb(new Error("CORS blocked"), false);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // 🔴 Inclui Cache-Control/Pragma (necessários p/ o preflight do download)
+  // ?? Inclui Cache-Control/Pragma (necess�rios p/ o preflight do download)
   allowedHeaders: [
     "Content-Type",
     "Accept",
     "X-Admin-Pass",
-    "x-admin-pass",     // variante minúscula
+    "x-admin-pass",     // variante min�scula
     "Cache-Control",
     "Pragma",
   ],
-  // 🔴 Exponha o header para o front poder ler o filename do XLSX
+  // ?? Exponha o header para o front poder ler o filename do XLSX
   exposedHeaders: ["Content-Disposition"],
-  credentials: false,        // não usamos cookies/sessão
+  credentials: false,        // n�o usamos cookies/sess�o
   optionsSuccessStatus: 204,
   maxAge: 86400,             // cache do preflight (1 dia)
 });
 
 export default corsMw;
+

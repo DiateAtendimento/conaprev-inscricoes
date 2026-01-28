@@ -1,5 +1,5 @@
-// /src/js/certs.js
-// Fluxo: trava até 03/04/2026 14h (salvo modo dev) e, quando liberado, redireciona para o Apps Script.
+﻿// /src/js/certs.js
+// Fluxo: trava at� 03/04/2026 14h (salvo modo dev) e, quando liberado, redireciona para o Apps Script.
 
 (() => {
   const CERT_LIBERACAO = "2026-04-03T14:00:00-03:00"; // 03/04/2026 14h BRT
@@ -34,19 +34,19 @@
       if (b) b.innerHTML = html || "";
       messageModal.show();
     } else {
-      // fallback simples se o modal não existir
+      // fallback simples se o modal n�o existir
       alert((title ? title + ":\n\n" : "") + (html || ""));
     }
   }
 
   function avisarLiberacao() {
     showMessage(
-      "Certificado indisponível",
-      "O certificado estará disponível para emissão em <strong>03/04/2026 (sexta-feira) às 14h</strong>, horário de Brasília."
+      "Certificado indispon�vel",
+      "O certificado estar� dispon�vel para emiss�o em <strong>03/04/2026 (sexta-feira) �s 14h</strong>, hor�rio de Bras�lia."
     );
   }
 
-  // Clique no botão de emitir certificado
+  // Clique no bot�o de emitir certificado
   btnAbrir.addEventListener("click", (e) => {
     e.preventDefault();
 
@@ -55,9 +55,10 @@
       return;
     }
 
-    // Se já estiver liberado ou em modo dev, redireciona para o Apps Script
+    // Se j� estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
       "https://script.google.com/macros/s/AKfycbyjowX0iYQQhtNEH5O9ZQOqoTNtjdZRtFKEyXHqwWKkErW7WyhumO2ZF_mmyqHgcqVT/exec";
   });
 })();
+
 

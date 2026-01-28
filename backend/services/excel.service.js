@@ -1,4 +1,4 @@
-// backend/services/excel.service.js
+﻿// backend/services/excel.service.js
 import ExcelJS from "exceljs";
 import { getSheets } from "./google.service.js";
 import cfg from "../config/env.js";
@@ -13,16 +13,16 @@ function shouldExportSheet(sheetMeta) {
 
   const t = String(title).trim();
 
-  // regras de exclusão
-  if (t.toLowerCase() === "senha") return false; // aba sensível
-  if (t.startsWith("_")) return false;           // técnicas/backup
+  // regras de exclus�o
+  if (t.toLowerCase() === "senha") return false; // aba sens�vel
+  if (t.startsWith("_")) return false;           // t�cnicas/backup
   if (t.startsWith("!")) return false;           // auxiliares
   if (/templates?/i.test(t)) return false;       // modelos
 
   return true;
 }
 
-/** gera timestamp YYYYMMDD-HHMM no fuso de Brasília */
+/** gera timestamp YYYYMMDD-HHMM no fuso de Bras�lia */
 function tsBR() {
   const now = new Date();
   const parts = new Intl.DateTimeFormat("pt-BR", {
@@ -43,7 +43,7 @@ function tsBR() {
   return `${y}${m}${d}-${hh}${mm}`;
 }
 
-/** largura automática de colunas (segura) */
+/** largura autom�tica de colunas (segura) */
 function autosizeColumns(ws) {
   const colCount = ws.columnCount || 0;
   const MIN = 10;
@@ -65,7 +65,7 @@ function autosizeColumns(ws) {
   }
 }
 
-/** congela cabeçalho e aplica autofiltro */
+/** congela cabe�alho e aplica autofiltro */
 function styleHeader(ws) {
   if (ws.rowCount === 0) return;
   const header = ws.getRow(1);
@@ -81,13 +81,13 @@ function styleHeader(ws) {
   }
 }
 
-/** sanitiza nome de worksheet (Excel: máx 31 chars; sem : \ / ? * [ ] ) e garante unicidade */
+/** sanitiza nome de worksheet (Excel: m�x 31 chars; sem : \ / ? * [ ] ) e garante unicidade */
 function makeWorksheetNameFactory() {
   const used = new Set();
   const ILLEGAL = /[:\\\/\?\*\[\]]/g;
 
   const sanitize = (t) => {
-    let s = String(t || "").trim().replace(ILLEGAL, "·");
+    let s = String(t || "").trim().replace(ILLEGAL, "�");
     if (!s) s = "Aba";
     // remove quebras/ctl
     s = s.replace(/[\u0000-\u001F\u007F]/g, " ");
@@ -116,7 +116,7 @@ export async function exportSpreadsheetToXlsx() {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: cfg.sheetId });
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = "CONAPREV Inscrições";
+  wb.creator = "CONAPREV Inscri��es";
   wb.created = new Date();
 
   const allSheets = meta.data.sheets || [];
@@ -125,7 +125,7 @@ export async function exportSpreadsheetToXlsx() {
   // nada a exportar?
   if (!exportables.length) {
     const ws = wb.addWorksheet("Export");
-    ws.addRow(["Não há abas públicas para exportar."]);
+    ws.addRow(["N�o h� abas p�blicas para exportar."]);
     styleHeader(ws);
     autosizeColumns(ws);
     const bufferEmpty = await wb.xlsx.writeBuffer();
@@ -137,7 +137,7 @@ export async function exportSpreadsheetToXlsx() {
     };
   }
 
-  // Tenta ler todas as abas de uma vez (menos chamadas → menos 429)
+  // Tenta ler todas as abas de uma vez (menos chamadas ? menos 429)
   const ranges = exportables.map((sh) => sh.properties.title);
   let valueRanges = null;
 
@@ -154,7 +154,7 @@ export async function exportSpreadsheetToXlsx() {
 
   const makeName = makeWorksheetNameFactory();
 
-  // Se veio pelo batch, monta direto; senão, faz get por aba com try/catch individual
+  // Se veio pelo batch, monta direto; sen�o, faz get por aba com try/catch individual
   if (valueRanges && valueRanges.length === exportables.length) {
     exportables.forEach((sh, i) => {
       const title = sh.properties.title;
@@ -177,7 +177,7 @@ export async function exportSpreadsheetToXlsx() {
       autosizeColumns(ws);
     });
   } else {
-    // Fallback: leitura individual (mantém resiliência por aba)
+    // Fallback: leitura individual (mant�m resili�ncia por aba)
     for (const sh of exportables) {
       const title = sh.properties.title;
       const wsName = makeName(title);
@@ -215,3 +215,4 @@ export async function exportSpreadsheetToXlsx() {
     mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
 }
+

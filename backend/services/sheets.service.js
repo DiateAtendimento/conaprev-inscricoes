@@ -1,4 +1,4 @@
-// backend/services/sheets.service.js
+﻿// backend/services/sheets.service.js
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
 import { normalizeKey, titleCase } from "./normalize.service.js";
@@ -6,10 +6,10 @@ import { normalizeKey, titleCase } from "./normalize.service.js";
 const SHEET_ID = cfg.sheetId;
 
 /** =========================================================
- *  CACHE LEVE (memória) p/ leituras do Google Sheets
+ *  CACHE LEVE (mem�ria) p/ leituras do Google Sheets
  *  - TTL curto (default 15s)
- *  - anti-stampede (reaproveita a mesma Promise simultânea)
- *  - invalidação automática após escritas
+ *  - anti-stampede (reaproveita a mesma Promise simult�nea)
+ *  - invalida��o autom�tica ap�s escritas
  *  ========================================================= */
 const CACHE_TTL_DEFAULT_MS = 15_000;
 const CACHE_TTL_SEARCH_MS  = 10_000;
@@ -94,7 +94,7 @@ function sheetForPerfil(perfil) {
 }
 
 /* ====== Helpers de tempo (BR) ====== */
-// ISO com timezone -03:00 estável (sem depender do fuso do servidor)
+// ISO com timezone -03:00 est�vel (sem depender do fuso do servidor)
 function nowBRISO() {
   const now = new Date();
   const fmt = new Intl.DateTimeFormat('pt-BR', {
@@ -113,7 +113,7 @@ function nowBRISO() {
   return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}-03:00`;
 }
 
-// extrai número para ordenação (ex.: CNL028 → 28, PAT-0012 → 12)
+// extrai n�mero para ordena��o (ex.: CNL028 ? 28, PAT-0012 ? 12)
 function protoKey(v) {
   const s = String(v || '');
   const m = s.match(/(\d+)/g);
@@ -142,7 +142,7 @@ async function readAll(sheetName) {
 
 function headerIndex(headers, wantedNorm) {
   const idx = headers.map(normalizeKey).indexOf(wantedNorm);
-  return idx; // -1 se não achou
+  return idx; // -1 se n�o achou
 }
 
 function matchQuery(rowObj, q) {
@@ -170,10 +170,10 @@ function mapRow(headers, row) {
 }
 
 function validarDados(formData) {
-  if (!formData?.cpf || !String(formData.cpf).trim()) throw new Error("Campo obrigatório: cpf");
+  if (!formData?.cpf || !String(formData.cpf).trim()) throw new Error("Campo obrigat�rio: cpf");
   const clean = String(formData.cpf).replace(/\D/g, "");
-  if (!/^\d{11}$/.test(clean)) throw new Error("CPF deve conter apenas números e ter 11 dígitos.");
-  if (!formData?.nome || !String(formData.nome).trim()) throw new Error("Campo obrigatório: nome");
+  if (!/^\d{11}$/.test(clean)) throw new Error("CPF deve conter apenas n�meros e ter 11 d�gitos.");
+  if (!formData?.nome || !String(formData.nome).trim()) throw new Error("Campo obrigat�rio: nome");
 }
 
 function createRowFromFormData(formData, perfil, headers) {
@@ -195,7 +195,7 @@ export async function buscarPorCpf(cpf, perfil) {
   const sheetName = sheetForPerfil(perfil);
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_SEARCH_MS);
   const idxCpf = headers.map(normalizeKey).indexOf("cpf");
-  if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado.');
+  if (idxCpf < 0) throw new Error('Cabe�alho "CPF" n�o encontrado.');
   for (let i = 0; i < rows.length; i++) {
     const cell = String(rows[i][idxCpf] || "").replace(/\D/g, "");
     if (cell === clean) {
@@ -218,13 +218,13 @@ async function gerarNumeroInscricao(perfil) {
     .filter(n => !isNaN(n))
     .sort((a,b)=>a-b);
   for (let i = 1; i <= 500; i++) if (!nums.includes(i)) return ("00" + i).slice(-3);
-  throw new Error("Limite de inscrições atingido");
+  throw new Error("Limite de inscri��es atingido");
 }
 
 export async function inscreverDados(formData, perfil) {
   validarDados(formData);
   const exists = await buscarPorCpf(formData.cpf, perfil);
-  if (exists) throw new Error("CPF já inscrito neste perfil.");
+  if (exists) throw new Error("CPF j� inscrito neste perfil.");
 
   const prefix = PROFILE_PREFIX[perfil] || "";
   const raw = await gerarNumeroInscricao(perfil);
@@ -244,7 +244,7 @@ export async function inscreverDados(formData, perfil) {
     requestBody: { values: [row] }
   });
 
-  // após escrita, invalida cache dessa aba
+  // ap�s escrita, invalida cache dessa aba
   invalidateSheetCache(sheetName);
 
   return codigo;
@@ -255,7 +255,7 @@ export async function atualizarDados(formData, perfil) {
   const sheetName = sheetForPerfil(perfil);
   const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   const idx = Number(formData._rowIndex);
-  if (!idx || idx < 2) throw new Error("Linha inválida.");
+  if (!idx || idx < 2) throw new Error("Linha inv�lida.");
   const row = createRowFromFormData(formData, perfil, headers);
   const range = `${sheetName}!A${idx}:${String.fromCharCode(64 + headers.length)}${idx}`;
   const sheets = await getSheets();
@@ -269,7 +269,7 @@ export async function atualizarDados(formData, perfil) {
 export async function confirmarInscricao(formData, perfil) {
   const sheetName = sheetForPerfil(perfil);
   const idx = Number(formData._rowIndex);
-  if (!idx || idx < 2) throw new Error("Linha inválida.");
+  if (!idx || idx < 2) throw new Error("Linha inv�lida.");
   const sheets = await getSheets();
   const cellResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}` });
   const cur = (cellResp.data.values || [])[0]?.[0];
@@ -288,13 +288,13 @@ export async function confirmarInscricao(formData, perfil) {
 
 export async function cancelarInscricao(formData, perfil) {
   const idx = Number(formData._rowIndex);
-  if (!idx || idx < 2) throw new Error("Linha inválida.");
+  if (!idx || idx < 2) throw new Error("Linha inv�lida.");
   const sheetName = sheetForPerfil(perfil);
 
-  // precisamos do sheetId numérico para apagar a linha via batchUpdate
+  // precisamos do sheetId num�rico para apagar a linha via batchUpdate
   const meta = await getSpreadsheetMeta();
   const sh = meta.sheets.find(s => s.title === sheetName);
-  if (!sh) throw new Error(`Aba não existe: ${sheetName}`);
+  if (!sh) throw new Error(`Aba n�o existe: ${sheetName}`);
   const sheets = await getSheets();
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: SHEET_ID,
@@ -317,7 +317,7 @@ export async function getConselheiroSeats() {
   const normHdrs = headers.map(h => normalizeKey(h));
   const idxCode = normHdrs.indexOf("numerodeinscricao");
   const idxName = normHdrs.indexOf("nome");
-  if (idxCode < 0 || idxName < 0) throw new Error('Cabeçalhos "Número de Inscrição" ou "Nome" não encontrados.');
+  if (idxCode < 0 || idxName < 0) throw new Error('Cabe�alhos "N�mero de Inscri��o" ou "Nome" n�o encontrados.');
   const seats = [];
   rows.forEach(r => {
     const code = r[idxCode];
@@ -338,21 +338,21 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
   const out = [];
   for (let i = 0; i < rows.length; i++) {
     const obj = mapRow(headers, rows[i]);
-    obj._rowIndex = i + 2; // cabeçalho + 1-based
+    obj._rowIndex = i + 2; // cabe�alho + 1-based
 
-    // status: ativos => não conferidos | finalizados => conferidos
+    // status: ativos => n�o conferidos | finalizados => conferidos
     const conf = isConferido(obj);
     const wantFinalizados = (String(status).toLowerCase() === "finalizados");
     if (wantFinalizados ? !conf : conf) continue;
 
     // filtro por CPF/Nome (CPF normalizado)
-    obj.cpf = String(obj.cpf || "").replace(/^'+/, ""); // tira apóstrofo
+    obj.cpf = String(obj.cpf || "").replace(/^'+/, ""); // tira ap�strofo
     if (!matchQuery(obj, q)) continue;
 
     out.push({
       _rowIndex: obj._rowIndex,
       numerodeinscricao: obj.numerodeinscricao || "",
-      cpf: String(obj.cpf || "").replace(/\D/g, ""), // só números para exibição/consulta
+      cpf: String(obj.cpf || "").replace(/\D/g, ""), // s� n�meros para exibi��o/consulta
       nome: obj.nome || "",
       conferido: obj.conferido || "",
       conferidopor: obj.conferidopor || "",
@@ -360,12 +360,12 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     });
   }
 
-  // Ordenação server-side para FINALIZADOS: MAIOR → MENOR por número do protocolo
+  // Ordena��o server-side para FINALIZADOS: MAIOR ? MENOR por n�mero do protocolo
   if (String(status).toLowerCase() === "finalizados") {
     out.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
   }
 
-  // paginação
+  // pagina��o
   const start = Math.max(0, offset);
   const end = Math.min(out.length, start + Math.max(1, limit));
   return out.slice(start, end);
@@ -373,7 +373,7 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
 
 export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoPor }) {
   const idx = Number(_rowIndex);
-  if (!idx || idx < 2) throw new Error("Linha inválida.");
+  if (!idx || idx < 2) throw new Error("Linha inv�lida.");
   const sheetName = sheetForPerfil(perfil);
 
   const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
@@ -382,7 +382,7 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   const colEm      = headerIndex(headers, "conferidoem");
 
   if (colConf < 0 || colPor < 0 || colEm < 0) {
-    throw new Error(`Planilha ${sheetName} está sem as colunas de conferência (Conferido/ConferidoPor/ConferidoEm).`);
+    throw new Error(`Planilha ${sheetName} est� sem as colunas de confer�ncia (Conferido/ConferidoPor/ConferidoEm).`);
   }
 
   const sheets = await getSheets();
@@ -392,11 +392,11 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   const valPor  = conferido ? (conferidoPor || "") : "";
   const valEm   = conferido ? nowBRISO() : ""; // ISO com timezone BR (-03:00)
 
-  // range da linha inteira (para montar o array completo com as 3 posições)
+  // range da linha inteira (para montar o array completo com as 3 posi��es)
   const lastColLetter = String.fromCharCode(64 + headers.length);
   const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
 
-  // lê a linha atual
+  // l� a linha atual
   const curResp = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
     range
@@ -420,4 +420,5 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
+
 

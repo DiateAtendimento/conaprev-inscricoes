@@ -1,13 +1,13 @@
-// backend/middlewares/security.js
+﻿// backend/middlewares/security.js
 import helmet from "helmet";
 import hpp from "hpp";
 import rateLimit from "express-rate-limit";
 
 /**
- * Rate limiter “seguro” para produção.
- * – Usa cabeçalhos padrão (RFC)
- * – Evita herdar o trust proxy permissivo (já está em app.set('trust proxy', 1))
- * – Mensagem clara em caso de excesso
+ * Rate limiter �seguro� para produ��o.
+ * � Usa cabe�alhos padr�o (RFC)
+ * � Evita herdar o trust proxy permissivo (j� est� em app.set('trust proxy', 1))
+ * � Mensagem clara em caso de excesso
  */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
@@ -21,7 +21,7 @@ const limiter = rateLimit({
 });
 
 /**
- * Helmet com defaults (pode ajustar CSP depois, se necessário)
+ * Helmet com defaults (pode ajustar CSP depois, se necess�rio)
  */
 const helmetMw = helmet({
   // exemplo: descomente se usar inline styles/scripts e quiser flexibilizar CSP depois
@@ -35,3 +35,4 @@ const security = [
 ];
 
 export default security;
+
