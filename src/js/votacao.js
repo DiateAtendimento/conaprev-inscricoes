@@ -11,8 +11,8 @@
   const THEMES = [
     { id: 'membros-rotativos', name: 'MEMBROS ROTATIVOS', title: 'Membros rotativos', icon: 'bi-arrow-repeat' },
     { id: 'membros-cnrpps', name: 'MEMBROS CNRPPS', title: 'Membros CNRPPS', icon: 'bi-people' },
-    { id: 'comite-compensacao', name: 'COMIT� DA COMPENSA��O PREVIDENCI�RIA', title: 'Comit� da compensa��o previdenci�ria', icon: 'bi-shield-check' },
-    { id: 'certificacao-profissional', name: 'CERTIFICA��O PROFISSIONAL', title: 'Certifica��o profissional', icon: 'bi-award' },
+    { id: 'comite-compensacao', name: 'COMITÊ DA COMPENSACÃO PREVIDENCIÁRIA', title: 'Comitê da compensação previdenciária', icon: 'bi-shield-check' },
+    { id: 'certificacao-profissional', name: 'CERTIFICAÇÃO PROFISSIONAL', title: 'Certificação profissional', icon: 'bi-award' },
     { id: 'pro-gestao', name: 'PR� GEST�O', title: 'Pr� Gest�o', icon: 'bi-patch-check' },
   ];
 
