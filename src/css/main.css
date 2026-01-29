@@ -151,6 +151,12 @@ body{ overflow-x:clip; }
 .logo-conaprev{ height:58px !important; }
 .logo-govbr{    height:155px !important; }
 .logo-amprev{   height:84px !important; }
+.logo-goiasprev{
+  height:auto !important;
+  max-height:83px;
+  max-width:142px;
+  width:auto;
+}
 
 /* os 3 links ocupam as 3 �ltimas colunas e ficam centralizados */
 .links{
@@ -578,6 +584,36 @@ body{ overflow-x:clip; }
   }
 }
 
+/* ===== TABLET / SMALL DESKTOP (<=993px) ===== */
+@media (max-width: 993px){
+  .topbar .wrap{
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+    padding: 8px 12px;
+  }
+  .brand-strip{
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 12px;
+    height: auto;
+  }
+  .links{
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 10px;
+  }
+  .topbar .brand-strip img{
+    max-height: 60px;
+  }
+  .logo-conaprev{ height: 48px !important; }
+  .logo-govbr{    height: 90px !important; }
+  .logo-amprev{   height: 54px !important; }
+  .logo-goiasprev{
+    max-height: 60px;
+    max-width: 120px;
+  }
+}
+
 /* =========================
    STEPPER + PANES (modal)
    ========================= */
@@ -756,6 +792,12 @@ body.gate-active .topbar{ display:none !important; }
   .logo-conaprev{ height: 44px !important; }
   .logo-govbr{    height: 80px !important; }
   .logo-amprev{   height: 48px !important; }
+  .logo-goiasprev{
+    height:auto !important;
+    max-height:56px;
+    max-width:116px;
+    width:auto;
+  }
 
   /* Esconde e-mail/telefone na topbar; mant�m s� o hamb�rguer */
   .links{
