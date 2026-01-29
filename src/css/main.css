@@ -587,24 +587,18 @@ body{ overflow-x:clip; }
 /* ===== TABLET / SMALL DESKTOP (<=993px) ===== */
 @media (max-width: 993px){
   .topbar .wrap{
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
     row-gap: 8px;
     padding: 8px 12px;
+    align-items:center;
   }
   .brand-strip{
-    grid-column: 1 / -1;
+    grid-column: 1 / 2;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     column-gap: 12px;
     height: auto;
   }
-  .links{
-    grid-column: 1 / -1;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 10px;
-  }
-  .topbar .brand-strip img{
-    max-height: 60px;
-  }
+  .topbar .brand-strip img{ max-height: 60px; }
   .logo-conaprev{ height: 48px !important; }
   .logo-govbr{    height: 90px !important; }
   .logo-amprev{   height: 54px !important; }
@@ -612,6 +606,19 @@ body{ overflow-x:clip; }
     max-height: 60px;
     max-width: 120px;
   }
+
+  /* header só com logos + hamburger */
+  .links{
+    grid-column: 2 / 3;
+    display: flex;
+    justify-content:flex-end;
+    align-items:center;
+  }
+  .links a{ display: none !important; }
+  .links .menu-icon{ justify-self: auto; }
+
+  /* footer mobile visível */
+  .site-footer{ display: block !important; }
 }
 
 /* =========================
@@ -838,8 +845,8 @@ body.gate-active .topbar{ display:none !important; }
   .site-footer{ display: block !important; }
 }
 
-/* Desktop/tablet: footer oculto (links seguem na topbar) */
-@media (min-width: 769px){
+/* Desktop: footer oculto (links seguem na topbar) */
+@media (min-width: 994px){
   .site-footer{ display: none !important; }
 }
 
@@ -853,9 +860,9 @@ body.gate-active .topbar{ display:none !important; }
 }
 .footer-links{
   display:grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  max-width: 320px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 640px;
   margin: 0 auto;
 }
 .footer-link{
@@ -878,6 +885,13 @@ body.gate-active .topbar{ display:none !important; }
   width: 28px;
   height: 28px;
   margin: 0;
+}
+
+@media (max-width: 576px){
+  .footer-links{
+    grid-template-columns: 1fr;
+    max-width: 320px;
+  }
 }
 
 
