@@ -246,8 +246,16 @@ body{ overflow-x:clip; }
 .chip{
   display:inline-flex; align-items:center; gap:8px;
   padding:8px 12px; border-radius:32px;
-  background:var(--chip-bg); border:1px solid var(--chip-bd);
+  background: #ffffff;
+  border:1px solid rgba(0,0,0,.08);
   color:#fff; text-decoration:none; backdrop-filter: blur(6px);
+  transition: background-color .25s ease, border-color .25s ease, transform .2s ease;
+}
+.chip, .chip *{ color:#0f2d2b !important; }
+.chip:hover{
+  background:#e8f1ef;
+  border-color: rgba(15,45,43,.22);
+  transform: translateY(-1px);
 }
 .chip:hover{ background:rgba(255,255,255,.16); }
 .chip.disabled{
@@ -284,6 +292,7 @@ body{ overflow-x:clip; }
   box-shadow: 0 12px 26px rgba(0,0,0,.22);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
   height: clamp(200px, 28vh, 230px);
+  cursor: pointer;
 }
 .profile-card::after{
   content:"";

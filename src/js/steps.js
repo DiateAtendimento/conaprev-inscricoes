@@ -661,30 +661,42 @@
   /* ===============================
    * Abrir modal a partir dos cards
    * =============================== */
+  const openProfileModal = (card) => {
+    if (!card) return;
+    const perfil = card?.dataset.profile || 'Conselheiro';
+    state = initialState();
+    state.perfil = perfil;
+
+    $('#miPerfil').textContent = perfil;
+
+    ensureStep1UI();
+    renderSeats();
+
+    const form = document.getElementById('miForm');
+    form.reset();
+    $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
+
+    const step2 = document.querySelector('.mi-pane[data-step="2"]');
+    if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
+    const step3 = document.querySelector('.mi-pane[data-step="3"]');
+    if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecerão aqui após a pesquisa do CPF.</div>';
+
+    updateFinalStepLabel();
+    renderStep();
+    modal.show();
+  };
+
+  $all('.profile-card').forEach(card => {
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('a, button, input, textarea, select')) return;
+      openProfileModal(card);
+    });
+  });
+
   $all('.select-profile').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const card = btn.closest('.profile-card');
-      const perfil = card?.dataset.profile || 'Conselheiro';
-      state = initialState();
-      state.perfil = perfil;
-
-      $('#miPerfil').textContent = perfil;
-
-      ensureStep1UI();
-      renderSeats();
-
-      const form = document.getElementById('miForm');
-      form.reset();
-      $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
-
-      const step2 = document.querySelector('.mi-pane[data-step="2"]');
-      if (step2) step2.innerHTML = '<div class="text-muted">Fa�a a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
-      const step3 = document.querySelector('.mi-pane[data-step="3"]');
-      if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecer�o aqui ap�s a pesquisa do CPF.</div>';
-
-      updateFinalStepLabel();
-      renderStep();
-      modal.show();
+    btn.addEventListener('click', (event) => {
+      event.preventDefault();
+      openProfileModal(btn.closest('.profile-card'));
     });
   });
 

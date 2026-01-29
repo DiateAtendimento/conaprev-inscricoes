@@ -3,108 +3,183 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sugest�es de Hospedagem � CONAPREV 83</title>
-  <!-- Favicon (SVG) -->
-  <link rel="icon" type="image/svg+xml" href="/imagens/logos/logo-conaprev.svg">
+  <title>Sugestões de Hospedagem — CONAPREV 84</title>
+  <meta name="description" content="Sugestões de hotéis para participantes da 84ª Reunião Ordinária do CONAPREV em Goiânia/GO.">
 
-  <!-- Fallbacks (recomendado) -->
+  <link rel="icon" type="image/svg+xml" href="/imagens/logos/logo-conaprev.svg">
   <link rel="icon" type="image/png" sizes="32x32"  href="/imagens/logos/logo-conaprev-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/imagens/logos/logo-conaprev-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/imagens/logos/logo-conaprev-180.png">
-
-  <!-- (Opcional) cor da barra no mobile -->
   <meta name="theme-color" content="#0b4d49">
 
-  <meta name="description" content="Sugest�es de hot�is para participantes da 83� Reuni�o Ordin�ria do CONAPREV em Macap�/AP.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/src/css/main.css" rel="stylesheet">
+  <link href="/src/css/components.css" rel="stylesheet">
   <link href="/src/css/hospedagem.css" rel="stylesheet">
 </head>
 <body>
-  <main class="hospe-wrap container-xxl">
-    <header class="hospe-header">
-      <div class="hospe-title">
-        <img class="hospe-pin" src="imagens/logos/hospedagem-pin.svg" alt="">
-        <div>
-          <h1 class="hospe-h1">Sugest�o de Hospedagem</h1>
-          <div class="hospe-sub">83 Reuni�o Ordin�ria do CONAPREV ,  AMAP� - AP</div>
+  <div id="app">
+    <header class="topbar">
+      <div class="wrap container">
+        <div class="brand-strip">
+          <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+          <img class="logo logo-govbr"    src="imagens/logos/logo-govbr.svg"    alt="Governo Federal">
+          <img class="logo logo-goiasprev"   src="imagens/logos/logo-goiasprev.png"   alt="GOIASPREV">
         </div>
+
+        <nav class="links" aria-label="Contatos e administração">
+          <a href="mailto:conaprev@previdencia.gov.br">
+            <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
+            conaprev@previdencia.gov.br
+          </a>
+          <a href="tel:+556120215347">
+            <img class="icon icon-phone" src="imagens/icones/phone.svg" alt="">
+            (61) 2021-5347
+          </a>
+          <button class="menu-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Abrir menu">
+            <i class="bi bi-list" aria-hidden="true"></i>
+          </button>
+        </nav>
       </div>
-      <p class="hospe-intro">
-        Seja bem-vindo � 83� Reuni�o Ordin�ria do CONAPREV! Pensando no seu conforto, preparamos sugest�es de
-        hospedagem para que sua estadia seja tranquila e pr�tica. Hospede-se bem e curta cada momento do evento!
-      </p>
-      <h2 class="hospe-section">Hot�is</h2>
     </header>
 
-    <section class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-4">
-
-      <!-- Hotel 1 -->
-      <div class="col">
-        <a class="hotel-card link-card" href="https://hoteldoforte.com" target="_blank" rel="noopener">
-          <img class="hotel-thumb" src="imagens/cards/hotel-forte.svg" alt="Hotel do Forte">
-          <h3 class="hotel-name">HOTEL DO FORTE</h3>
-          <dl class="hotel-info">
-            <dt>Endere�o:</dt><dd>Av. Beira Rio, 248 - Santa In�s</dd>
-            <dt>Fone/Fax:</dt><dd>+55 96 3223-2585</dd>
-            <dt>CEP:</dt><dd>68901-470 � Macap�/AP - Brasil</dd>
-            <dt>E-mail:</dt><dd>reserva@hoteldoforte.com</dd>
-            <dt>Site:</dt><dd>hoteldoforte.com</dd>
-          </dl>
-        </a>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" aria-labelledby="menuOffcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="menuOffcanvasLabel">Menu</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
       </div>
-
-      <!-- Hotel 2 -->
-      <div class="col">
-        <a class="hotel-card link-card" href="https://hotelforteexpress.com" target="_blank" rel="noopener">
-          <img class="hotel-thumb" src="imagens/cards/hotel-fort-express.svg" alt="Hotel Forte Express">
-          <h3 class="hotel-name">HOTEL FORTE EXPRESS</h3>
-          <dl class="hotel-info">
-            <dt>Endere�o:</dt><dd>Av. Feliciano Coelho, 160 - Trem</dd>
-            <dt>Fone/Fax:</dt><dd>+55 96 3223-2585</dd>
-            <dt>CEP:</dt><dd>68900-170 � Macap�/AP - Brasil</dd>
-            <dt>E-mail:</dt><dd>reserva@hotelforteexpress.com</dd>
-            <dt>Site:</dt><dd>hotelforteexpress.com</dd>
-          </dl>
-        </a>
+      <div class="offcanvas-body">
+        <nav class="menu-list">
+          <a href="/index.html" class="menu-item d-flex align-items-center gap-2">
+            <i class="bi bi-house" aria-hidden="true"></i>
+            <span>Voltar ao início</span>
+          </a>
+        </nav>
       </div>
+    </div>
 
-      <!-- Hotel 3 -->
-      <div class="col">
-        <a class="hotel-card link-card" href="https://amapahotel.com.br" target="_blank" rel="noopener">
-          <img class="hotel-thumb" src="imagens/cards/amapa-hotel.svg" alt="Amap� Hotel">
-          <h3 class="hotel-name">AMAP� HOTEL</h3>
-          <dl class="hotel-info">
-            <dt>Endere�o:</dt><dd>Rua Tiradentes, 303 - Central</dd>
-            <dt>Fone/Fax:</dt><dd>+55 96 2011-9050</dd>
-            <dt>CEP:</dt><dd>68900-098 � Macap�/AP - Brasil</dd>
-            <dt>E-mail:</dt><dd>reservas@amapahotel.com.br</dd>
-            <dt>Site:</dt><dd>amapahotel.com.br</dd>
-          </dl>
-        </a>
+    <section class="hero">
+      <div class="hero-grid container container--narrow">
+        <img class="amapa-badge reveal d1" src="imagens/logos/goias-badge.svg" alt="Goiás">
+        <div class="inner reveal d2">
+          <h1>84ª Reunião Ordinária do</h1>
+          <div class="brand-title">CONAPREV</div>
+        </div>
       </div>
-
-      <!-- Hotel 4 -->
-      <div class="col">
-        <a class="hotel-card link-card" href="mailto:hotelnorteap@hotmail.com" target="_blank" rel="noopener">
-          <img class="hotel-thumb" src="imagens/cards/hotel-norte.svg" alt="Hotel Norte">
-          <h3 class="hotel-name">HOTEL NORTE</h3>
-          <dl class="hotel-info">
-            <dt>Endere�o:</dt><dd>Av. Padre J�lio Maria Lombard, 1976 - Santa Rita</dd>
-            <dt>Fone/Fax:</dt><dd>+55 96 3223-0451</dd>
-            <dt>CEP:</dt><dd>68900-030 � Macap�/AP - Brasil</dd>
-            <dt>E-mail:</dt><dd>hotelnorteap@hotmail.com</dd>
-            <dt>Site:</dt>.<dd></dd>
-          </dl>
-        </a>
-      </div>
-
     </section>
 
+    <main class="hospe-wrap container container--narrow">
+      <section id="home" class="cards-wrapper">
+        <header class="hospe-header">
+          <div class="hospe-title">
+            <img class="hospe-pin" src="imagens/logos/hospedagem-pin.svg" alt="">
+            <div>
+              <h1 class="hospe-h1">Sugestões de Hospedagem</h1>
+            </div>
+          </div>
+          <p class="hospe-intro">
+            A 84ª Reunião Ordinária do Conaprev será realizada no K Hotel Goiânia, localizado
+            na Avenida Jamel Cecílio, no Bairro Jardim Goiás e para melhor acesso e
+            comodidade dos participantes, apresentamos sugestões de hotéis próximos ao
+            local da reunião, com links diretos para reserva.
+          </p>
+          <h2 class="hospe-section">Hotéis</h2>
+        </header>
 
-    <footer class="hospe-foot">
-      OBRIGADO POR PARTICIPAR DA 83� REUNI�O ORDIN�RIA DO CONAPREV
-    </footer>
-  </main>
+        <section class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-3">
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho444288/k-hotel-goiania-brasil/?chkin=2026-02-08&chkout=2026-02-09&rfrr=HSR&pwa_ts=1769536786261&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&selected=16063667&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=598&top_cur=BRL&userIntent&selectedRoomType=200411072&selectedRatePlan=202386393&expediaPropertyId=6909235&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1g%2FOd0yu9EpOzDBIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQAhdXcrOwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/K-hotel.avif" alt="K Hotel Goiânia">
+              <h3 class="hotel-name">K HOTEL GOIÂNIA</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 598,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho624406/quality-hotel-flamboyant-goiania-brasil/?chkin=2026-02-08&chkout=2026-02-09&rfrr=HSR&pwa_ts=1769536783443&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&neighborhoodId=553248635209677680&selected=16063667&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=378&top_cur=BRL&userIntent&selectedRoomType=221427281&selectedRatePlan=296096327&expediaPropertyId=16063667&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1s9wzy1IcbSwTDdIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQBNd%2FVFOwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/Quality Hotel Flamboyant.jpg" alt="Quality Flamboyant Goiânia">
+              <h3 class="hotel-name">QUALITY FLAMBOYANT GOIÂNIA</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 378,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho205787/comfort-suites-flamboyant-goiania-brasil/?chkin=2026-02-08&chkout=2026-02-09&rfrr=HSR&pwa_ts=1769536783445&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&neighborhoodId=553248635209677680&selected=16063667&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=408&top_cur=BRL&userIntent&selectedRoomType=211803176&selectedRatePlan=232064356&expediaPropertyId=895505&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1ne2MLR0NkpNzDBIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQCab4NYOwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/Comfort Suites Flamboyant.webp" alt="Comfort Suites Flamboyant">
+              <h3 class="hotel-name">COMFORT SUITES FLAMBOYANT</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 430,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho3199030240/iflat-brookfield-towers-goiania-brasil/?chkin=2026-02-08&chkout=2026-02-09&rfrr=HSR&pwa_ts=1769536786240&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&neighborhoodId=553248635209677680&selected=16063667&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=309&top_cur=BRL&userIntent&selectedRoomType=323706426&selectedRatePlan=392588614&expediaPropertyId=99938445&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1k8LMTByDUxPzDBIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQBm%2BrNxOwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/iFlat Brookfield Towers.avif" alt="iFlat Brookfield Towers">
+              <h3 class="hotel-name">IFLAT BROOKFIELD TOWERS</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 217,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho3822988384/stay-studio-all/?chkin=2026-02-11&chkout=2026-02-12&rfrr=HSR&pwa_ts=1769536968016&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&neighborhoodId=553248635209677680&selected=119437137&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=225&top_cur=BRL&userIntent&selectedRoomType=327137468&selectedRatePlan=403836802&expediaPropertyId=119437137&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1vc3inD0MstJzDBIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQDRoB%2B7OwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/STAY Studio All.webp" alt="STAY Studio All">
+              <h3 class="hotel-name">STAY STUDIO ALL</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 225,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho3803463264/metropolitan-sidney-mss/?chkin=2026-02-11&chkout=2026-02-12&rfrr=HSR&pwa_ts=1769536971179&referrerUrl=aHR0cHM6Ly93d3cuaG90ZWlzLmNvbS9Ib3RlbC1TZWFyY2g%3D&useRewards=false&rm1=a2&regionId=553248635209677680&destination=Jardim%20Goi%C3%A1s%2C%20Goi%C3%A2nia%2C%20Goi%C3%A1s%2C%20Brasil&destType=MARKET&neighborhoodId=553248635209677680&selected=119437137&latLong=-16.693827%2C-49.238533&sort=RECOMMENDED&top_dp=225&top_cur=BRL&userIntent&selectedRoomType=328048922&selectedRatePlan=407379900&expediaPropertyId=118826977&brandcid=HCOM.OWNED.BRANCH.DEFAULT.DESKTOP-SHARELINK&_branch_match_id=1545473890338876036&_branch_referrer=H4sIAAAAAAAAA8soKSkottLXz8gvSc0p1kssKNDLyczL1k8MDTDzKclPzDBIsq8rSk1LLSrKzEuPTyrKLy9OLbJ1TUlPBQB5o%2BRlOwAAAA%3D%3D" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/Metropolitan Sidney - MSS.avif" alt="Metropolitan Sidney (MSS)">
+              <h3 class="hotel-name">METROPOLITAN SIDNEY (MSS)</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 225,00</dd>
+              </dl>
+            </a>
+          </div>
+
+          <div class="col">
+            <a class="hotel-card link-card" href="https://www.hoteis.com/ho440615/oitis-hotel-goiania-brasil/?referrerId=HOT.HIS.Share.Landed.Copy_Link" target="_blank" rel="noopener">
+              <img class="hotel-thumb" src="imagens/cards/Oitis Hotel.webp" alt="Oitis Hotel">
+              <h3 class="hotel-name">OITIS HOTEL</h3>
+              <dl class="hotel-info">
+                <dt>Diária média:</dt><dd>R$ 491,00</dd>
+              </dl>
+            </a>
+          </div>
+        </section>
+
+        <footer class="hospe-foot">
+          OBRIGADO POR PARTICIPAR DA 84ª REUNIÃO ORDINÁRIA DO CONAPREV
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-links">
+      <a class="footer-link" href="mailto:conaprev@previdencia.gov.br">
+        <img class="icon" src="imagens/icones/mail.svg" alt="">
+        <span>conaprev@previdencia.gov.br</span>
+      </a>
+      <a class="footer-link" href="tel:+556120215347">
+        <img class="icon" src="imagens/icones/phone.svg" alt="">
+        <span>(61) 2021-5347</span>
+      </a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </body>
 </html>
-
