@@ -878,7 +878,7 @@ body.gate-active .topbar{ display:none !important; }
   background: rgba(255,255,255,.6);
   border:1px solid rgba(0,0,0,.08);
 }
-.footer-link:hover{ text-decoration: underline; }
+.footer-link:hover{ text-decoration: none; }
 .footer-link span{ text-align:center; }
 .footer-link .icon{
   display:block;
