@@ -24,7 +24,7 @@ const adminGuard = (req, res, next) => {
   if (!required) return next();
   const got = String(req.headers["x-admin-pass"] || "");
   if (got === String(required)) return next();
-  return res.status(401).json({ error: "N�o autorizado" });
+  return res.status(401).json({ error: "Não autorizado" });
 };
 
 function sendError(res, e, fallback = "Erro interno") {
@@ -73,7 +73,7 @@ r.get("/temas/:tema/latest", async (req, res) => {
       previousAnswers,
     });
   } catch (e) {
-    return sendError(res, e, "Erro ao buscar vota��o");
+    return sendError(res, e, "Erro ao buscar votação");
   }
 });
 
@@ -104,18 +104,18 @@ r.get("/admin/temas/:tema/votacoes", adminGuard, async (req, res) => {
     const list = await listVotesByTema(tema);
     return res.json(list);
   } catch (e) {
-    return sendError(res, e, "Erro ao listar vota��es");
+    return sendError(res, e, "Erro ao listar votações");
   }
 });
 
 r.post("/admin/votacoes", adminGuard, async (req, res) => {
   try {
     const { tema, questions } = req.body || {};
-    if (!tema) return res.status(400).json({ error: "Tema � obrigat�rio" });
+    if (!tema) return res.status(400).json({ error: "Tema é obrigatório" });
     const out = await createVote({ temaInput: tema, questions });
     return res.status(201).json(out);
   } catch (e) {
-    return sendError(res, e, "Erro ao criar vota��o");
+    return sendError(res, e, "Erro ao criar votação");
   }
 });
 
@@ -126,7 +126,7 @@ r.put("/admin/votacoes/:id", adminGuard, async (req, res) => {
     const out = await updateVote(id, { questions });
     return res.json(out);
   } catch (e) {
-    return sendError(res, e, "Erro ao atualizar vota��o");
+    return sendError(res, e, "Erro ao atualizar votação");
   }
 });
 
@@ -136,7 +136,7 @@ r.delete("/admin/votacoes/:id", adminGuard, async (req, res) => {
     const out = await deleteVote(id);
     return res.json(out);
   } catch (e) {
-    return sendError(res, e, "Erro ao excluir vota��o");
+    return sendError(res, e, "Erro ao excluir votação");
   }
 });
 
@@ -165,10 +165,10 @@ r.get("/admin/votacoes/:id", adminGuard, async (req, res) => {
   try {
     const id = String(req.params.id || "");
     const out = await getVoteById(id);
-    if (!out) return res.status(404).json({ error: "Vota��o n�o encontrada" });
+    if (!out) return res.status(404).json({ error: "Votação não encontrada" });
     return res.json(out);
   } catch (e) {
-    return sendError(res, e, "Erro ao buscar vota��o");
+    return sendError(res, e, "Erro ao buscar votação");
   }
 });
 

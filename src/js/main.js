@@ -23,13 +23,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // ===== Bot�o "Emitir certificado" (id alinhado ao HTML) =====
   document.getElementById('btnEmitirCert')?.addEventListener('click', async (e) => {
     e.preventDefault();
-    const cpf = prompt('Informe seu CPF (somente n�meros)');
+    const cpf = prompt('Informe seu CPF (somente números)');
     if (!cpf) return;
     try {
       const pdf = await emitirCertificado(cpf);
       downloadBlob(pdf, 'certificado_conaprev.pdf');
     } catch (err) {
-      alert(err?.message || 'N�o foi poss�vel emitir o certificado.');
+      alert(err?.message || 'Não foi possível emitir o certificado.');
     }
   });
 

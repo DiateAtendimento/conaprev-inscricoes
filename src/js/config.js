@@ -2,9 +2,9 @@
 (() => {
   // Janela de libera��o das inscri��es (usado pelo gate)
   window.EVENTO = {
-    INICIO: '2025-09-22T08:00:00-03:00',
-    FIM:    '2025-12-03T13:00:00-03:00', // FIM > INICIO
-    LOCAL:  'Bras�lia/DF',
+    INICIO: '2026-03-30T08:00:00-03:00',
+    FIM:    '2026-13-31T13:00:00-03:00', // FIM > INICIO
+    LOCAL:  'Brasília/DF',
   };
 
   // Base da API (Render em produ��o; localhost no dev)

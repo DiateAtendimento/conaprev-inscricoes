@@ -8,7 +8,7 @@ const EVENTO = window.EVENTO || { INICIO: '2025-09-22T08:00:00-03:00' };
  *  ============================= */
 const MAINTENANCE_MODE = true;          // todos veem o gate (a menos que usem o preview)
 const RELEASE_AT       = EVENTO.INICIO; // data/hora de libera��o
-const PREVIEW_TOKEN    = 'CONAPREV83_DEV'; // ?preview=CONAPREV83_DEV (salva cookie)
+const PREVIEW_TOKEN    = 'CONAPREV84_DEV'; // ?preview=CONAPREV84_DEV (salva cookie)
 
 /* Helpers cookie/query */
 function setCookie(name, value, days = 7) {
@@ -79,19 +79,19 @@ function mountGate() {
 
     <main class="container py-5">
       <div class="row g-4 align-items-center">
-        <!-- Texto � esquerda -->
+        <!-- Texto à esquerda -->
         <div class="col-12 col-lg-6">
           <h1 class="fw-semibold" style="font-size:clamp(24px,3vw,36px);line-height:1.2;">
-            Aguarde, falta pouco para a libera��o das inscri��es da
-            <strong>83� Reuni�o Ordin�ria do CONAPREV</strong>.
+            Aguarde, falta pouco para a liberação das inscrições da
+            <strong>84ª Reunião Ordinária do CONAPREV</strong>.
           </h1>
           <p class="text-secondary mt-2">
             Abertura prevista para <strong>${pad(release.getDate())}/${pad(release.getMonth() + 1)}/${release.getFullYear()}</strong>
-            �s <strong>${pad(release.getHours())}:${pad(release.getMinutes())}</strong> (hor�rio de Bras�lia).
+            às <strong>${pad(release.getHours())}:${pad(release.getMinutes())}</strong> (horário de Brasília).
           </p>
         </div>
 
-        <!-- Contador � direita -->
+        <!-- Contador à direita -->
         <div class="col-12 col-lg-6">
           <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center">
             <div class="gate-box">

@@ -50,13 +50,13 @@ export async function emitirCertificadoPDF(cpf) {
     const u = await buscarPorCpf(cpf, p);
     if (u) { user = u; perfilEncontrado = p; break; }
   }
-  if (!user) throw new Error("CPF n�o encontrado.");
+  if (!user) throw new Error("CPF nãoo encontrado.");
   if (!user.numerodeinscricao || String(user.numerodeinscricao).trim() === "")
-    throw new Error("Certificado dispon�vel apenas para inscritos confirmados (com n�mero de inscri��o).");
+    throw new Error("Certificado disponível apenas para inscritos confirmados (com número de inscrição).");
 
   const dias = await checarPresencaDias(user.numerodeinscricao, user.nome);
   if (!dias.dia1 && !dias.dia2)
-    throw new Error("NAO_CONSTA_PRESENCA|O seu n�mero de inscri��o n�o consta nas listas Dia1/Dia2.");
+    throw new Error("NAO_CONSTA_PRESENCA|O seu número de inscrição nãoo consta nas listas Dia1/Dia2.");
 
   const agora = new Date();
   const eventoFim = new Date(cfg.event.fim);

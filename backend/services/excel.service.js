@@ -87,7 +87,7 @@ function makeWorksheetNameFactory() {
   const ILLEGAL = /[:\\\/\?\*\[\]]/g;
 
   const sanitize = (t) => {
-    let s = String(t || "").trim().replace(ILLEGAL, "�");
+    let s = String(t || "").trim().replace(ILLEGAL, "_");
     if (!s) s = "Aba";
     // remove quebras/ctl
     s = s.replace(/[\u0000-\u001F\u007F]/g, " ");
@@ -116,7 +116,7 @@ export async function exportSpreadsheetToXlsx() {
   const meta = await sheets.spreadsheets.get({ spreadsheetId: cfg.sheetId });
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = "CONAPREV Inscri��es";
+  wb.creator = "CONAPREV Inscrições";
   wb.created = new Date();
 
   const allSheets = meta.data.sheets || [];
@@ -125,7 +125,7 @@ export async function exportSpreadsheetToXlsx() {
   // nada a exportar?
   if (!exportables.length) {
     const ws = wb.addWorksheet("Export");
-    ws.addRow(["N�o h� abas p�blicas para exportar."]);
+    ws.addRow(["Não há abas públicas para exportar."]);
     styleHeader(ws);
     autosizeColumns(ws);
     const bufferEmpty = await wb.xlsx.writeBuffer();

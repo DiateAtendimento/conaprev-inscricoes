@@ -41,8 +41,8 @@
 
   function avisarLiberacao() {
     showMessage(
-      "Certificado indispon�vel",
-      "O certificado estar� dispon�vel para emiss�o em <strong>03/04/2026 (sexta-feira) �s 14h</strong>, hor�rio de Bras�lia."
+      "Certificado indisponível",
+      "O certificado estará disponível para emissão em <strong>01/04/2026 (Quarta-feira) às 14h</strong>, horário de Brasíia."
     );
   }
 
