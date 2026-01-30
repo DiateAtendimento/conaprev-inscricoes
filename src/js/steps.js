@@ -363,80 +363,54 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
-    const PHOTO_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'bmp', 'avif'];
+    const PHOTO_DIR = '/imagens/fotos-conselheiros';
+    const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
     const DEFAULT_PHOTO_URL = '/imagens/fotos-conselheiros/padrao.svg';
     const photoCache = new Map();
+    let photoIndexPromise = null;
 
     const stripDiacritics = (value) =>
       String(value || '')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
 
-    const toSlugParts = (value) =>
-      stripDiacritics(value)
-        .replace(/[^a-zA-Z0-9\s-]/g, ' ')
+    function normalizeNameKey(value) {
+      return stripDiacritics(value)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
         .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-
-    function buildNameVariants(name) {
-      const originalParts = toSlugParts(name);
-      if (!originalParts.length) return [];
-      const variants = new Set();
-
-      const fullHyphen = originalParts.join('-');
-      const fullSpace = originalParts.join(' ');
-      const fullUnderscore = originalParts.join('_');
-      variants.add(fullHyphen);
-      variants.add(fullHyphen.toLowerCase());
-      variants.add(fullHyphen.toUpperCase());
-      variants.add(fullSpace);
-      variants.add(fullSpace.toLowerCase());
-      variants.add(fullSpace.toUpperCase());
-      variants.add(fullUnderscore);
-      variants.add(fullUnderscore.toLowerCase());
-      variants.add(fullUnderscore.toUpperCase());
-
-      return [...variants].filter(Boolean);
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
     }
 
-    function buildPhotoCandidates(name) {
-      const variants = buildNameVariants(name);
-      const candidates = [];
-      variants.forEach(variant => {
-        PHOTO_EXTS.forEach(ext => {
-          candidates.push(`/imagens/fotos-conselheiros/${variant}.${ext}`);
-        });
-      });
-      return candidates;
-    }
-
-    function tryLoadImage(url) {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        img.src = url;
-      });
+    async function loadPhotoIndex() {
+      if (photoIndexPromise) return photoIndexPromise;
+      photoIndexPromise = fetch(PHOTO_MANIFEST_URL, { cache: 'no-cache' })
+        .then(res => (res.ok ? res.json() : []))
+        .then(list => {
+          const map = new Map();
+          if (!Array.isArray(list)) return map;
+          list.forEach((file) => {
+            if (typeof file !== 'string') return;
+            const key = normalizeNameKey(file);
+            if (key) map.set(key, file);
+          });
+          return map;
+        })
+        .catch(() => new Map());
+      return photoIndexPromise;
     }
 
     async function resolvePhotoUrl(name) {
-      const key = stripDiacritics(name).trim().toLowerCase();
+      const key = normalizeNameKey(name);
       if (!key) return null;
       if (photoCache.has(key)) return photoCache.get(key);
 
-      const candidates = buildPhotoCandidates(name);
-      for (const url of candidates) {
-        // Tenta carregar a imagem; se existir, usa a primeira encontrada.
-        // (Sem requisição extra ao backend.)
-        if (await tryLoadImage(url)) {
-          photoCache.set(key, url);
-          return url;
-        }
-      }
-
-      photoCache.set(key, DEFAULT_PHOTO_URL);
-      return DEFAULT_PHOTO_URL;
+      const index = await loadPhotoIndex();
+      const filename = index.get(key);
+      const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+      photoCache.set(key, url);
+      return url;
     }
 
     pos.forEach(({ n, row, col }) => {
