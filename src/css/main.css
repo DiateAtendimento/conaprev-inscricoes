@@ -739,8 +739,14 @@ body{ overflow-x:clip; }
   user-select:none;
   border:1px solid rgba(0,0,0,.12);
   background:#e5e7eb;
+  overflow: visible;
   justify-self:center;
   align-self:center;
+}
+.mi-seat-num{
+  position: relative;
+  z-index: 1;
+  line-height: 1;
 }
 .mi-seat--has-card{ z-index: 2; }
 .mi-seat-card{
@@ -756,6 +762,7 @@ body{ overflow-x:clip; }
   padding:6px;
   box-shadow: 0 12px 26px rgba(0,0,0,.22);
   transition: opacity .18s ease, transform .18s ease;
+  z-index: 5;
 }
 .mi-seat-card::after{
   content:"";

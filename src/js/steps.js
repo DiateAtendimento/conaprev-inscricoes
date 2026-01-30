@@ -300,28 +300,107 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
-    const seatPhotoByNumber = {
-      1: '/imagens/fotos-conselheiros/Allex-albert.svg'
-    };
+    const PHOTO_EXTS = ['png', 'jpg', 'jpeg', 'webp', 'svg', 'gif', 'bmp', 'avif'];
+    const DEFAULT_PHOTO_URL = '/imagens/fotos-conselheiros/padrao.svg';
+    const photoCache = new Map();
+
+    const stripDiacritics = (value) =>
+      String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const toSlugParts = (value) =>
+      stripDiacritics(value)
+        .replace(/[^a-zA-Z0-9\s-]/g, ' ')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    function buildNameVariants(name) {
+      const originalParts = toSlugParts(name);
+      if (!originalParts.length) return [];
+      const variants = new Set();
+
+      const fullHyphen = originalParts.join('-');
+      const fullSpace = originalParts.join(' ');
+      const fullUnderscore = originalParts.join('_');
+      variants.add(fullHyphen);
+      variants.add(fullHyphen.toLowerCase());
+      variants.add(fullHyphen.toUpperCase());
+      variants.add(fullSpace);
+      variants.add(fullSpace.toLowerCase());
+      variants.add(fullSpace.toUpperCase());
+      variants.add(fullUnderscore);
+      variants.add(fullUnderscore.toLowerCase());
+      variants.add(fullUnderscore.toUpperCase());
+
+      return [...variants].filter(Boolean);
+    }
+
+    function buildPhotoCandidates(name) {
+      const variants = buildNameVariants(name);
+      const candidates = [];
+      variants.forEach(variant => {
+        PHOTO_EXTS.forEach(ext => {
+          candidates.push(`/imagens/fotos-conselheiros/${variant}.${ext}`);
+        });
+      });
+      return candidates;
+    }
+
+    function tryLoadImage(url) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+      });
+    }
+
+    async function resolvePhotoUrl(name) {
+      const key = stripDiacritics(name).trim().toLowerCase();
+      if (!key) return null;
+      if (photoCache.has(key)) return photoCache.get(key);
+
+      const candidates = buildPhotoCandidates(name);
+      for (const url of candidates) {
+        // Tenta carregar a imagem; se existir, usa a primeira encontrada.
+        // (Sem requisição extra ao backend.)
+        if (await tryLoadImage(url)) {
+          photoCache.set(key, url);
+          return url;
+        }
+      }
+
+      photoCache.set(key, DEFAULT_PHOTO_URL);
+      return DEFAULT_PHOTO_URL;
+    }
 
     pos.forEach(({ n, row, col }) => {
       const btn = document.createElement('button');
       const ocupado = !!occ[n];
       btn.type = 'button';
-      btn.textContent = n;
+      const num = document.createElement('span');
+      num.className = 'mi-seat-num';
+      num.textContent = n;
       btn.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
       btn.style.gridRow = String(row);
       btn.style.gridColumn = String(col);
-      if (ocupado && typeof occ[n] === 'string') btn.title = occ[n];
+      if (ocupado && typeof occ[n] === 'string' && !seatPhotoByNumber[n]) {
+        btn.title = occ[n];
+      }
+      btn.appendChild(num);
 
-      const photo = seatPhotoByNumber[n];
-      if (photo) {
-        const photoUrl = new URL(photo, window.location.origin).toString();
-        btn.classList.add('mi-seat--has-card');
-        const card = document.createElement('div');
-        card.className = 'mi-seat-card';
-        card.innerHTML = `<img src="${photoUrl}" alt="Foto do conselheiro">`;
-        btn.appendChild(card);
+      if (ocupado && typeof occ[n] === 'string') {
+        const nome = occ[n].trim();
+        resolvePhotoUrl(nome).then(photoUrl => {
+          if (!photoUrl || !btn.isConnected) return;
+          btn.classList.add('mi-seat--has-card');
+          const card = document.createElement('div');
+          card.className = 'mi-seat-card';
+          card.innerHTML = `<img src="${photoUrl}" alt="Foto de ${escapeHtml(nome)}">`;
+          btn.appendChild(card);
+        });
       }
       grid.appendChild(btn);
     });
