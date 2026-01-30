@@ -300,6 +300,10 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
+    const seatPhotoByNumber = {
+      1: '/imagens/fotos-conselheiros/Allex%20albert.svg'
+    };
+
     pos.forEach(({ n, row, col }) => {
       const btn = document.createElement('button');
       const ocupado = !!occ[n];
@@ -309,6 +313,15 @@
       btn.style.gridRow = String(row);
       btn.style.gridColumn = String(col);
       if (ocupado && typeof occ[n] === 'string') btn.title = occ[n];
+
+      const photo = seatPhotoByNumber[n];
+      if (photo) {
+        btn.classList.add('mi-seat--has-card');
+        const card = document.createElement('div');
+        card.className = 'mi-seat-card';
+        card.innerHTML = `<img src="${photo}" alt="Foto do conselheiro">`;
+        btn.appendChild(card);
+      }
       grid.appendChild(btn);
     });
 
