@@ -301,7 +301,7 @@
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
     const seatPhotoByNumber = {
-      1: '/imagens/fotos-conselheiros/Allex%20albert.svg'
+      1: '/imagens/fotos-conselheiros/Allex-albert.svg'
     };
 
     pos.forEach(({ n, row, col }) => {
@@ -319,7 +319,8 @@
         btn.classList.add('mi-seat--has-card');
         const card = document.createElement('div');
         card.className = 'mi-seat-card';
-        card.innerHTML = `<img src="${photo}" alt="Foto do conselheiro">`;
+        const photoUrl = new URL(photo, window.location.origin).toString();
+        card.innerHTML = `<div class="mi-seat-photo" style="background-image:url('${photoUrl}')"></div>`;
         btn.appendChild(card);
       }
       grid.appendChild(btn);

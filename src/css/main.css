@@ -769,12 +769,11 @@ body{ overflow-x:clip; }
   border-left:1px solid rgba(0,0,0,.12);
   border-bottom:1px solid rgba(0,0,0,.12);
 }
-.mi-seat-card img{
-  display:block;
+.mi-seat-photo{
   width:84px;
   height:84px;
-  object-fit:cover;
   border-radius:10px;
+  background: #f3f4f6 center / cover no-repeat;
 }
 .mi-seat--has-card:hover .mi-seat-card,
 .mi-seat--has-card:focus-visible .mi-seat-card{
