@@ -369,6 +369,45 @@
     const photoCache = new Map();
     let photoIndexPromise = null;
 
+    function getSeatPreviewEl() {
+      let el = document.getElementById('miSeatPreview');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'miSeatPreview';
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function showSeatPreview(nome, url, ev) {
+      const el = getSeatPreviewEl();
+      const safeUrl = url || DEFAULT_PHOTO_URL;
+      el.innerHTML = `
+        <div class="mi-seat-card">
+          <img src="${safeUrl}" alt="Foto de ${escapeHtml(nome)}">
+        </div>
+      `;
+      el.style.display = 'block';
+      moveSeatPreview(ev);
+    }
+
+    function moveSeatPreview(ev) {
+      const el = document.getElementById('miSeatPreview');
+      if (!el || el.style.display === 'none') return;
+      let x = ev.clientX + 14;
+      let y = ev.clientY + 14;
+      const r = el.getBoundingClientRect();
+      if (x + r.width > window.innerWidth) x = ev.clientX - r.width - 14;
+      if (y + r.height > window.innerHeight) y = ev.clientY - r.height - 14;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+    }
+
+    function hideSeatPreview() {
+      const el = document.getElementById('miSeatPreview');
+      if (el) el.style.display = 'none';
+    }
+
     const stripDiacritics = (value) =>
       String(value || '')
         .normalize('NFD')
@@ -444,6 +483,11 @@
           };
           card.appendChild(img);
           btn.appendChild(card);
+
+          btn.addEventListener('mouseenter', (ev) => showSeatPreview(nome, safeUrl, ev));
+          btn.addEventListener('mousemove', moveSeatPreview);
+          btn.addEventListener('mouseleave', hideSeatPreview);
+          btn.addEventListener('blur', hideSeatPreview);
         });
       }
       grid.appendChild(btn);

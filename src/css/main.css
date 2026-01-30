@@ -788,6 +788,23 @@ body{ overflow-x:clip; }
   opacity:1;
   transform: translate(-50%, -10px) scale(1);
 }
+.mi-seat--has-card:hover .mi-seat-card,
+.mi-seat--has-card:focus-visible .mi-seat-card{
+  opacity:0;
+}
+
+/* Preview flutuante fora do overflow do modal */
+#miSeatPreview{
+  position: fixed;
+  z-index: 20000; /* acima do modal (bootstrap ~1055) */
+  display: none;
+  pointer-events: none;
+}
+#miSeatPreview .mi-seat-card{
+  position: static;
+  opacity: 1;
+  transform: none;
+}
 .mi-seat.available{
   background:#e5e7eb;
   color:#111827;
