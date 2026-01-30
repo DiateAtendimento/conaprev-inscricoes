@@ -650,7 +650,7 @@ body{ overflow-x:clip; }
 .mi-pane{ display:none; }
 .mi-pane.active{ display:block; }
 
-/* Bot�o pulso (real�a confirma��o) */
+/* Bot�o pulso (realáa Confirmação) */
 @keyframes pulseRing{
   0%{ box-shadow:0 0 0 0 rgba(13,110,253,.55); }
   70%{ box-shadow:0 0 0 12px rgba(13,110,253,0); }
@@ -732,7 +732,7 @@ body{ overflow-x:clip; }
   61%, 100% { box-shadow: 0 0 0 6px rgba(13,110,253,.15); }
 }
 
-/* Modal footer: voltar � esquerda, avan�ar � direita */
+/* Modal footer: voltar � esquerda, Avançar � direita */
 .modal-footer{
   justify-content: space-between;   /* separa os bot�es */
 }
@@ -745,7 +745,7 @@ body{ overflow-x:clip; }
 #miLottieOverlay.d-none{ display:none; }
 .mi-lottie-backdrop{
   position:absolute; inset:0;
-  background:rgba(0,0,0,.38);   /* s� o backdrop escuro */
+  background:rgba(0,0,0,.38);   /* Só o backdrop escuro */
 }
 .mi-lottie-card{
   position:absolute; top:50%; left:50%;
@@ -780,7 +780,7 @@ body.gate-active .topbar{ display:none !important; }
 /* =========================
    RESPONSIVO � adicional
    ========================= */
-/* ===== MOBILE (=768px) � topbar s� com logos, links v�o para o footer ===== */
+/* ===== MOBILE (=768px) � topbar Só com logos, links v�o para o footer ===== */
 @media (max-width: 768px){
 
   :root{ --content-max: 92vw; --topbar-h: 64px; }
@@ -789,7 +789,7 @@ body.gate-active .topbar{ display:none !important; }
     background: url("/imagens/bg/bg-desktop.jpg") center top / cover no-repeat;
   }
 
-  /* Topbar em 1 coluna; s� as logos + hamb�rguer */
+  /* Topbar em 1 coluna; Só as logos + hamb�rguer */
   .topbar{ min-height:auto; }
   .topbar .wrap{
     grid-template-columns: 1fr;
@@ -815,11 +815,11 @@ body.gate-active .topbar{ display:none !important; }
     width:auto;
   }
 
-  /* Esconde e-mail/telefone na topbar; mant�m s� o hamb�rguer */
+  /* Esconde e-mail/telefone na topbar; mant�m Só o hamb�rguer */
   .links{
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: 1fr;   /* s� para posicionar o hamb�rguer */
+    grid-template-columns: 1fr;   /* Só para posicionar o hamb�rguer */
   }
   .links a{ display: none !important; }          /* <- some no mobile */
   .links .menu-icon{
@@ -850,7 +850,7 @@ body.gate-active .topbar{ display:none !important; }
     min-width: clamp(220px, 80vw, 280px);
   }
 
-  /* Footer mobile vis�vel */
+  /* Footer mobile viSóvel */
   .site-footer{ display: block !important; }
 }
 
@@ -904,7 +904,7 @@ body.gate-active .topbar{ display:none !important; }
 }
 
 
-/* telas m�dias tamb�m reduzem um pouco a badge */
+/* telas médias tamb�m reduzem um pouco a badge */
 @media (max-width: 1200px){
   .amapa-badge{ width: clamp(190px, 22vw, 260px); }
 }
@@ -922,19 +922,19 @@ body.gate-active .topbar{ display:none !important; }
 #adminMonitorModal .nav-tabs .nav-link{
   display: inline-block !important;
 }
-/* Header do modal admin alinhado: t�tulo � esquerda, a��es � direita */
+/* Header do modal admin alinhado: título � esquerda, Ações � direita */
 #adminMonitorModal .modal-header{
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: .5rem;
 }
-/* Evita o t�tulo ocupar 100% da linha */
+/* Evita o título ocupar 100% da linha */
 #adminMonitorModal .modal-header h5{
   margin: 0;
   flex: 0 1 auto;
 }
-/* Mant�m o grupo de a��es grudado � direita */
+/* Mant�m o grupo de Ações grudado � direita */
 #adminMonitorModal .modal-header > .d-flex{
   margin-left: auto;
 }
@@ -949,4 +949,5 @@ body.gate-active .topbar{ display:none !important; }
   overflow-x: auto;
 }
 #adminMonitorModal .nav-tabs::-webkit-scrollbar{ height: 6px; }
+
 

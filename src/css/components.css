@@ -1,4 +1,4 @@
-/* =========================
+﻿/* =========================
    VOTACAO AO VIVO
    ========================= */
 .voting-empty-state{
@@ -354,7 +354,7 @@ body.vote-admin-page::after{
   }
 }
 
-/* ===== THEMES (admin + público) ===== */
+/* ===== THEMES (admin + pÃºblico) ===== */
 .voting-theme-card{
   border-radius:18px;
   border:1px solid #e2e8f0;

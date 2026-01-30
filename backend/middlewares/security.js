@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 
 /**
  * Rate limiter �seguro� para produ��o.
- * � Usa cabe�alhos padr�o (RFC)
+ * � Usa cabeçalhos padrão (RFC)
  * � Evita herdar o trust proxy permissivo (j� est� em app.set('trust proxy', 1))
  * � Mensagem clara em caso de excesso
  */
@@ -21,7 +21,7 @@ const limiter = rateLimit({
 });
 
 /**
- * Helmet com defaults (pode ajustar CSP depois, se necess�rio)
+ * Helmet com defaults (pode ajustar CSP depois, se necesSório)
  */
 const helmetMw = helmet({
   // exemplo: descomente se usar inline styles/scripts e quiser flexibilizar CSP depois
@@ -35,4 +35,5 @@ const security = [
 ];
 
 export default security;
+
 

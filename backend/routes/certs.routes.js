@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { emitirCertificadoPDF } from "../services/certs.service.js";
 
 const r = Router();

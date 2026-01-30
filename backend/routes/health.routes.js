@@ -1,4 +1,4 @@
-// backend/routes/health.routes.js
+﻿// backend/routes/health.routes.js
 import { Router } from "express";
 import { getSpreadsheetMeta } from "../services/sheets.service.js"; // <= aqui!
 

@@ -308,10 +308,10 @@
     };
 
     const fetchVotes = async (themeId) => {
-      const stop = startLoading('Carregando vota��es...');
+      const stop = startLoading('Carregando votações...');
       const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
       stop();
-      if (!res.ok) throw new Error('Falha ao carregar vota��es');
+      if (!res.ok) throw new Error('Falha ao carregar votAções');
       return res.json();
     };
 
@@ -328,10 +328,10 @@
             <div class="card-body d-flex flex-wrap align-items-center gap-3">
               <div class="flex-grow-1">
                 <div class="text-muted small">${status}</div>
-                <div class="h6 mb-1">${vote.title || 'Sem t�tulo'}</div>
+                <div class="h6 mb-1">${vote.title || 'Sem título'}</div>
                 <div class="small text-muted">Atualizada em ${formatDate(vote.updatedAt || vote.createdAt)}</div>
               </div>
-              <div class="voting-actions" role="group" aria-label="A��es">
+              <div class="voting-actions" role="group" aria-label="Ações">
                 <button type="button" class="btn btn-warning btn-sm" data-action="edit">
                   <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
                 </button>
@@ -882,7 +882,7 @@
     });
   };
 
-  // ===== P�blico =====
+  // ===== Público =====
   const initPublicPage = () => {
     const container = document.getElementById('votePublicContainer');
     const loginForm = document.getElementById('voteLoginForm');
@@ -1102,7 +1102,7 @@
         target.checked = false;
         const msg = limitType === 'equal'
           ? `Selecione exatamente ${limitValue} opção(ões).`
-          : `Selecione no m�ximo ${limitValue} opção(ões).`;
+          : `Selecione no máximo ${limitValue} opção(ões).`;
         await showUiModal({ title: 'Aviso', message: msg, variant: 'warning' });
       }
     });
@@ -1198,5 +1198,6 @@
   initBuilderPage();
   initPublicPage();
 })();
+
 
 

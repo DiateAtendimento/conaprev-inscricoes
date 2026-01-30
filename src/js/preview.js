@@ -1,14 +1,14 @@
-// frontend/src/js/preview.js
+﻿// frontend/src/js/preview.js
 (() => {
   const params = new URLSearchParams(window.location.search);
   const isPreviewApp = params.get("preview") === "app";
   // flag global simples que outros scripts enxergam
   window.__PREVIEW_APP__ = isPreviewApp;
 
-  // opcional: coloca uma “pista” no <html> pra CSS se quiser
+  // opcional: coloca uma â€œpistaâ€ no <html> pra CSS se quiser
   document.documentElement.setAttribute("data-preview", isPreviewApp ? "app" : "countdown");
 
-  // alterna visões quando o DOM estiver pronto
+  // alterna visÃµes quando o DOM estiver pronto
   document.addEventListener("DOMContentLoaded", () => {
     const viewCountdown = document.getElementById("view-countdown");
     const viewApp = document.getElementById("view-app");

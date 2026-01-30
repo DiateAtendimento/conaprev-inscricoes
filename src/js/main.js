@@ -41,7 +41,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // IMPORTANTE:
   // O bot�o #adminAccessBtn � tratado por /src/js/admin.js (modal + senha).
-  // N�o adicionamos listeners aqui para evitar conflitos.
+  // Não adicionamos listeners aqui para evitar conflitos.
 });
 
 /* =========================
@@ -84,4 +84,5 @@ window.testCancelar = async () => {
     console.log('cancelar:', r);
   } catch (e) { console.error(e); }
 };
+
 

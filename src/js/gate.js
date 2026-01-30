@@ -1,13 +1,13 @@
 ﻿// gate.js � cron�metro/bloqueio de abertura
 
-// L� a data de libera��o do objeto global definido em config.js
+// lá a data de liberAção do objeto global definido em config.js
 const EVENTO = window.EVENTO || { INICIO: '2025-09-22T08:00:00-03:00' };
 
 /** =============================
  *  Config do �port�o� (gate)
  *  ============================= */
 const MAINTENANCE_MODE = true;          // todos veem o gate (a menos que usem o preview)
-const RELEASE_AT       = EVENTO.INICIO; // data/hora de libera��o
+const RELEASE_AT       = EVENTO.INICIO; // data/hora de liberAção
 const PREVIEW_TOKEN    = 'CONAPREV84_DEV'; // ?preview=CONAPREV84_DEV (salva cookie)
 
 /* Helpers cookie/query */
@@ -60,7 +60,7 @@ function ensureBlackBackground() {
 if (shouldGate) {
   ensureBlackBackground();
   document.body.classList.add('gate-active');
-  mountGate();     // n�o mostra dicas de preview
+  mountGate();     // Não mostra dicas de preview
 } else {
   document.getElementById('app')?.classList.remove('d-none');
   // Se voc� tiver um main.js de app, pode carregar aqui.
@@ -148,4 +148,5 @@ function mountGate() {
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
+
 

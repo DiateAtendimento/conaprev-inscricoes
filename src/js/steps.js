@@ -49,7 +49,7 @@
   });
   let state = initialState();
 
-  // �Nome no prisma� autom�tico
+  // "Nome no prisma" automático
   let prismaManual = false;
   let ultimaSugestaoPrisma = '';
 
@@ -57,18 +57,18 @@
    * Esquemas
    * =============================== */
   const CAMPOS_DADOS_CONSELHEIRO = [
-    { id: 'numerodeinscricao', label: 'N�mero de Inscri��o', type: 'text', readonly: true },
+    { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
     { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
     { id: 'nome',              label: 'Nome',                type: 'text', required: true },
-    { id: 'nomenoprismacracha',label: 'Nome no Prisma/Crach�', type: 'text' },
+    { id: 'nomenoprismacracha',label: 'Nome no Prisma/Crachá', type: 'text' },
     { id: 'ufsigla',           label: 'UF/Sigla',            type: 'text' },
     { id: 'sigladaentidade',   label: 'Sigla da Entidade',   type: 'text' },
-    { id: 'endereco',          label: 'Endere�o',            type: 'text' },
+    { id: 'endereco',          label: 'Endereço',            type: 'text' },
     { id: 'emailconselheiroa', label: 'E-mail Conselheiro(a)', type: 'email' },
-    { id: 'emailsecretarioa',  label: 'E-mail Secret�rio(a)',  type: 'email' },
+    { id: 'emailsecretarioa',  label: 'E-mail Secretário(a)',  type: 'email' },
   ];
   const CAMPOS_DADOS_REDUZIDOS = [
-    { id: 'numerodeinscricao', label: 'N�mero de Inscri��o', type: 'text', readonly: true },
+    { id: 'numerodeinscricao', label: 'Número de Inscrição', type: 'text', readonly: true },
     { id: 'cpf',               label: 'CPF',                 type: 'text', required: true },
     { id: 'nome',              label: 'Nome',                type: 'text', required: true },
     { id: 'ufsigla',           label: 'UF/Sigla',            type: 'text' },
@@ -76,11 +76,11 @@
     { id: 'email',             label: 'E-mail',              type: 'email' },
   ];
   const CAMPOS_PERFIL_BASE = [
-    { id: 'identificacao',     label: 'Identifica��o',       type: 'text', readonly: true },
+    { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
   ];
   const CAMPOS_PERFIL_CONSELHEIRO = [
     { id: 'representatividade',label: 'Representatividade',  type: 'text' },
-    { id: 'cargofuncao',       label: 'Cargo / Fun��o',      type: 'text' },
+    { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
   ];
 
   /* ===============================
@@ -142,7 +142,7 @@
     if (msgEl) msgEl.textContent = '';
   }
 
-  // ?? Expor para outros m�dulos (ex.: admin.js)
+  // ?? Expor para outros módulos (ex.: admin.js)
   window.miLottieShow = (kindOrPath = 'search', msg = '') => openLottie(kindOrPath, msg);
   window.miLottieHide = () => closeLottie();
 
@@ -159,7 +159,7 @@
   function updateFinalStepLabel() {
     const lastStep = document.querySelector('.mi-stepper .mi-step[data-step="6"]');
     if (!lastStep) return;
-    lastStep.textContent = state.protocolo ? 'N�mero de inscri��o' : 'Finalizar';
+    lastStep.textContent = state.protocolo ? 'Número de Inscrição' : 'Finalizar';
   }
 
   function renderStep() {
@@ -171,7 +171,7 @@
     });
     $all('.mi-pane').forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
 
-    // Voltar: vis�vel s� do passo 2 ao 6 e fica � esquerda (CSS cuida do layout)
+    // Voltar: visível só do passo 2 ao 6 e fica à esquerda (CSS cuida do layout)
     const btnVoltar = $('#miBtnVoltar');
     btnVoltar.classList.toggle('d-none', state.step === 1);
 
@@ -179,7 +179,7 @@
     if (state.step === 4 && state.data?.numerodeinscricao) {
       avancar.textContent = 'Salvar e Sair';
     } else {
-      avancar.textContent = state.step < STEP_MAX ? 'Avan�ar' : 'Concluir';
+      avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
     }
     avancar.disabled = (state.step === 1 && !state.searched);
 
@@ -187,13 +187,13 @@
   }
 
   /* ===============================
-   * PASSO 1 � CPF + Pesquisar + Assentos
+   * PASSO 1 – CPF + Pesquisar + Assentos
    * =============================== */
   function ensureStep1UI() {
     const pane = document.querySelector('.mi-pane[data-step="1"]');
     if (!pane || pane.dataset.enhanced === '1') return;
 
-    // A��es (Pesquisar + mensagem)
+    // Ações (Pesquisar + mensagem)
     const actions = document.createElement('div');
     actions.className = 'd-flex align-items-end gap-2 mt-2';
 
@@ -241,7 +241,7 @@
     grid.innerHTML = '';
 
     try {
-      openLottie('seats', 'Carregando mapa de assentos�');
+      openLottie('seats', 'Carregando mapa de assentoSó');
       const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
       const occ = {};
@@ -269,7 +269,7 @@
   }
 
   /* ===============================
-   * PASSO 2 � Dados
+   * PASSO 2 – Dados
    * =============================== */
   function buildStep2Form(perfil, data = {}) {
     const pane = document.querySelector('.mi-pane[data-step="2"]');
@@ -286,14 +286,14 @@
         <div class="col-12 col-md-6">
           <label class="form-label" for="${f.id}">${f.label}${f.required ? ' *' : ''}</label>
           <input id="${f.id}" name="${f.id}" type="${type}" class="form-control" value="${escapeHtml(val)}" ${ro} ${req}>
-          ${f.required ? '<div class="invalid-feedback">Campo obrigat�rio.</div>' : ''}
+          ${f.required ? '<div class="invalid-feedback">Campo obrigatório.</div>' : ''}
         </div>
       `;
     }).join('');
 
     pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
 
-    // Nome no prisma/crach� autom�tico
+    // Nome no prisma/crachá automático
     const nomeEl   = $('#nome');
     const prismaEl = $('#nomenoprismacracha');
 
@@ -317,7 +317,7 @@
   }
 
   /* ===============================
-   * PASSO 3 � Perfil
+   * PASSO 3 – Perfil
    * =============================== */
   function buildStep3Perfil(perfil, data = {}) {
     const pane = document.querySelector('.mi-pane[data-step="3"]');
@@ -341,7 +341,7 @@
   }
 
   /* ===============================
-   * Leitura/valida��o + rascunho
+   * Leitura/Validação + rascunho
    * =============================== */
   function readForm() {
     const form = $('#miForm');
@@ -383,20 +383,20 @@
     return out;
   }
 
-  // R�tulos bonitos para Revis�o
+  // Rótulos bonitos para Revisão
   const LABELS = {
-    numerodeinscricao: 'N�mero de Inscri��o',
+    numerodeinscricao: 'Número de Inscrição',
     cpf: 'CPF',
     nome: 'Nome',
-    nomenoprismacracha: 'Nome no Prisma/Crach�',
+    nomenoprismacracha: 'Nome no Prisma/Crachá',
     ufsigla: 'UF/Sigla',
     representatividade: 'Representatividade',
-    cargofuncao: 'Cargo / Fun��o',
+    cargofuncao: 'Cargo / Função',
     sigladaentidade: 'Sigla da Entidade',
-    identificacao: 'Identifica��o',
-    endereco: 'Endere�o',
+    identificacao: 'Identificação',
+    endereco: 'Endereço',
     emailconselheiroa: 'E-mail Conselheiro(a)',
-    emailsecretarioa: 'E-mail Secret�rio(a)',
+    emailsecretarioa: 'E-mail Secretário(a)',
     convidadopor: 'Convidado por',
     email: 'E-mail'
   };
@@ -422,7 +422,7 @@
       .join('');
 
     const editarLink = `<div class="mt-3">
-      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informa��es</button>
+      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informAções</button>
     </div>`;
 
     $('#miReview').innerHTML = (rows || '<div class="text-muted">Sem dados para revisar.</div>') + editarLink;
@@ -471,9 +471,9 @@
     $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
     $('#miCpfMsg') && ($('#miCpfMsg').textContent = '');
     const step2 = document.querySelector('.mi-pane[data-step="2"]');
-    if (step2) step2.innerHTML = '<div class="text-muted">Fa�a a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
+    if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
     const step3 = document.querySelector('.mi-pane[data-step="3"]');
-    if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecer�o aqui ap�s a pesquisa do CPF.</div>';
+    if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecerão aqui após a pesquisa do CPF.</div>';
     $('#miReview') && ($('#miReview').innerHTML = '');
     updateFinalStepLabel();
     renderStep();
@@ -487,13 +487,13 @@
     // Passo 6: concluir ? fecha modal
     if (state.step === 6) { modal.hide(); return; }
 
-    // Caso �Salvar e Sair� (editar dados de quem j� tem n�mero)
+    // Caso "Salvar e Sair" (editar dados de quem já tem Número)
     if (state.step === 4 && state.data?.numerodeinscricao) {
       if (!validateStep()) return;
       saveDraft();
       try {
         const payload = { ...state.data, ...readForm() };
-        openLottie('saving', 'Salvando altera��es�');
+        openLottie('saving', 'Salvando alterações…');
         await apiAtualizar(payload);  // ? editar = /atualizar
         closeLottie();
         openLottie('confirming', `${(payload.nome || '').split(' ')[0] || 'OK'}, dados atualizados!`);
@@ -509,47 +509,47 @@
     if (!validateStep()) return;
     saveDraft();
 
-    // envio final (gerar n�mero de inscri��o)
+    // envio final (gerar Número de Inscrição)
     if (state.step === 5) {
       try {
         const payload   = { ...state.data, ...readForm() };
-        const isNew     = !state.found || !payload._rowIndex;       // n�o veio da planilha ? novo
-        const hasNumero = !!payload.numerodeinscricao;               // j� tem n�? ? � edi��o
+        const isNew     = !state.found || !payload._rowIndex;       // Não veio da planilha ? novo
+        const hasNumero = !!payload.numerodeinscricao;               // já tem nº? -> é edição
 
         let resp;
 
         if (isNew) {
-          openLottie('saving', 'Realizando sua inscri��o�');
+          openLottie('saving', 'Realizando sua inscrição…');
           resp = await apiCriar(payload);                            // { codigo }
         } else if (hasNumero) {
-          openLottie('saving', 'Atualizando seus dados�');
+          openLottie('saving', 'Atualizando seus dadoSó');
           await apiAtualizar(payload);                               // { ok:true }
           resp = { codigo: payload.numerodeinscricao };
         } else {
-          openLottie('saving', 'Confirmando sua inscri��o�');
+          openLottie('saving', 'Confirmando sua inscrição…');
           resp = await apiConfirmar(payload);                        // { codigo }
         }
 
         state.protocolo = resp?.codigo || null;
         state.pdfUrl    = resp?.pdfUrl || null;
-        $('#miProtocolo').textContent = state.protocolo || '�';
+        $('#miProtocolo').textContent = state.protocolo || '-';
 
         state.step = 6;
         renderStep();
 
         closeLottie();
-        openLottie('confirming', 'Inscri��o conclu�da!');
+        openLottie('confirming', 'Inscrição concluída!');
         setTimeout(closeLottie, 1200);
         return;
       } catch (e) {
-        openLottie('error', e.message || 'Erro ao concluir a inscri��o.');
+        openLottie('error', e.message || 'Erro ao concluir a Inscrição.');
         setTimeout(closeLottie, 1600);
         return;
       }
     }
 
 
-    // navega��o normal
+    // navegAção normal
     if (state.step < STEP_MAX) {
       state.step++;
       renderStep();
@@ -565,7 +565,7 @@
     }
   });
 
-  // CPF: s� n�meros + ENTER para pesquisar
+  // CPF: Só Números + ENTER para pesquisar
   const cpfInput = document.getElementById('miCpf');
   cpfInput.addEventListener('input', (e) => {
     const v = e.target.value.replace(/[^\d]/g, '');
@@ -577,7 +577,7 @@
     if (e.key === 'Enter') { e.preventDefault(); onPesquisarCpf(); }
   });
 
-  // Atualiza revis�o ao vivo no passo 4
+  // Atualiza Revisão ao vivo no passo 4
   document.getElementById('miForm').addEventListener('input', () => {
     if (state.step === 4) renderReview();
   });
@@ -586,7 +586,7 @@
     const cpf = cpfDigits($('#miCpf').value);
     const msg = $('#miCpfMsg');
     if (!cpf || cpf.length !== 11) {
-      msg.textContent = 'Digite um CPF v�lido (11 d�gitos).';
+      msg.textContent = 'Digite um CPF válido (11 dígitos).';
       msg.className = 'small ms-2 text-danger';
       return;
     }
@@ -594,7 +594,7 @@
     try {
       msg.textContent = 'Buscando...';
       msg.className = 'small ms-2 text-muted';
-      openLottie('search', 'Buscando CPF�');
+      openLottie('search', 'Buscando CPF…');
 
       const found = await apiLookupCpf(cpf);
       const draft  = readDraft(cpf);
@@ -627,12 +627,12 @@
         buildStep2Form(perfil, merged);
         buildStep3Perfil(perfil, merged);
 
-        // AVAN�A DIRETO PARA REVIS�O (passo 4)
+        // AVANÇA DIRETO PARA Revisão (passo 4)
         state.step = 4;
         renderStep();
         renderReview();
 
-        msg.textContent = 'Inscri��o encontrada. Revise os dados.';
+        msg.textContent = 'Inscrição encontrada. Revise os dados.';
         msg.className = 'small ms-2 text-success';
       } else {
         const base = { cpf, identificacao: state.perfil, ...(draft || {}) };
@@ -640,7 +640,7 @@
         buildStep2Form(state.perfil, base);
         buildStep3Perfil(state.perfil, base);
 
-        msg.innerHTML = '<span class="text-warning">CPF n�o encontrado.</span> Clique em <strong>Avan�ar</strong> para fazer seu cadastro.';
+        msg.innerHTML = '<span class="text-warning">CPF Não encontrado.</span> Clique em <strong>Avançar</strong> para fazer seu cadastro.';
         msg.className = 'small ms-2';
 
         renderStep();
@@ -701,4 +701,5 @@
   });
 
 })();
+
 

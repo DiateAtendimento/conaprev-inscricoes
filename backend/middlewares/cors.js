@@ -22,7 +22,7 @@ const extraAllow = [
 ];
 extraAllow.forEach(o => allowed.add(o));
 
-// Permite tamb�m �deploy previews� do Netlify (*.netlify.app)
+// Permite tamb�m �deploy previewSó do Netlify (*.netlify.app)
 function isAllowed(origin) {
   const o = norm(origin);
   if (allowed.size === 0) return true;
@@ -37,21 +37,22 @@ const corsMw = cors({
     return isAllowed(origin) ? cb(null, true) : cb(new Error("CORS blocked"), false);
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // ?? Inclui Cache-Control/Pragma (necess�rios p/ o preflight do download)
+  // ?? Inclui Cache-Control/Pragma (necesSórios p/ o preflight do download)
   allowedHeaders: [
     "Content-Type",
     "Accept",
     "X-Admin-Pass",
-    "x-admin-pass",     // variante min�scula
+    "x-admin-pass",     // variante minúscula
     "Cache-Control",
     "Pragma",
   ],
   // ?? Exponha o header para o front poder ler o filename do XLSX
   exposedHeaders: ["Content-Disposition"],
-  credentials: false,        // n�o usamos cookies/sess�o
+  credentials: false,        // Não usamos cookies/sesSóo
   optionsSuccessStatus: 204,
   maxAge: 86400,             // cache do preflight (1 dia)
 });
 
 export default corsMw;
+
 

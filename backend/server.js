@@ -1,4 +1,4 @@
-// backend/server.js
+﻿// backend/server.js
 import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
@@ -19,7 +19,7 @@ const app = express();
  * IMPORTANTE no Render:
  * Em vez de `true` (permissivo), configure hops conhecidos.
  * `1` = confia apenas no primeiro proxy (o do Render).
- * Isso satisfaz o express-rate-limit e mantém IPs corretos.
+ * Isso satisfaz o express-rate-limit e mantÃ©m IPs corretos.
  */
 app.set("trust proxy", 1);
 
@@ -30,7 +30,7 @@ app.use(morgan("tiny"));
 app.use(corsMw);
 app.options("*", corsMw);
 
-// segurança depois
+// seguranÃ§a depois
 app.use(security);
 
 
@@ -41,11 +41,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/certificado", certsRoutes);
 app.use("/api/votacao", votacaoRoutes);
 
-// rota raiz amigável (evita 404 no "/")
+// rota raiz amigÃ¡vel (evita 404 no "/")
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
-    name: "CONAPREV Inscrições API",
+    name: "CONAPREV InscriÃ§Ãµes API",
     docs: "/api",
     time: new Date().toISOString(),
   });

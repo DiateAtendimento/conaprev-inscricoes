@@ -2,7 +2,7 @@
 import { getSheets, getSlides } from "./google.service.js";
 import { buscarPorCpf } from "./sheets.service.js";
 
-// checa presen�a nas abas Dia1/Dia2
+// checa presença nas abas Dia1/Dia2
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
   const abas = ["Dia1", "Dia2"];
@@ -26,7 +26,7 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
           break;
         }
       }
-    } catch (_e) { /* aba pode n�o existir */ }
+    } catch (_e) { /* aba pode Não existir */ }
   }
   return { dia1, dia2 };
 }
@@ -76,13 +76,13 @@ export async function emitirCertificadoPDF(cpf) {
   const funcao = perfilEncontrado.toLowerCase();
   const periodoTexto = montarPeriodoTexto(dias);
 
-  // === GERA��O via Slides (copia template -> substitui -> exporta PDF) ===
+  // === GERAção via Slides (copia template -> substitui -> exporta PDF) ===
   const { slides, drive } = await getSlides();
   const parents = process.env.DRIVE_PARENT_ID ? [process.env.DRIVE_PARENT_ID] : undefined;
 
 
 
-  // 1) copiar o template para n�o alterarmos o original
+  // 1) copiar o template para Não alterarmos o original
   const copy = await drive.files.copy({
     fileId: cfg.slidesTplId,
     requestBody: {
@@ -115,4 +115,5 @@ export async function emitirCertificadoPDF(cpf) {
 
   return { buffer, filename: "certificado_conaprev.pdf" };
 }
+
 

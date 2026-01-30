@@ -34,7 +34,7 @@
       if (b) b.innerHTML = html || "";
       messageModal.show();
     } else {
-      // fallback simples se o modal n�o existir
+      // fallback simples se o modal Não existir
       alert((title ? title + ":\n\n" : "") + (html || ""));
     }
   }
@@ -60,5 +60,6 @@
       "https://script.google.com/macros/s/AKfycbyuz7FuSpALU9wH9vd_7rrUkR94N_Dz6ymwpUO3tGq8XnoLkWB4BjqDkMs0HFO4YZTn/exec";
   });
 })();
+
 
 

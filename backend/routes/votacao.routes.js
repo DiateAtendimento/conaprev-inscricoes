@@ -32,7 +32,7 @@ function sendError(res, e, fallback = "Erro interno") {
   return res.status(400).json({ error: String(msg) });
 }
 
-// ===== P�blico =====
+// ===== Público =====
 r.post("/login", async (req, res) => {
   try {
     const cpf = String(req.body?.cpf || "").replace(/\D/g, "");
@@ -173,4 +173,5 @@ r.get("/admin/votacoes/:id", adminGuard, async (req, res) => {
 });
 
 export default r;
+
 

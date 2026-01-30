@@ -14,7 +14,7 @@ import {
 
 const r = Router();
 
-// Perfis v�lidos para todas as opera��es
+// Perfis válidos para todas as operAções
 const PERFIS_OK = new Set([
   "Conselheiro",
   "CNRPPS",
@@ -72,8 +72,8 @@ async function buscarPorCpfSafe(cpf, perfil) {
 
 /**
  * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
- * Lista inscri��es para acompanhamento administrativo.
- * Observa��o: a ordena��o de FINALIZADOS (MAIOR?MENOR por protocolo) j� � feita no service.
+ * Lista Inscrições para acompanhamento administrativo.
+ * ObservAção: a ordenAção de FINALIZADOS (MAIOR?MENOR por protocolo) j� � feita no service.
  */
 r.get("/listar", adminGuard, async (req, res) => {
   try {
@@ -217,7 +217,7 @@ r.post("/confirmar", async (req, res) => {
       return res.status(400).json({ error: "Perfil inválido" });
     }
 
-    // Fallback: se n�o veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
+    // Fallback: se Não veio _rowIndex, tenta achar por CPF dentro da mesma aba/perfil
     if ((!formData._rowIndex || Number(formData._rowIndex) < 2) && formData.cpf) {
       const achado = await buscarPorCpf(String(formData.cpf), String(perfil));
       if (!achado) {
@@ -269,7 +269,7 @@ r.get("/assentos/conselheiros", async (_req, res) => {
     return res.json(Array.isArray(seats) ? seats : []);
   } catch (e) {
     console.error("[GET /inscricoes/assentos/conselheiros]", e);
-    // Para esse endpoint, preferimos n�o estourar erro no front:
+    // Para esse endpoint, preferimos não estourar erro no front:
     return res.json([]);
   }
 });
@@ -292,4 +292,5 @@ r.get("/:id/comprovante.pdf", async (req, res) => {
 });
 
 export default r;
+
 

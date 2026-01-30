@@ -1,4 +1,4 @@
-import cfg from "../config/env.js";
+﻿import cfg from "../config/env.js";
 
 export function requireApiKey(req, res, next) {
   const key = req.get("x-api-key") || req.query.api_key;

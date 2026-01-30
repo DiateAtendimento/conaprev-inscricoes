@@ -219,7 +219,7 @@ function parseResponsesText(text, vote) {
   return { answers: parsed, durationMs };
 }
 
-/* ===== presen�a Dia1/Dia2 ===== */
+/* ===== presença Dia1/Dia2 ===== */
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
   const abas = ["Dia1", "Dia2"];
@@ -244,7 +244,7 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
         }
       }
     } catch {
-      // aba pode n�o existir
+      // aba pode Não existir
     }
   }
   return { dia1, dia2 };
@@ -632,4 +632,5 @@ export async function getVoteResults(voteId) {
     stats,
   };
 }
+
 

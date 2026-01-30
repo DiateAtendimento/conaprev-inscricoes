@@ -1,4 +1,4 @@
-export function normalizeKey(str) {
+﻿export function normalizeKey(str) {
   return String(str || "")
     .trim()
     .toLowerCase()

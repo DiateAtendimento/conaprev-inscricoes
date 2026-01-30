@@ -1,13 +1,13 @@
-import { google } from "googleapis";
+﻿import { google } from "googleapis";
 import cfg from "../config/env.js";
 
 function scopeUrl(s) { return `https://www.googleapis.com/auth/${s}`; }
 
-// ⚠️ Escopos mínimos:
+// âš ï¸ Escopos mÃ­nimos:
 // - spreadsheets (ler/escrever planilha)
 // - presentations (editar Slides)
 // - drive (APENAS copiar/exportar PDF do Slides)
-// Se quiser 0% Drive, troque o certificado para HTML→PDF (Puppeteer) no certs.service.js.
+// Se quiser 0% Drive, troque o certificado para HTMLâ†’PDF (Puppeteer) no certs.service.js.
 export async function getAuth(scopes = ["spreadsheets", "presentations", "drive"]) {
   const creds = cfg.google;
   const jwt = new google.auth.JWT(

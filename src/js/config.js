@@ -1,6 +1,6 @@
-﻿// /src/js/config.js  (script cl�ssico, sem export/import)
+﻿// /src/js/config.js  (script clássico, sem export/import)
 (() => {
-  // Janela de libera��o das inscri��es (usado pelo gate)
+  // Janela de liberAção das Inscrições (usado pelo gate)
   window.EVENTO = {
     INICIO: '2026-03-30T08:00:00-03:00',
     FIM:    '2026-13-31T13:00:00-03:00', // FIM > INICIO
@@ -34,10 +34,10 @@
     // POST (o steps.js faz o POST com { cpf, perfil })
     buscarCpf: `${API_BASE}/api/inscricoes/buscar`,
 
-    // Passo 5 (confirma��o) � retorna { codigo [, pdfUrl] }
+    // Passo 5 (Confirmação) � retorna { codigo [, pdfUrl] }
     confirmar: `${API_BASE}/api/inscricoes/confirmar`,
 
-    // PDF opcional (se o backend expuser por ID/c�digo)
+    // PDF opcional (se o backend expuser por ID/código)
     comprovantePdf: (id) => `${API_BASE}/api/inscricoes/${encodeURIComponent(id)}/comprovante.pdf`,
 
     // Assentos � somente para Conselheiro
@@ -47,4 +47,5 @@
   // (Opcional) Auth global
   // window.AUTH_TOKEN = '...';
 })();
+
 

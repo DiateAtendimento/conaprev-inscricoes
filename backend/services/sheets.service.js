@@ -9,7 +9,7 @@ const SHEET_ID = cfg.sheetId;
  *  CACHE LEVE (mem�ria) p/ leituras do Google Sheets
  *  - TTL curto (default 15s)
  *  - anti-stampede (reaproveita a mesma Promise simult�nea)
- *  - invalida��o autom�tica ap�s escritas
+ *  - inValidação autom�tica ap�s escritas
  *  ========================================================= */
 const CACHE_TTL_DEFAULT_MS = 15_000;
 const CACHE_TTL_SEARCH_MS  = 10_000;
@@ -113,7 +113,7 @@ function nowBRISO() {
   return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}-03:00`;
 }
 
-// extrai n�mero para ordena��o (ex.: CNL028 ? 28, PAT-0012 ? 12)
+// extrai Número para ordenAção (ex.: CNL028 ? 28, PAT-0012 ? 12)
 function protoKey(v) {
   const s = String(v || '');
   const m = s.match(/(\d+)/g);
@@ -142,7 +142,7 @@ async function readAll(sheetName) {
 
 function headerIndex(headers, wantedNorm) {
   const idx = headers.map(normalizeKey).indexOf(wantedNorm);
-  return idx; // -1 se n�o achou
+  return idx; // -1 se Não achou
 }
 
 function matchQuery(rowObj, q) {
@@ -172,7 +172,7 @@ function mapRow(headers, row) {
 function validarDados(formData) {
   if (!formData?.cpf || !String(formData.cpf).trim()) throw new Error("Campo obrigat�rio: cpf");
   const clean = String(formData.cpf).replace(/\D/g, "");
-  if (!/^\d{11}$/.test(clean)) throw new Error("CPF deve conter apenas n�meros e ter 11 d�gitos.");
+  if (!/^\d{11}$/.test(clean)) throw new Error("CPF deve conter apenas Números e ter 11 dígitos.");
   if (!formData?.nome || !String(formData.nome).trim()) throw new Error("Campo obrigat�rio: nome");
 }
 
@@ -338,9 +338,9 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
   const out = [];
   for (let i = 0; i < rows.length; i++) {
     const obj = mapRow(headers, rows[i]);
-    obj._rowIndex = i + 2; // cabe�alho + 1-based
+    obj._rowIndex = i + 2; // cabeçalho + 1-based
 
-    // status: ativos => n�o conferidos | finalizados => conferidos
+    // status: ativos => Não conferidos | finalizados => conferidos
     const conf = isConferido(obj);
     const wantFinalizados = (String(status).toLowerCase() === "finalizados");
     if (wantFinalizados ? !conf : conf) continue;
@@ -352,7 +352,7 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     out.push({
       _rowIndex: obj._rowIndex,
       numerodeinscricao: obj.numerodeinscricao || "",
-      cpf: String(obj.cpf || "").replace(/\D/g, ""), // s� n�meros para exibi��o/consulta
+      cpf: String(obj.cpf || "").replace(/\D/g, ""), // Só Números para exibição/consulta
       nome: obj.nome || "",
       conferido: obj.conferido || "",
       conferidopor: obj.conferidopor || "",
@@ -360,12 +360,12 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     });
   }
 
-  // Ordena��o server-side para FINALIZADOS: MAIOR ? MENOR por n�mero do protocolo
+  // OrdenAção server-side para FINALIZADOS: MAIOR ? MENOR por Número do protocolo
   if (String(status).toLowerCase() === "finalizados") {
     out.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
   }
 
-  // pagina��o
+  // paginAção
   const start = Math.max(0, offset);
   const end = Math.min(out.length, start + Math.max(1, limit));
   return out.slice(start, end);
@@ -396,7 +396,7 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   const lastColLetter = String.fromCharCode(64 + headers.length);
   const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
 
-  // l� a linha atual
+  // lá a linha atual
   const curResp = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
     range
@@ -420,5 +420,6 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
+
 
 

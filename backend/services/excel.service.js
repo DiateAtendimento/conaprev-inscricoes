@@ -13,16 +13,16 @@ function shouldExportSheet(sheetMeta) {
 
   const t = String(title).trim();
 
-  // regras de exclus�o
-  if (t.toLowerCase() === "senha") return false; // aba sens�vel
-  if (t.startsWith("_")) return false;           // t�cnicas/backup
+  // regras de excluSóo
+  if (t.toLowerCase() === "senha") return false; // aba senSóvel
+  if (t.startsWith("_")) return false;           // técnicas/backup
   if (t.startsWith("!")) return false;           // auxiliares
   if (/templates?/i.test(t)) return false;       // modelos
 
   return true;
 }
 
-/** gera timestamp YYYYMMDD-HHMM no fuso de Bras�lia */
+/** gera timestamp YYYYMMDD-HHMM no fuso de BraSólia */
 function tsBR() {
   const now = new Date();
   const parts = new Intl.DateTimeFormat("pt-BR", {
@@ -65,7 +65,7 @@ function autosizeColumns(ws) {
   }
 }
 
-/** congela cabe�alho e aplica autofiltro */
+/** congela cabeçalho e aplica autofiltro */
 function styleHeader(ws) {
   if (ws.rowCount === 0) return;
   const header = ws.getRow(1);
@@ -154,7 +154,7 @@ export async function exportSpreadsheetToXlsx() {
 
   const makeName = makeWorksheetNameFactory();
 
-  // Se veio pelo batch, monta direto; sen�o, faz get por aba com try/catch individual
+  // Se veio pelo batch, monta direto; seNão, faz get por aba com try/catch individual
   if (valueRanges && valueRanges.length === exportables.length) {
     exportables.forEach((sh, i) => {
       const title = sh.properties.title;
@@ -215,4 +215,5 @@ export async function exportSpreadsheetToXlsx() {
     mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
 }
+
 

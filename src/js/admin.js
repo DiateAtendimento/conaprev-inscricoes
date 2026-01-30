@@ -20,7 +20,7 @@
     'Patrocinador'
   ];
 
-  // ======= Elements (podem n�o existir nesta p�gina) =======
+  // ======= Elements (podem Não existir nesta página) =======
   const elAdminBtn         = document.getElementById('adminAccessBtn');
   const elAuthModal        = document.getElementById('adminAuthModal');
   const elAuthForm         = document.getElementById('adminAuthForm');
@@ -32,7 +32,7 @@
   const elSearch           = document.getElementById('adminSearch');
   const elRefresh          = document.getElementById('adminRefreshBtn');
   const elDownload         = document.getElementById('adminDownloadBtn');
-  const elLogout           = document.getElementById('adminLogoutBtn'); // bot�o de logout (se existir no HTML)
+  const elLogout           = document.getElementById('adminLogoutBtn'); // botão de logout (se existir no HTML)
 
   const elTabAtivosBtn     = document.getElementById('tabAdminAtivos');
   const elTabFinalBtn      = document.getElementById('tabAdminFinalizados');
@@ -44,7 +44,7 @@
   const elBadgeTop         = document.getElementById('adminNotifBadge');
   const elBadgeModal       = document.getElementById('adminNotifCount');
 
-  // Se n�o tem nada de admin na p�gina, n�o faz nada
+  // Se Não tem nada de admin na página, Não faz nada
   if (!elAdminBtn) return;
 
   // ======= Bootstrap Modals (se existirem) =======
@@ -90,7 +90,7 @@
   let _adminLottie = null;
   const LOTTIE_SEARCH_PATH = "/lottie/lottie_search_loading.json"; // ajuste o caminho se estiver em outra pasta
 
-  function showOverlayLottie(msg = "Preparando download�", path = LOTTIE_SEARCH_PATH) {
+  function showOverlayLottie(msg = "Preparando download…", path = LOTTIE_SEARCH_PATH) {
     try {
       const overlay = document.getElementById("miLottieOverlay");
       const holder  = document.getElementById("miLottieHolder");
@@ -143,7 +143,7 @@
     lastAtivosIds: new Set(), // snapshot da aba atual (para toasts)
   };
 
-  // ======= Persist�ncia local da sess�o admin =======
+  // ======= Persistência local da sessão admin =======
   const storageKeyPass = 'admin.pass';
 
   function loadSavedSession() {
@@ -180,7 +180,7 @@
 
   // Data/hora pt-BR com America/Sao_Paulo
   function fmtDateBR(x) {
-    if (!x) return '�';
+    if (!x) return '-';
     let d = x;
     if (!(x instanceof Date)) {
       // aceita ISO, timestamps ou textos do Sheets
@@ -195,18 +195,18 @@
     });
   }
 
-  // Extrai n�mero para ordena��o por protocolo (ex.: 'CNL028' -> 28, 'PAT-0012' -> 12)
+  // Extrai Número para ordenAção por protocolo (ex.: 'CNL028' -> 28, 'PAT-0012' -> 12)
   function protoKey(v) {
     const s = String(v || '');
     const m = s.match(/(\d+)/g);
     if (!m) return 0;
-    // pega o MAIOR trecho num�rico (resiste a prefixos diferentes)
+    // pega o MAIOR trecho numérico (resiste a prefixos diferentes)
     return Math.max(...m.map(n => parseInt(n, 10)).filter(n => Number.isFinite(n)));
   }
 
   // ======= Contador do sininho (GLOBAL = soma de TODOS os perfis) =======
   async function countAllProfilesActivesWithProtocol() {
-    // busca cada perfil (status=ativos) e soma os que t�m numerodeinscricao
+    // busca cada perfil (status=ativos) e soma os que têm numerodeinscricao
     try {
       const qs = (perfil) => new URLSearchParams({
         perfil, status: 'ativos', limit: '200', offset: '0'
@@ -264,7 +264,7 @@
     const checked = (conferido === 'SIM' || conferido === 'TRUE' || conferido === 'OK' || conferido === '1');
     const temProtocolo = String(item.numerodeinscricao || '').trim().length > 0;
 
-    // �pitadas de verde� quando tem protocolo
+    // "pitadas de verde" quando tem protocolo
     const highlightStyle = temProtocolo
       ? 'border-left:6px solid #28a745; background: rgba(40,167,69,0.08);'
       : '';
@@ -274,7 +274,7 @@
         <div class="d-flex flex-wrap align-items-center gap-2">
           <div class="me-3">
             <div class="small text-muted">Protocolo</div>
-            <div class="fw-semibold">${item.numerodeinscricao || '�'}</div>
+            <div class="fw-semibold">${item.numerodeinscricao || '-'}</div>
           </div>
           <div class="me-3">
             <div class="small text-muted">CPF</div>
@@ -282,13 +282,13 @@
           </div>
           <div class="flex-grow-1">
             <div class="small text-muted">Nome</div>
-            <div class="fw-semibold">${item.nome || '�'}</div>
+            <div class="fw-semibold">${item.nome || '-'}</div>
           </div>
 
           <div class="d-flex align-items-center gap-2 ms-auto">
             ${handBtnHtml(checked)}
             <div class="text-end small">
-              <div><span class="text-muted">Conferido por:</span> ${item.conferidopor || '�'}</div>
+              <div><span class="text-muted">Conferido por:</span> ${item.conferidopor || '-'}</div>
               <div><span class="text-muted">Em:</span> ${fmtDateBR(item.conferidoem)}</div>
             </div>
           </div>
@@ -300,7 +300,7 @@
   function renderList(targetEl, pagerEl, data, status){
     if (!targetEl || !pagerEl) return;
 
-    // Ordena��o especial nos FINALIZADOS: MAIOR ? MENOR por n�mero do protocolo
+    // OrdenAção especial nos FINALIZADOS: MAIOR ? MENOR por Número do protocolo
     let toRender = Array.isArray(data) ? [...data] : [];
     if (status === 'finalizados') {
       toRender.sort((a, b) => protoKey(b?.numerodeinscricao) - protoKey(a?.numerodeinscricao));
@@ -334,7 +334,7 @@
         </button>
         <div class="small text-muted">Exibindo ${toRender.length} ${toRender.length === 1 ? 'registro' : 'registros'}</div>
         <button class="btn btn-sm btn-outline-secondary pg-next" ${canNext ? '' : 'disabled'}>
-          Pr�ximo <i class="bi bi-chevron-right"></i>
+          Próximo <i class="bi bi-chevron-right"></i>
         </button>
       </div>
     `;
@@ -372,7 +372,7 @@
       if (res.status === 401) {
         if (monitorModal) monitorModal.hide();
         if (authModal) authModal.show();
-        throw new Error('N�o autorizado');
+        throw new Error('Não autorizado');
       }
       if (!res.ok) throw new Error('Erro ao listar');
       const data = await res.json();
@@ -460,7 +460,7 @@
     const hide = window.miLottieHide || window.closeLottie;
 
     try {
-      show && show('download', 'Preparando dashboard�');
+      show && show('download', 'Preparando dashboard…');
 
       const res = await fetch(`${API}/api/admin/exportar`, {
         method: 'GET',
@@ -503,7 +503,7 @@
       }, 0);
     } catch (e) {
       console.error('[admin] downloadWorkbookXLSX', e);
-      alert(e?.message || 'N�o foi poss�vel baixar a planilha completa.');
+      alert(e?.message || 'Não foi possível baixar a planilha completa.');
     } finally {
       hide && hide(); // fecha o Lottie ao iniciar o download
     }
@@ -533,8 +533,8 @@
       const res = await fetch(`${API}/api/inscricoes/listar?perfil=${encodeURIComponent(state.perfil)}&status=ativos&limit=1`, {
         headers: { ...headersAdmin(), 'x-admin-pass': pass }
       });
-      if (res.status === 401) throw new Error('Senha inv�lida');
-      if (!res.ok) throw new Error('Falha na valida��o');
+      if (res.status === 401) throw new Error('Senha inválida');
+      if (!res.ok) throw new Error('Falha na Validação');
       state.adminPass = pass;
       saveSession(pass); // persiste neste navegador
       elAuthMsg?.classList.add('d-none');
@@ -544,14 +544,14 @@
       snapshotActiveProtocols();
     } catch (err) {
       elAuthMsg?.classList.remove('d-none');
-      elAuthMsg.textContent = 'Senha inv�lida.';
+      elAuthMsg.textContent = 'Senha inválida.';
     }
   });
 
   // LOGOUT
   elLogout?.addEventListener('click', () => {
     clearSession();
-    showToast('Sess�o de administrador encerrada.');
+    showToast('SesSóo de administrador encerrada.');
     try { monitorModal?.hide(); } catch {}
     setNotif(0);
   });
@@ -578,7 +578,7 @@
 
     try {
       elRefresh.disabled = true;                 // evita cliques repetidos
-      show && show('timeout', 'Atualizando�');   // usa lottie_timeout_hourglass.json
+      show && show('timeout', 'Atualizando…');   // usa lottie_timeout_hourglass.json
       await refreshBoth();                       // recarrega Ativos + Finalizados
       snapshotActiveProtocols();                 // atualiza snapshot p/ toasts
     } catch (e) {
@@ -603,7 +603,7 @@
   elTabFinalBtn?.addEventListener('shown.bs.tab', async () => {
     state.activeTab = 'finalizados';
     await refreshFinalizados();
-    state.lastAtivosIds = new Set(); // reset snapshot quando n�o estamos em "Ativos"
+    state.lastAtivosIds = new Set(); // reset snapshot quando Não estamos em "Ativos"
   });
 
   // Ao abrir o modal Admin: refresh e polling focado em novos protocolos (do perfil escolhido)
@@ -614,17 +614,17 @@
       // busca apenas ATIVOS do perfil selecionado para detectar novos protocolos (toasts)
       const data = await fetchList('ativos');
 
-      // detecta novos protocolos (apenas com n�mero)
+      // detecta novos protocolos (apenas com Número)
       const currentSet = new Set();
       (data || []).forEach(it => {
         const proto = String(it?.numerodeinscricao || '').trim();
         if (proto) currentSet.add(proto);
       });
 
-      // compara com o �ltimo snapshot
+      // compara com o último snapshot
       currentSet.forEach(proto => {
         if (!state.lastAtivosIds.has(proto)) {
-          showToast(`Voc� tem uma nova inscri��o ${proto}`);
+          showToast(`Você tem uma nova inscrição ${proto}`);
         }
       });
 
@@ -659,11 +659,12 @@
     }
   })();
 
-  // ======= Badge GLOBAL �leve� (fora do modal) a cada 15s, se logado) =======
+  // ======= Badge GLOBAL "leve" (fora do modal) a cada 15s, se logado) =======
   setInterval(async () => {
     if (!state.adminPass) return;
     await refreshGlobalBadge();
   }, 15000);
 
 })();
+
 
