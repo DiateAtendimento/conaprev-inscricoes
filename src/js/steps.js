@@ -451,7 +451,18 @@
       if (photoCache.has(key)) return photoCache.get(key);
 
       const index = await loadPhotoIndex();
-      const filename = index.get(key) || photoAliases.get(key);
+      let filename = index.get(key) || photoAliases.get(key);
+      if (!filename) {
+        const nameTokens = new Set(key.split(' ').filter(Boolean));
+        let bestKey = '';
+        index.forEach((_file, idxKey) => {
+          const idxTokens = idxKey.split(' ').filter(Boolean);
+          if (idxTokens.length < 2) return;
+          const allPresent = idxTokens.every(t => nameTokens.has(t));
+          if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
+        });
+        if (bestKey) filename = index.get(bestKey);
+      }
       const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
       photoCache.set(key, url);
       return url;
