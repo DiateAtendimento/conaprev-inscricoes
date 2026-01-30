@@ -317,8 +317,11 @@
       const photo = seatPhotoByNumber[n];
       if (photo) {
         const photoUrl = new URL(photo, window.location.origin).toString();
-        btn.classList.add('mi-seat--has-photo');
-        btn.style.backgroundImage = `url('${photoUrl}')`;
+        btn.classList.add('mi-seat--has-card');
+        const card = document.createElement('div');
+        card.className = 'mi-seat-card';
+        card.innerHTML = `<img src="${photoUrl}" alt="Foto do conselheiro">`;
+        btn.appendChild(card);
       }
       grid.appendChild(btn);
     });
