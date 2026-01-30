@@ -431,11 +431,18 @@
       if (ocupado && typeof occ[n] === 'string') {
         const nome = occ[n].trim();
         resolvePhotoUrl(nome).then(photoUrl => {
-          if (!photoUrl || !btn.isConnected) return;
+          if (!btn.isConnected) return;
+          const safeUrl = photoUrl || DEFAULT_PHOTO_URL;
           btn.classList.add('mi-seat--has-card');
           const card = document.createElement('div');
           card.className = 'mi-seat-card';
-          card.innerHTML = `<img src="${photoUrl}" alt="Foto de ${escapeHtml(nome)}">`;
+          const img = document.createElement('img');
+          img.alt = `Foto de ${nome}`;
+          img.src = safeUrl;
+          img.onerror = () => {
+            if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
+          };
+          card.appendChild(img);
           btn.appendChild(card);
         });
       }
