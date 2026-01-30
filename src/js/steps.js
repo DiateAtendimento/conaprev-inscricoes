@@ -368,6 +368,9 @@
     const DEFAULT_PHOTO_URL = '/imagens/fotos-conselheiros/padrao.svg';
     const photoCache = new Map();
     let photoIndexPromise = null;
+    const photoAliases = new Map([
+      ['allex albert rodrigues', 'Allex-albert.svg'],
+    ]);
 
     function getSeatPreviewEl() {
       let el = document.getElementById('miSeatPreview');
@@ -379,7 +382,7 @@
       return el;
     }
 
-    function showSeatPreview(nome, url, ev) {
+    function showSeatPreview(nome, url, anchorEl) {
       const el = getSeatPreviewEl();
       const safeUrl = url || DEFAULT_PHOTO_URL;
       el.innerHTML = `
@@ -388,17 +391,19 @@
         </div>
       `;
       el.style.display = 'block';
-      moveSeatPreview(ev);
+      positionSeatPreview(anchorEl);
     }
 
-    function moveSeatPreview(ev) {
+    function positionSeatPreview(anchorEl) {
       const el = document.getElementById('miSeatPreview');
-      if (!el || el.style.display === 'none') return;
-      let x = ev.clientX + 14;
-      let y = ev.clientY + 14;
+      if (!el || el.style.display === 'none' || !anchorEl) return;
+      const seatRect = anchorEl.getBoundingClientRect();
       const r = el.getBoundingClientRect();
-      if (x + r.width > window.innerWidth) x = ev.clientX - r.width - 14;
-      if (y + r.height > window.innerHeight) y = ev.clientY - r.height - 14;
+      const centerX = seatRect.left + seatRect.width / 2;
+      let x = centerX - r.width / 2;
+      let y = seatRect.top - r.height - 10; // 10px acima do assento
+      x = Math.max(8, Math.min(x, window.innerWidth - r.width - 8));
+      y = Math.max(8, y);
       el.style.left = `${x}px`;
       el.style.top = `${y}px`;
     }
@@ -446,7 +451,7 @@
       if (photoCache.has(key)) return photoCache.get(key);
 
       const index = await loadPhotoIndex();
-      const filename = index.get(key);
+      const filename = index.get(key) || photoAliases.get(key);
       const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
       photoCache.set(key, url);
       return url;
@@ -484,8 +489,7 @@
           card.appendChild(img);
           btn.appendChild(card);
 
-          btn.addEventListener('mouseenter', (ev) => showSeatPreview(nome, safeUrl, ev));
-          btn.addEventListener('mousemove', moveSeatPreview);
+          btn.addEventListener('mouseenter', () => showSeatPreview(nome, safeUrl, btn));
           btn.addEventListener('mouseleave', hideSeatPreview);
           btn.addEventListener('blur', hideSeatPreview);
         });

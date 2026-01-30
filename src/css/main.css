@@ -805,6 +805,18 @@ body{ overflow-x:clip; }
   opacity: 1;
   transform: none;
 }
+#miSeatPreview .mi-seat-card::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:-6px;
+  transform: translateX(-50%) rotate(45deg);
+  width:12px;
+  height:12px;
+  background:#fff;
+  border-left:1px solid rgba(0,0,0,.12);
+  border-bottom:1px solid rgba(0,0,0,.12);
+}
 .mi-seat.available{
   background:#e5e7eb;
   color:#111827;
