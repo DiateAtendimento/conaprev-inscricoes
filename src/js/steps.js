@@ -449,7 +449,7 @@
       btn.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
       btn.style.gridRow = String(row);
       btn.style.gridColumn = String(col);
-      if (ocupado && typeof occ[n] === 'string' && !seatPhotoByNumber[n]) {
+      if (ocupado && typeof occ[n] === 'string') {
         btn.title = occ[n];
       }
       btn.appendChild(num);
