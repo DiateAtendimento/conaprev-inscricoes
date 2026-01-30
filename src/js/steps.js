@@ -211,17 +211,26 @@
     actions.appendChild(msg);
     pane.querySelector('.row.g-3')?.appendChild(actions);
 
-    // Grid de assentos
+    // Mapa de assentos
     const seatsWrap = document.createElement('div');
     seatsWrap.id = 'miSeatsWrap';
     seatsWrap.className = 'mt-4 d-none';
     seatsWrap.innerHTML = `
       <div class="fw-semibold mb-2">Conselheiros inscritos</div>
-      <div class="mb-2">
-        <span class="badge me-2" style="background:#198754">Livre</span>
-        <span class="badge" style="background:#dc3545">Ocupado</span>
+      <div class="mi-seat-map">
+        <div class="mi-seat-map__legend mb-2">
+          <span class="badge mi-seat-badge available">Livre</span>
+          <span class="badge mi-seat-badge occupied">Ocupado</span>
+        </div>
+        <div class="mi-seat-map__body">
+          <div class="mi-seat-screen" aria-hidden="true">
+            <span>Tela</span>
+          </div>
+          <div class="mi-seat-grid-wrap" aria-label="Mapa de assentos em espinha de peixe">
+            <div id="miSeatGrid" class="mi-seat-grid"></div>
+          </div>
+        </div>
       </div>
-      <div id="miSeatGrid" class="mi-seat-grid"></div>
     `;
     pane.appendChild(seatsWrap);
 
@@ -246,26 +255,80 @@
       const data = res.ok ? await res.json() : [];
       const occ = {};
       (data || []).forEach(s => occ[Number(s.seat)] = s.name || true);
-      const MAX = 62;
-      grid.innerHTML = '';
-      for (let n = 1; n <= MAX; n++) {
-        const b = document.createElement('div');
-        const ocupado = !!occ[n];
-        b.textContent = n;
-        b.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
-        if (ocupado && typeof occ[n] === 'string') b.title = occ[n];
-        grid.appendChild(b);
-      }
+      renderFishboneSeats(occ);
     } catch {
-      for (let n = 1; n <= 62; n++) {
-        const b = document.createElement('div');
-        b.textContent = n;
-        b.className = 'mi-seat available';
-        grid.appendChild(b);
-      }
+      renderFishboneSeats({});
     } finally {
       closeLottie();
     }
+  }
+
+  function renderFishboneSeats(occ = {}) {
+    const grid = document.getElementById('miSeatGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+
+    // Dois blocos retangulares (como no mock)
+    const ROWS = 6;
+    const COLS = 6;
+    const isMobile = window.matchMedia && window.matchMedia('(max-width: 576px)').matches;
+    const GAP_COLS = isMobile ? 1 : 3; // corredor central em colunas vazias
+    const TOTAL = 62;
+
+    const pos = [];
+    const addPos = (n, row, col) => pos.push({ n, row, col });
+
+    let seat = 1;
+    const leftStartCol = 1;
+    const rightStartCol = 1 + COLS + GAP_COLS;
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (seat > TOTAL) break;
+        addPos(seat, 1 + r, leftStartCol + c);
+        seat++;
+      }
+      for (let c = 0; c < COLS; c++) {
+        if (seat > TOTAL) break;
+        addPos(seat, 1 + r, rightStartCol + c);
+        seat++;
+      }
+      if (seat > TOTAL) break;
+    }
+
+    grid.style.setProperty('--grid-rows', ROWS);
+    grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
+
+    pos.forEach(({ n, row, col }) => {
+      const btn = document.createElement('button');
+      const ocupado = !!occ[n];
+      btn.type = 'button';
+      btn.textContent = n;
+      btn.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
+      btn.style.gridRow = String(row);
+      btn.style.gridColumn = String(col);
+      if (ocupado && typeof occ[n] === 'string') btn.title = occ[n];
+      grid.appendChild(btn);
+    });
+
+    // 5) FIT automático (caber em largura E altura sem scroll)
+    requestAnimationFrame(() => {
+      const wrap = document.querySelector('.mi-seat-grid-wrap');
+      if (!wrap) return;
+
+      grid.style.transform = 'scale(1)';
+
+      const wrapRect = wrap.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+
+      const scaleW = wrapRect.width / gridRect.width;
+      const scaleH = wrapRect.height / gridRect.height;
+      // permite crescer um pouco quando há espaço, para evitar mapa "miúdo"
+      const maxScale = 1.2;
+      const scale = Math.min(maxScale, scaleW, scaleH);
+      grid.style.transform = `scale(${scale})`;
+    });
   }
 
   /* ===============================

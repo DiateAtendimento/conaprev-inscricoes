@@ -659,46 +659,232 @@ body{ overflow-x:clip; }
 .btn-pulse{ animation:pulseRing 1.6s infinite; }
 
 /* =========================
-   GRID DE ASSENTOS (Conselheiro) � RESPONSIVO
+   MAPA DE ASSENTOS (Conselheiro) — ESPINHA DE PEIXE
    ========================= */
-/* base (=1200px): 19 colunas, largura total */
-.mi-seat-grid{
+.mi-seat-map{
+  --seat-size: 28px;
+  --seat-gap: 12px;
   display:grid;
-  grid-template-columns: repeat(19, minmax(40px, 1fr));
-  gap:10px;
-  width:100%;
-  max-width:none;     /* ocupa todo o container */
+  gap:12px;
+}
+
+.mi-seat-map__legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+.mi-seat-badge{
+  padding:6px 10px;
+  font-weight:700;
+}
+.mi-seat-badge.available{
+  background:#e5e7eb;
+  color:#111827;
+}
+.mi-seat-badge.occupied{
+  background:#16a34a;
+  color:#fff;
+}
+
+.mi-seat-map__body{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:center;
+}
+
+.mi-seat-map__body .mi-seat-screen{
+  max-width: 560px;
+}
+
+.mi-seat-grid-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow: hidden !important;
+  padding: 2px 0 6px;
+  width: 100%;
+  height: clamp(150px, 36vh, 360px);
+}
+
+.mi-seat-grid{
+  /* tamanho fluido, sem vários breakpoints */
+  --cell: clamp(18px, 3.6vw, 38px);
+  --grid-cols: 24;
+  --grid-rows: 25;
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), var(--cell));
+  grid-template-rows: repeat(var(--grid-rows), var(--cell));
+  grid-auto-columns: var(--cell);
+  grid-auto-rows: var(--cell);
+  gap: clamp(2px, .6vw, 6px);
+  width: max-content;
+  height: max-content;
+  transform-origin: center center;
+  margin-inline: auto;
 }
 
 .mi-seat{
   display:flex;
   align-items:center;
   justify-content:center;
-  height:40px;
-  border-radius:10px;
+  width: calc(var(--cell) * 0.85);
+  height: calc(var(--cell) * 0.85);
+  border-radius:8px;
   font-weight:800;
-  font-size:14px;
+  font-size: clamp(11px, 1.4vw, 15px);
   color:#fff;
   user-select:none;
+  border:1px solid rgba(0,0,0,.12);
+  background:#e5e7eb;
+  justify-self:center;
+  align-self:center;
 }
-.mi-seat.available{ background:#16a34a; }  /* verde */
-.mi-seat.occupied{  background:#dc2626; }  /* vermelho */
+.mi-seat.available{
+  background:#e5e7eb;
+  color:#111827;
+}
+.mi-seat.occupied{
+  background:#16a34a;
+  color:#fff;
+}
 
-/* =992px e <1200px -> 12 colunas */
-@media (max-width: 1199.98px){
-  .mi-seat-grid{ grid-template-columns: repeat(12, minmax(40px, 1fr)); }
+.mi-seat-screen{
+  width:100%;
+  height:28px;
+  background:#0b3d6d;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:700;
+  font-size:13.5px;
+  letter-spacing:.4px;
+  margin-bottom: 0;
 }
-/* =768px e <992px -> 9 colunas */
+
 @media (max-width: 991.98px){
-  .mi-seat-grid{ grid-template-columns: repeat(9, minmax(38px, 1fr)); }
+  .mi-seat-map{
+    --seat-size: 26px;
+    --seat-gap: 10px;
+  }
+  .mi-seat-screen{
+    width: 100%;
+    height: 38px;
+  }
 }
-/* =576px e <768px -> 8 colunas */
-@media (max-width: 767.98px){
-  .mi-seat-grid{ grid-template-columns: repeat(8, minmax(36px, 1fr)); }
-}
-/* <576px -> 6 colunas */
+
 @media (max-width: 575.98px){
-  .mi-seat-grid{ grid-template-columns: repeat(6, minmax(34px, 1fr)); }
+  .mi-seat-map{
+    --seat-size: 24px;
+    --seat-gap: 8px;
+  }
+  .mi-seat-grid{
+    --cell: clamp(11px, 3.4vw, 14px);
+    gap: clamp(1px, .6vw, 2px);
+  }
+  .mi-seat{
+    font-size:12px;
+    border-radius:6px;
+  }
+  .mi-seat-grid-wrap{
+    overflow: hidden !important;
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    height: clamp(130px, 32vh, 280px);
+  }
+}
+
+/* Modal responsivo e flexível em altura */
+html, body{ overflow-x:hidden !important; }
+body.modal-open{ padding-right:0 !important; overflow:hidden !important; }
+#modalInscricao.modal{ overflow-x: hidden !important; }
+#modalInscricao.modal{
+  --bs-modal-width: min(90vw, 1080px);
+  --bs-modal-margin: clamp(.5rem, 1.2vw, .9rem);
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+#modalInscricao .modal-dialog{
+  width: var(--bs-modal-width);
+  max-width: calc(100vw - (var(--bs-modal-margin) * 2));
+  height: auto;
+  max-height: 96vh;
+  margin: var(--bs-modal-margin) auto;
+}
+#modalInscricao .modal-dialog.modal-dialog-scrollable{
+  max-height: 96vh;
+  max-width: calc(100vw - (var(--bs-modal-margin) * 2));
+}
+#modalInscricao .modal-content{
+  height: 100%;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+}
+#modalInscricao .modal-body{
+  overflow: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: clamp(6px, 1vw, 12px);
+}
+#modalInscricao .modal-header,
+#modalInscricao .modal-footer{
+  flex: 0 0 auto;
+}
+
+@media (max-width: 992px){
+  #modalInscricao.modal{
+    --bs-modal-width: 96vw;
+    --bs-modal-margin: .5rem;
+  }
+  .mi-stepper{
+    overflow: visible;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    padding-bottom: 0;
+  }
+  .mi-stepper .mi-step{
+    min-width: 84px;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 576px){
+  #modalInscricao.modal{
+    --bs-modal-width: 100vw;
+    --bs-modal-margin: 0;
+  }
+  #modalInscricao .modal-content{
+    border-radius: 0;
+    max-height: 100vh;
+  }
+  #modalInscricao .modal-body{
+    padding: 8px;
+  }
+  .mi-stepper .mi-step{
+    min-width: 80px;
+  }
+  .mi-seat-grid{
+    --cell: clamp(12px, 4.8vw, 20px);
+    gap: clamp(6px, 2.4vw, 10px);
+  }
+  .mi-seat{
+    width: calc(var(--cell) * 0.9);
+    height: calc(var(--cell) * 0.9);
+  }
+  .mi-seat-map__body{ gap:4px; }
+  .mi-seat-grid-wrap{
+    padding-top: 0;
+    height: clamp(120px, 30vh, 260px);
+  }
 }
 
 /* =========================
