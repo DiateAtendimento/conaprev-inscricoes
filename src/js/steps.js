@@ -222,6 +222,7 @@
           <span class="badge mi-seat-badge available">Livre</span>
           <span class="badge mi-seat-badge occupied">Ocupado</span>
         </div>
+        <div id="miSeatsMsg" class="small text-muted"></div>
         <div class="mi-seat-map__body">
           <div class="mi-seat-screen" aria-hidden="true">
             <span>Tela</span>
@@ -238,6 +239,45 @@
     btnSearch.addEventListener('click', onPesquisarCpf);
   }
 
+  const SEAT_CACHE_KEY = 'mi:seat-cache:conselheiros';
+  const SEAT_CACHE_TTL_MS = 1000 * 60 * 30; // 30 min
+
+  function readSeatCache() {
+    try {
+      const raw = localStorage.getItem(SEAT_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.data) || !parsed.ts) return null;
+      if (Date.now() - parsed.ts > SEAT_CACHE_TTL_MS) return null;
+      return parsed.data;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeSeatCache(data) {
+    try {
+      localStorage.setItem(SEAT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+    } catch {}
+  }
+
+  function setSeatsMsg(text, tone = 'text-muted') {
+    const el = document.getElementById('miSeatsMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = `small ${tone}`;
+  }
+
+  function buildOccMap(data) {
+    const occ = {};
+    (data || []).forEach(s => {
+      const seatNum = Number(s?.seat);
+      if (!Number.isFinite(seatNum)) return;
+      occ[seatNum] = s?.name || true;
+    });
+    return occ;
+  }
+
   async function renderSeats() {
     const wrap = $('#miSeatsWrap');
     const grid = $('#miSeatGrid');
@@ -250,13 +290,36 @@
     grid.innerHTML = '';
 
     try {
+      setSeatsMsg('Carregando mapa de assentos...', 'text-muted');
       openLottie('seats', 'Carregando mapa de assentoSó');
       const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
-      const occ = {};
-      (data || []).forEach(s => occ[Number(s.seat)] = s.name || true);
-      renderFishboneSeats(occ);
+      const normalized = Array.isArray(data) ? data : [];
+
+      if (normalized.length > 0) {
+        writeSeatCache(normalized);
+        setSeatsMsg('', 'text-muted');
+        renderFishboneSeats(buildOccMap(normalized));
+        return;
+      }
+
+      const cached = readSeatCache();
+      if (cached?.length) {
+        setSeatsMsg('Sem dados ao vivo; usando dados salvos recentemente.', 'text-warning');
+        renderFishboneSeats(buildOccMap(cached));
+        return;
+      }
+
+      setSeatsMsg('Nenhum assento ocupado no momento.', 'text-muted');
+      renderFishboneSeats({});
     } catch {
+      const cached = readSeatCache();
+      if (cached?.length) {
+        setSeatsMsg('Falha ao carregar ao vivo; usando dados salvos recentemente.', 'text-warning');
+        renderFishboneSeats(buildOccMap(cached));
+        return;
+      }
+      setSeatsMsg('Falha ao carregar os assentos.', 'text-danger');
       renderFishboneSeats({});
     } finally {
       closeLottie();
