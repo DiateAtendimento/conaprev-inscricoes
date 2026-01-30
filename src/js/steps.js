@@ -316,12 +316,9 @@
 
       const photo = seatPhotoByNumber[n];
       if (photo) {
-        btn.classList.add('mi-seat--has-card');
-        const card = document.createElement('div');
-        card.className = 'mi-seat-card';
         const photoUrl = new URL(photo, window.location.origin).toString();
-        card.innerHTML = `<div class="mi-seat-photo" style="background-image:url('${photoUrl}')"></div>`;
-        btn.appendChild(card);
+        btn.classList.add('mi-seat--has-photo');
+        btn.style.backgroundImage = `url('${photoUrl}')`;
       }
       grid.appendChild(btn);
     });
