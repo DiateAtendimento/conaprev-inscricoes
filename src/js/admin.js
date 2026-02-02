@@ -164,6 +164,12 @@
   const headersAdmin = () =>
     state.adminPass ? { 'x-admin-pass': state.adminPass } : {};
 
+  const PHOTO_DIR = '/imagens/fotos-conselheiros';
+  const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
+  const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
+  const photoCache = new Map();
+  let photoIndexPromise = null;
+
   const fmtCPF = (v) => {
     const s = String(v || '').replace(/\D/g, '');
     if (s.length !== 11) return v;
@@ -202,6 +208,49 @@
     if (!m) return 0;
     // pega o MAIOR trecho numérico (resiste a prefixos diferentes)
     return Math.max(...m.map(n => parseInt(n, 10)).filter(n => Number.isFinite(n)));
+  }
+
+  const stripDiacritics = (value) =>
+    String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  function normalizeNameKey(value) {
+    return stripDiacritics(value)
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  }
+
+  async function loadPhotoIndex() {
+    if (photoIndexPromise) return photoIndexPromise;
+    photoIndexPromise = fetch(PHOTO_MANIFEST_URL, { cache: 'no-cache' })
+      .then(res => (res.ok ? res.json() : []))
+      .then(list => {
+        const map = new Map();
+        if (!Array.isArray(list)) return map;
+        list.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const key = normalizeNameKey(file);
+          if (key) map.set(key, file);
+        });
+        return map;
+      })
+      .catch(() => new Map());
+    return photoIndexPromise;
+  }
+
+  async function resolvePhotoUrl(name) {
+    const key = normalizeNameKey(name);
+    if (!key) return null;
+    if (photoCache.has(key)) return photoCache.get(key);
+    const index = await loadPhotoIndex();
+    const filename = index.get(key);
+    const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+    photoCache.set(key, url);
+    return url;
   }
 
   // ======= Contador do sininho (GLOBAL = soma de TODOS os perfis) =======
@@ -269,9 +318,17 @@
       ? 'border-left:6px solid #28a745; background: rgba(40,167,69,0.08);'
       : '';
 
+    const showPhoto = (state.perfil === 'Conselheiro');
+    const photoHtml = showPhoto ? `
+      <div class="admin-photo-wrap me-3">
+        <img class="admin-photo" data-name="${item.nome || ''}" src="${DEFAULT_PHOTO_URL}" alt="Foto de ${item.nome || 'Conselheiro'}">
+      </div>
+    ` : '';
+
     return `
       <div class="card p-2" data-rowindex="${item._rowIndex}" style="${highlightStyle}">
         <div class="d-flex flex-wrap align-items-center gap-2">
+          ${photoHtml}
           <div class="me-3">
             <div class="small text-muted">Protocolo</div>
             <div class="fw-semibold">${item.numerodeinscricao || '-'}</div>
@@ -315,6 +372,10 @@
       ? toRender.map(item => rowCardHtml(item, status === 'finalizados')).join('')
       : `<div class="text-muted">Nenhum registro encontrado.</div>`;
 
+    if (state.perfil === 'Conselheiro' && toRender.length) {
+      hydrateConselheiroPhotos(targetEl);
+    }
+
     // Eventos do bot�o de m�o
     targetEl.querySelectorAll('.btn-hand').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -353,6 +414,21 @@
       if (isAtivos) state.ativosOffset += state.limit;
       else          state.finalOffset  += state.limit;
       refreshActiveTab();
+    });
+  }
+
+  async function hydrateConselheiroPhotos(rootEl) {
+    const imgs = rootEl.querySelectorAll('img.admin-photo[data-name]');
+    if (!imgs.length) return;
+    await loadPhotoIndex();
+    imgs.forEach((img) => {
+      const nome = img.getAttribute('data-name') || '';
+      resolvePhotoUrl(nome).then((url) => {
+        img.src = url || DEFAULT_PHOTO_URL;
+      });
+      img.onerror = () => {
+        if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
+      };
     });
   }
 

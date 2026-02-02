@@ -1212,4 +1212,21 @@ body.gate-active .topbar{ display:none !important; }
 }
 #adminMonitorModal .nav-tabs::-webkit-scrollbar{ height: 6px; }
 
+.admin-photo-wrap{
+  width:40px;
+  height:40px;
+  flex:0 0 40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.admin-photo{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid rgba(15,23,42,.15);
+  background:#f1f5f9;
+}
+
 
