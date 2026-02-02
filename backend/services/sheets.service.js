@@ -65,6 +65,7 @@ const HEADER_ALIASES = {
   emailsecretarioa: "emailsecretarioa",
   convidadopor: "convidadopor",
   email: "email",
+  foto: "foto",
   conferido: "conferido",
   conferidopor: "conferidopor",
   conferidoem: "conferidoem"

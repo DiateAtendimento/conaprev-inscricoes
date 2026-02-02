@@ -14,6 +14,7 @@
     criar:     `${API}/api/inscricoes/criar`,
     atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
+    fotoUpload: `${API}/api/inscricoes/foto`,
     assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
   };
 
@@ -82,6 +83,9 @@
     { id: 'representatividade',label: 'Representatividade',  type: 'text' },
     { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
   ];
+
+  const PHOTO_DIR = '/imagens/fotos-conselheiros';
+  const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
 
   /* ===============================
    * Helpers DOM/UX
@@ -596,7 +600,28 @@
         </div>
       `;
     }).join('');
-    pane.innerHTML = `<div class="row g-3">${blocks}</div>`;
+
+    const fotoBlock = (perfil === 'Conselheiro') ? `
+      <div class="col-12">
+        <label class="form-label" for="fotoFile">Foto</label>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="mi-photo-preview">
+            <img id="miFotoPreview" src="${escapeHtml(getFotoUrl(data.foto))}" alt="Foto do conselheiro">
+          </div>
+          <div class="flex-grow-1">
+            <input id="fotoFile" type="file" class="form-control" accept="image/*">
+            <input id="foto" name="foto" type="hidden" value="${escapeHtml(data.foto || '')}">
+            <div class="form-text">JPG ou PNG, até 4MB. Se escolher um arquivo, a foto será substituída.</div>
+          </div>
+        </div>
+      </div>
+    ` : '';
+
+    pane.innerHTML = `<div class="row g-3">${fotoBlock}${blocks}</div>`;
+
+    if (perfil === 'Conselheiro') {
+      wireFotoInput();
+    }
   }
 
   /* ===============================
@@ -657,7 +682,8 @@
     emailconselheiroa: 'E-mail Conselheiro(a)',
     emailsecretarioa: 'E-mail Secretário(a)',
     convidadopor: 'Convidado por',
-    email: 'E-mail'
+    email: 'E-mail',
+    foto: 'Foto'
   };
   const HIDDEN_KEYS = new Set(['_rowIndex']);
 
@@ -670,13 +696,72 @@
       .replace(/\b\w/g, m => m.toUpperCase());
   }
 
+  function getFotoUrl(value) {
+    if (!value) return DEFAULT_PHOTO_URL;
+    const v = String(value).trim();
+    if (!v) return DEFAULT_PHOTO_URL;
+    if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/')) return v;
+    return `${PHOTO_DIR}/${v}`;
+  }
+
+  function renderReviewValue(key, value) {
+    if (key === 'foto') {
+      const url = getFotoUrl(value);
+      return `
+        <div class="mi-photo-preview">
+          <img src="${escapeHtml(url)}" alt="Foto do conselheiro">
+        </div>
+      `;
+    }
+    return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
+  }
+
+  function wireFotoInput() {
+    const input = document.getElementById('fotoFile');
+    const hidden = document.getElementById('foto');
+    const preview = document.getElementById('miFotoPreview');
+    if (!input || !hidden || !preview) return;
+
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      try {
+        openLottie('saving', 'Enviando foto…');
+        const form = new FormData();
+        form.append('foto', file);
+        form.append('perfil', 'Conselheiro');
+        form.append('nome', $('#nome')?.value || state.data?.nome || '');
+        form.append('cpf', $('#cpf')?.value || state.data?.cpf || '');
+
+        const res = await fetch(ROUTES.fotoUpload, { method: 'POST', body: form });
+        if (!res.ok) {
+          const j = await res.json().catch(()=>null);
+          throw new Error(j?.error || 'Falha ao enviar a foto.');
+        }
+        const out = await res.json();
+        const filename = out?.filename || '';
+        const url = out?.url || getFotoUrl(filename);
+
+        hidden.value = filename;
+        preview.src = url;
+        state.data.foto = filename;
+        if (state.step === 4) renderReview();
+      } catch (e) {
+        alert(e?.message || 'Erro ao enviar a foto.');
+      } finally {
+        closeLottie();
+      }
+    });
+  }
+
   function renderReview() {
     const d = { ...state.data, ...readForm() };
     const rows = Object.entries(d)
       .filter(([k,v]) => !HIDDEN_KEYS.has(k) && String(v).trim() !== '')
       .map(([k,v]) => `<div class="d-flex">
         <div class="me-2 text-secondary" style="min-width:220px">${escapeHtml(prettyLabel(k))}</div>
-        <div class="fw-semibold flex-grow-1">${Array.isArray(v)?v.map(escapeHtml).join(', '):escapeHtml(v)}</div>
+        <div class="fw-semibold flex-grow-1">${renderReviewValue(k, v)}</div>
       </div>`)
       .join('');
 
@@ -878,6 +963,7 @@
           emailsecretarioa: found.emailsecretarioa || '',
           convidadopor: found.convidadopor || '',
           email: found.email || '',
+          foto: found.foto || '',
           _rowIndex: found._rowIndex
         };
         const merged = { ...back, ...filterNonEmpty(draft) };

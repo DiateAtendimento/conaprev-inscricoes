@@ -1,5 +1,9 @@
 ﻿// backend/routes/inscricoes.routes.js
 import { Router } from "express";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+import { fileURLToPath } from "url";
 import cfg from "../config/env.js";
 import {
   buscarPorCpf,
@@ -24,6 +28,63 @@ const PERFIS_OK = new Set([
   "Patrocinador",
   "COPAJURE",
 ]);
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, "..", "..");
+const PHOTO_DIR = path.resolve(REPO_ROOT, "public", "imagens", "fotos-conselheiros");
+const MANIFEST_PATH = path.join(PHOTO_DIR, "manifest.json");
+
+function ensurePhotoDir() {
+  fs.mkdirSync(PHOTO_DIR, { recursive: true });
+}
+
+function sanitizeFileBase(input, fallback = "conselheiro") {
+  const raw = String(input || "").trim();
+  const base = raw
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return base || fallback;
+}
+
+function ensureManifestHas(filename) {
+  try {
+    ensurePhotoDir();
+    let list = [];
+    if (fs.existsSync(MANIFEST_PATH)) {
+      const raw = fs.readFileSync(MANIFEST_PATH, "utf-8");
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    }
+    if (!list.includes(filename)) {
+      list.push(filename);
+      fs.writeFileSync(MANIFEST_PATH, JSON.stringify(list, null, 2) + "\n");
+    }
+  } catch (e) {
+    console.error("[POST /inscricoes/foto] Falha ao atualizar manifest.json", e);
+  }
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      try { ensurePhotoDir(); } catch {}
+      cb(null, PHOTO_DIR);
+    },
+    filename: (req, file, cb) => {
+      const nome = sanitizeFileBase(req.body?.nome);
+      const cpf = String(req.body?.cpf || "").replace(/\D/g, "");
+      const base = nome || (cpf ? `CPF ${cpf}` : "conselheiro");
+      const ext = path.extname(file.originalname || "").toLowerCase() || ".jpg";
+      cb(null, `${base}${ext}`);
+    },
+  }),
+  limits: { fileSize: 4 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ok = ["image/jpeg", "image/png", "image/jpg"].includes(file.mimetype);
+    cb(ok ? null : new Error("Formato inválido. Use JPG ou PNG."), ok);
+  },
+});
 
 // Guard de administrador (usa header x-admin-pass)
 const adminGuard = (req, res, next) => {
@@ -235,6 +296,31 @@ r.post("/confirmar", async (req, res) => {
   } catch (e) {
     console.error("[POST /inscricoes/confirmar]", e);
     return sendGoogleError(res, e, "Erro ao confirmar inscrição");
+  }
+});
+
+/**
+ * POST /api/inscricoes/foto
+ * multipart/form-data: foto (file), nome, cpf, perfil
+ */
+r.post("/foto", upload.single("foto"), async (req, res) => {
+  try {
+    const perfil = String(req.body?.perfil || "");
+    if (perfil !== "Conselheiro") {
+      return res.status(400).json({ error: "Upload de foto disponível apenas para Conselheiro." });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: "Arquivo de foto não enviado." });
+    }
+    const filename = req.file.filename;
+    ensureManifestHas(filename);
+    return res.json({
+      filename,
+      url: `/imagens/fotos-conselheiros/${filename}`
+    });
+  } catch (e) {
+    console.error("[POST /inscricoes/foto]", e);
+    return res.status(500).json({ error: e?.message || "Falha ao enviar foto." });
   }
 });
 
