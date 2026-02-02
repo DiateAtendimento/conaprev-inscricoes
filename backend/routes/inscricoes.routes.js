@@ -84,12 +84,13 @@ r.get("/listar", adminGuard, async (req, res) => {
     const q = String(req.query.q || "");
     const limit = Math.min(parseInt(req.query.limit || "200", 10) || 200, 500);
     const offset = Math.max(parseInt(req.query.offset || "0", 10) || 0, 0);
+    const hasProtocol = String(req.query.hasProtocol || "") === "1";
 
     if (!PERFIS_OK.has(perfil)) {
       return res.status(400).json({ error: "Perfil inválido" });
     }
 
-    const out = await listarInscricoes(perfil, status, q, { limit, offset });
+    const out = await listarInscricoes(perfil, status, q, { limit, offset, hasProtocol });
     return res.json(Array.isArray(out) ? out : []);
   } catch (e) {
     console.error("[GET /inscricoes/listar]", e);

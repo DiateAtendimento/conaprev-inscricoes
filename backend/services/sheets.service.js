@@ -331,7 +331,7 @@ export async function getConselheiroSeats() {
 }
 
 
-export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0 } = {}) {
+export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false } = {}) {
   const sheetName = sheetForPerfil(perfil);
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
 
@@ -349,7 +349,7 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     obj.cpf = String(obj.cpf || "").replace(/^'+/, ""); // tira ap�strofo
     if (!matchQuery(obj, q)) continue;
 
-    out.push({
+    const item = {
       _rowIndex: obj._rowIndex,
       numerodeinscricao: obj.numerodeinscricao || "",
       cpf: String(obj.cpf || "").replace(/\D/g, ""), // Só Números para exibição/consulta
@@ -357,7 +357,9 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
       conferido: obj.conferido || "",
       conferidopor: obj.conferidopor || "",
       conferidoem: obj.conferidoem || "",
-    });
+    };
+    if (hasProtocol && !String(item.numerodeinscricao || "").trim()) continue;
+    out.push(item);
   }
 
   // OrdenAção server-side para FINALIZADOS: MAIOR ? MENOR por Número do protocolo
