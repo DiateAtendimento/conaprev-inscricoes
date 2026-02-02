@@ -642,6 +642,11 @@
         resolvePhotoUrlByName(data.nome).then((url) => {
           const preview = document.getElementById('miFotoPreview');
           if (preview && url) preview.src = url;
+          const hidden = document.getElementById('foto');
+          if (hidden && !hidden.value && url) {
+            hidden.value = url.split('/').pop() || '';
+            state.data.foto = hidden.value;
+          }
         });
       }
     }
@@ -883,6 +888,10 @@
       resolvePhotoUrlByName(d.nome).then((url) => {
         const img = document.getElementById('miReviewFoto');
         if (img && url) img.src = url;
+        const filename = url ? url.split('/').pop() : '';
+        if (filename) {
+          state.data.foto = filename;
+        }
       });
     }
 

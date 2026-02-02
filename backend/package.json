@@ -6,8 +6,10 @@
     "node": ">=18"
   },
   "scripts": {
+    "postinstall": "npm run sync:photos",
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "sync:photos": "node scripts/sync-photos.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

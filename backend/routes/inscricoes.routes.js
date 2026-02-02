@@ -30,8 +30,11 @@ const PERFIS_OK = new Set([
 ]);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
-const PHOTO_DIR = path.resolve(REPO_ROOT, "public", "imagens", "fotos-conselheiros");
+const BACKEND_ROOT = path.resolve(__dirname, "..");
+const REPO_ROOT = path.resolve(BACKEND_ROOT, "..");
+const BACKEND_PHOTO_DIR = path.resolve(BACKEND_ROOT, "public", "imagens", "fotos-conselheiros");
+const ROOT_PHOTO_DIR = path.resolve(REPO_ROOT, "public", "imagens", "fotos-conselheiros");
+const PHOTO_DIR = fs.existsSync(BACKEND_PHOTO_DIR) ? BACKEND_PHOTO_DIR : ROOT_PHOTO_DIR;
 const MANIFEST_PATH = path.join(PHOTO_DIR, "manifest.json");
 
 function ensurePhotoDir() {
