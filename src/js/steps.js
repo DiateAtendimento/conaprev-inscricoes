@@ -767,14 +767,6 @@
   }
 
   function renderReviewValue(key, value) {
-    if (key === 'foto') {
-      const url = getFotoUrl(value);
-      return `
-        <div class="mi-photo-preview">
-          <img src="${escapeHtml(url)}" alt="Foto do conselheiro">
-        </div>
-      `;
-    }
     return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
   }
 
@@ -814,15 +806,11 @@
       loadPhotoIndexGlobal().then(() => {
         const img = document.getElementById('miReviewFoto');
         if (!img) return;
-        if (d.foto) {
-          img.src = getFotoUrl(d.foto);
-          return;
-        }
-        if (d.nome) {
-          resolvePhotoUrlByName(d.nome).then((url) => {
-            if (url) img.src = url;
-          });
-        }
+        const nome = d.nome || state.data?.nome || $('#nome')?.value || '';
+        if (!nome) return;
+        resolvePhotoUrlByName(nome).then((url) => {
+          if (url) img.src = url;
+        });
       });
     }
 
