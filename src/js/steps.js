@@ -88,6 +88,7 @@
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const photoCacheGlobal = new Map();
+  const photoVersionByName = new Map();
   let photoIndexPromiseGlobal = null;
   let photoIndexLocal = new Map();
   let photoIndexRemote = new Map();
@@ -804,11 +805,25 @@
     if (photoCacheGlobal.has(key)) return photoCacheGlobal.get(key);
     const index = await loadPhotoIndexGlobal();
     const filename = index.local.get(key) || index.remote.get(key);
-    const url = filename
+    let url = filename
       ? (index.local.has(key) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR_REMOTE}/${filename}`)
       : DEFAULT_PHOTO_URL;
+    const v = photoVersionByName.get(key);
+    if (v && url && url !== DEFAULT_PHOTO_URL) {
+      url = `${url}${url.includes('?') ? '&' : '?'}v=${v}`;
+    }
     photoCacheGlobal.set(key, url);
     return url;
+  }
+
+  function updateSeatPhotoByName(name, url) {
+    if (!name || !url) return;
+    const esc = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/["\\]/g, '\\$&');
+    document.querySelectorAll(`.mi-seat[title="${esc}"] img`).forEach((img) => {
+      img.src = url;
+    });
+    const previewImg = document.querySelector('#miSeatPreview img');
+    if (previewImg) previewImg.src = url;
   }
 
   function renderReviewValue(key, value) {
@@ -859,7 +874,14 @@
         }
         const out = await res.json();
         const filename = out?.filename || '';
-        const url = out?.url || getFotoUrl(filename);
+        const baseUrl = out?.url || getFotoUrl(filename);
+        const nomeAtual = $('#nome')?.value || state.data?.nome || '';
+        const key = normalizeNameKeyGlobal(nomeAtual);
+        const version = Date.now();
+        if (key) photoVersionByName.set(key, version);
+        const url = baseUrl
+          ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}v=${version}`
+          : baseUrl;
 
         hidden.value = filename;
         preview.src = url;
@@ -872,6 +894,10 @@
           if (preview.src !== DEFAULT_PHOTO_URL) preview.src = DEFAULT_PHOTO_URL;
         };
         state.data.foto = filename;
+        if (key) photoCacheGlobal.set(key, url);
+        updateSeatPhotoByName(nomeAtual, url);
+        const reviewImg = document.getElementById('miReviewFoto');
+        if (reviewImg) reviewImg.src = url;
         if (state.step === 4) renderReview();
       } catch (e) {
         alert(e?.message || 'Erro ao enviar a foto.');
