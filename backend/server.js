@@ -2,9 +2,6 @@
 import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
 
 import security from "./middlewares/security.js";
 import corsMw from "./middlewares/cors.js";
@@ -17,11 +14,6 @@ import certsRoutes from "./routes/certs.routes.js";
 import votacaoRoutes from "./routes/votacao.routes.js";
 
 const app = express();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..");
-const BACKEND_PHOTO_DIR = path.join(__dirname, "public", "imagens", "fotos-conselheiros");
-const ROOT_PHOTO_DIR = path.join(REPO_ROOT, "public", "imagens", "fotos-conselheiros");
-const PHOTO_DIR = fs.existsSync(BACKEND_PHOTO_DIR) ? BACKEND_PHOTO_DIR : ROOT_PHOTO_DIR;
 
 /**
  * IMPORTANTE no Render:
@@ -40,18 +32,6 @@ app.options("*", corsMw);
 
 // seguranÃ§a depois
 app.use(security);
-
-// fotos de conselheiros (upload)
-app.use(
-  "/imagens/fotos-conselheiros",
-  express.static(PHOTO_DIR, {
-    setHeaders: (res) => {
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-    },
-  })
-);
-
 
 // rotas API
 app.use("/api", healthRoutes);

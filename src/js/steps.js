@@ -14,7 +14,6 @@
     criar:     `${API}/api/inscricoes/criar`,
     atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
-    fotoUpload: `${API}/api/inscricoes/foto`,
     assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
   };
 
@@ -84,14 +83,11 @@
     { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
   ];
 
-  const PHOTO_DIR_REMOTE = `${API}/imagens/fotos-conselheiros`;
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const photoCacheGlobal = new Map();
-  const photoVersionByName = new Map();
   let photoIndexPromiseGlobal = null;
   let photoIndexLocal = new Map();
-  let photoIndexRemote = new Map();
 
   /* ===============================
    * Helpers DOM/UX
@@ -373,13 +369,11 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
-    const PHOTO_DIR = PHOTO_DIR_REMOTE;
-    const PHOTO_MANIFEST_URL = `${PHOTO_DIR_REMOTE}/manifest.json`;
+    const PHOTO_DIR = PHOTO_DIR_LOCAL;
+    const PHOTO_MANIFEST_URL = `${PHOTO_DIR_LOCAL}/manifest.json`;
     const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
     const photoCache = new Map();
     let photoIndexPromise = null;
-    let photoIndexLocal = new Map();
-    let photoIndexRemote = new Map();
     const photoAliases = new Map([
       ['allex albert rodrigues', 'Allex-albert.svg'],
     ]);
@@ -450,20 +444,13 @@
           return Array.isArray(list) ? list : [];
         };
         let list = [];
-        try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
+        try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
         list.forEach((file) => {
           if (typeof file !== 'string') return;
           const key = normalizeNameKey(file);
-          if (key) photoIndexLocal.set(key, file);
+          if (key) map.set(key, file);
         });
-        let listRemote = [];
-        try { listRemote = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
-        listRemote.forEach((file) => {
-          if (typeof file !== 'string') return;
-          const key = normalizeNameKey(file);
-          if (key) photoIndexRemote.set(key, file);
-        });
-        return { local: photoIndexLocal, remote: photoIndexRemote };
+        return map;
       })();
       return photoIndexPromise;
     }
@@ -474,29 +461,19 @@
       if (photoCache.has(key)) return photoCache.get(key);
 
       const index = await loadPhotoIndex();
-      let filename = index.local.get(key) || index.remote.get(key) || photoAliases.get(key);
+      let filename = index.get(key) || photoAliases.get(key);
       if (!filename) {
         const nameTokens = new Set(key.split(' ').filter(Boolean));
         let bestKey = '';
-        index.local.forEach((_file, idxKey) => {
+        index.forEach((_file, idxKey) => {
           const idxTokens = idxKey.split(' ').filter(Boolean);
           if (idxTokens.length < 2) return;
           const allPresent = idxTokens.every(t => nameTokens.has(t));
           if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
         });
-        index.remote.forEach((_file, idxKey) => {
-          const idxTokens = idxKey.split(' ').filter(Boolean);
-          if (idxTokens.length < 2) return;
-          const allPresent = idxTokens.every(t => nameTokens.has(t));
-          if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
-        });
-        if (bestKey) {
-          filename = index.local.get(bestKey) || index.remote.get(bestKey);
-        }
+        if (bestKey) filename = index.get(bestKey);
       }
-      const url = filename
-        ? (index.local.has(normalizeNameKey(filename)) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR}/${filename}`)
-        : DEFAULT_PHOTO_URL;
+      const url = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
       photoCache.set(key, url);
       return url;
     }
@@ -638,15 +615,10 @@
 
     const fotoBlock = (perfil === 'Conselheiro') ? `
       <div class="col-12">
-        <label class="form-label" for="fotoFile">Foto</label>
+        <label class="form-label">Foto</label>
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div class="mi-photo-preview">
             <img id="miFotoPreview" src="${escapeHtml(DEFAULT_PHOTO_URL)}" alt="Foto do conselheiro">
-          </div>
-          <div class="flex-grow-1">
-            <input id="fotoFile" type="file" class="form-control" accept="image/*">
-            <input id="foto" name="foto" type="hidden" value="${escapeHtml(data.foto || '')}">
-            <div class="form-text">JPG ou PNG, até 4MB. Se escolher um arquivo, a foto será substituída.</div>
           </div>
         </div>
       </div>
@@ -655,20 +627,12 @@
     pane.innerHTML = `<div class="row g-3">${fotoBlock}${blocks}</div>`;
 
     if (perfil === 'Conselheiro') {
-      wireFotoInput();
       loadPhotoIndexGlobal().then(() => {
         const preview = document.getElementById('miFotoPreview');
         if (!preview) return;
-        if (data.foto) {
-          preview.src = getFotoUrl(data.foto);
-        } else if (data.nome) {
+        if (data.nome) {
           resolvePhotoUrlByName(data.nome).then((url) => {
             if (url) preview.src = url;
-            const hidden = document.getElementById('foto');
-            if (hidden && !hidden.value && url && !url.endsWith('/padrao.svg')) {
-              hidden.value = url.split('/').pop() || '';
-              state.data.foto = hidden.value;
-            }
           });
         }
       });
@@ -733,10 +697,9 @@
     emailconselheiroa: 'E-mail Conselheiro(a)',
     emailsecretarioa: 'E-mail Secretário(a)',
     convidadopor: 'Convidado por',
-    email: 'E-mail',
-    foto: 'Foto'
+    email: 'E-mail'
   };
-  const HIDDEN_KEYS = new Set(['_rowIndex', 'foto']);
+  const HIDDEN_KEYS = new Set(['_rowIndex']);
 
   function prettyLabel(key) {
     if (LABELS[key]) return LABELS[key];
@@ -752,9 +715,7 @@
     const v = String(value).trim();
     if (!v) return DEFAULT_PHOTO_URL;
     if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/')) return v;
-    if (photoIndexLocal.size === 0) return `${PHOTO_DIR_LOCAL}/${v}`;
-    if (photoIndexLocal.has(normalizeNameKeyGlobal(v))) return `${PHOTO_DIR_LOCAL}/${v}`;
-    return `${PHOTO_DIR_REMOTE}/${v}`;
+    return `${PHOTO_DIR_LOCAL}/${v}`;
   }
 
   const stripDiacriticsGlobal = (value) =>
@@ -787,14 +748,7 @@
         const key = normalizeNameKeyGlobal(file);
         if (key) photoIndexLocal.set(key, file);
       });
-      let listRemote = [];
-      try { listRemote = await tryFetch(`${PHOTO_DIR_REMOTE}/manifest.json`); } catch {}
-      listRemote.forEach((file) => {
-        if (typeof file !== 'string') return;
-        const key = normalizeNameKeyGlobal(file);
-        if (key) photoIndexRemote.set(key, file);
-      });
-      return { local: photoIndexLocal, remote: photoIndexRemote };
+      return { local: photoIndexLocal };
     })();
     return photoIndexPromiseGlobal;
   }
@@ -804,26 +758,12 @@
     if (!key) return null;
     if (photoCacheGlobal.has(key)) return photoCacheGlobal.get(key);
     const index = await loadPhotoIndexGlobal();
-    const filename = index.local.get(key) || index.remote.get(key);
-    let url = filename
-      ? (index.local.has(key) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR_REMOTE}/${filename}`)
+    const filename = index.local.get(key);
+    const url = filename
+      ? `${PHOTO_DIR_LOCAL}/${filename}`
       : DEFAULT_PHOTO_URL;
-    const v = photoVersionByName.get(key);
-    if (v && url && url !== DEFAULT_PHOTO_URL) {
-      url = `${url}${url.includes('?') ? '&' : '?'}v=${v}`;
-    }
     photoCacheGlobal.set(key, url);
     return url;
-  }
-
-  function updateSeatPhotoByName(name, url) {
-    if (!name || !url) return;
-    const esc = (window.CSS && CSS.escape) ? CSS.escape(name) : name.replace(/["\\]/g, '\\$&');
-    document.querySelectorAll(`.mi-seat[title="${esc}"] img`).forEach((img) => {
-      img.src = url;
-    });
-    const previewImg = document.querySelector('#miSeatPreview img');
-    if (previewImg) previewImg.src = url;
   }
 
   function renderReviewValue(key, value) {
@@ -836,75 +776,6 @@
       `;
     }
     return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
-  }
-
-  function wireFotoInput() {
-    const input = document.getElementById('fotoFile');
-    const hidden = document.getElementById('foto');
-    const preview = document.getElementById('miFotoPreview');
-    if (!input || !hidden || !preview) return;
-
-    preview.onerror = () => {
-      const filename = (preview.src || '').split('/').pop();
-      const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
-      if (local && local !== DEFAULT_PHOTO_URL && preview.src !== local) {
-        preview.src = local;
-        return;
-      }
-      if (preview.src !== DEFAULT_PHOTO_URL) preview.src = DEFAULT_PHOTO_URL;
-    };
-
-    input.addEventListener('change', async () => {
-      const file = input.files && input.files[0];
-      if (!file) return;
-
-      try {
-        openLottie('saving', 'Enviando foto…');
-        const form = new FormData();
-        form.append('foto', file);
-        form.append('perfil', 'Conselheiro');
-        form.append('nome', $('#nome')?.value || state.data?.nome || '');
-        form.append('cpf', $('#cpf')?.value || state.data?.cpf || '');
-        if (hidden.value) form.append('filename', hidden.value);
-
-        const res = await fetch(ROUTES.fotoUpload, { method: 'POST', body: form });
-        if (!res.ok) {
-          const j = await res.json().catch(()=>null);
-          throw new Error(j?.error || 'Falha ao enviar a foto.');
-        }
-        const out = await res.json();
-        const filename = out?.filename || '';
-        const baseUrl = out?.url || getFotoUrl(filename);
-        const nomeAtual = $('#nome')?.value || state.data?.nome || '';
-        const key = normalizeNameKeyGlobal(nomeAtual);
-        const version = Date.now();
-        if (key) photoVersionByName.set(key, version);
-        const url = baseUrl
-          ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}v=${version}`
-          : baseUrl;
-
-        hidden.value = filename;
-        preview.src = url;
-        preview.onerror = () => {
-          const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
-          if (preview.src !== local) {
-            preview.src = local;
-            return;
-          }
-          if (preview.src !== DEFAULT_PHOTO_URL) preview.src = DEFAULT_PHOTO_URL;
-        };
-        state.data.foto = filename;
-        if (key) photoCacheGlobal.set(key, url);
-        updateSeatPhotoByName(nomeAtual, url);
-        const reviewImg = document.getElementById('miReviewFoto');
-        if (reviewImg) reviewImg.src = url;
-        if (state.step === 4) renderReview();
-      } catch (e) {
-        alert(e?.message || 'Erro ao enviar a foto.');
-      } finally {
-        closeLottie();
-      }
-    });
   }
 
   function renderReview() {
@@ -1147,7 +1018,6 @@
           emailsecretarioa: found.emailsecretarioa || '',
           convidadopor: found.convidadopor || '',
           email: found.email || '',
-          foto: found.foto || '',
           _rowIndex: found._rowIndex
         };
         const merged = { ...back, ...filterNonEmpty(draft) };
