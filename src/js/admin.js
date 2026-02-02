@@ -164,7 +164,7 @@
   const headersAdmin = () =>
     state.adminPass ? { 'x-admin-pass': state.adminPass } : {};
 
-  const PHOTO_DIR = '/imagens/fotos-conselheiros';
+  const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
   const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
   const photoCache = new Map();

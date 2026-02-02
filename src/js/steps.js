@@ -84,7 +84,7 @@
     { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
   ];
 
-  const PHOTO_DIR = '/imagens/fotos-conselheiros';
+  const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
 
   /* ===============================
@@ -367,9 +367,9 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
-    const PHOTO_DIR = '/imagens/fotos-conselheiros';
+    const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
     const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
-    const DEFAULT_PHOTO_URL = '/imagens/fotos-conselheiros/padrao.svg';
+    const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
     const photoCache = new Map();
     let photoIndexPromise = null;
     const photoAliases = new Map([

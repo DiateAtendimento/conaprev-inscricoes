@@ -2,6 +2,8 @@
 import "dotenv/config";
 import express from "express";
 import morgan from "morgan";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import security from "./middlewares/security.js";
 import corsMw from "./middlewares/cors.js";
@@ -14,6 +16,9 @@ import certsRoutes from "./routes/certs.routes.js";
 import votacaoRoutes from "./routes/votacao.routes.js";
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(__dirname, "..");
+const PHOTO_DIR = path.join(REPO_ROOT, "public", "imagens", "fotos-conselheiros");
 
 /**
  * IMPORTANTE no Render:
@@ -32,6 +37,9 @@ app.options("*", corsMw);
 
 // seguranÃ§a depois
 app.use(security);
+
+// fotos de conselheiros (upload)
+app.use("/imagens/fotos-conselheiros", express.static(PHOTO_DIR));
 
 
 // rotas API
