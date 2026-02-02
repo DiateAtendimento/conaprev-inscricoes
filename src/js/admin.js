@@ -164,12 +164,13 @@
   const headersAdmin = () =>
     state.adminPass ? { 'x-admin-pass': state.adminPass } : {};
 
-  const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
+  const PHOTO_DIR_REMOTE = `${API}/imagens/fotos-conselheiros`;
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
-  const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const photoCache = new Map();
   let photoIndexPromise = null;
+  let photoIndexLocal = new Map();
+  let photoIndexRemote = new Map();
 
   const fmtCPF = (v) => {
     const s = String(v || '').replace(/\D/g, '');
@@ -228,7 +229,6 @@
   async function loadPhotoIndex() {
     if (photoIndexPromise) return photoIndexPromise;
     photoIndexPromise = (async () => {
-      const map = new Map();
       const tryFetch = async (url) => {
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) return [];
@@ -236,17 +236,20 @@
         return Array.isArray(list) ? list : [];
       };
       let list = [];
-      try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
-      if (!list.length) {
-        const localUrl = `${PHOTO_DIR_LOCAL}/manifest.json`;
-        try { list = await tryFetch(localUrl); } catch {}
-      }
+      try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
       list.forEach((file) => {
         if (typeof file !== 'string') return;
         const key = normalizeNameKey(file);
-        if (key) map.set(key, file);
+        if (key) photoIndexLocal.set(key, file);
       });
-      return map;
+      let listRemote = [];
+      try { listRemote = await tryFetch(`${PHOTO_DIR_REMOTE}/manifest.json`); } catch {}
+      listRemote.forEach((file) => {
+        if (typeof file !== 'string') return;
+        const key = normalizeNameKey(file);
+        if (key) photoIndexRemote.set(key, file);
+      });
+      return { local: photoIndexLocal, remote: photoIndexRemote };
     })();
     return photoIndexPromise;
   }
@@ -256,8 +259,10 @@
     if (!key) return null;
     if (photoCache.has(key)) return photoCache.get(key);
     const index = await loadPhotoIndex();
-    const filename = index.get(key);
-    const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+    const filename = index.local.get(key) || index.remote.get(key);
+    const url = filename
+      ? (index.local.has(key) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR_REMOTE}/${filename}`)
+      : DEFAULT_PHOTO_URL;
     photoCache.set(key, url);
     return url;
   }

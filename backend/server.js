@@ -42,7 +42,15 @@ app.options("*", corsMw);
 app.use(security);
 
 // fotos de conselheiros (upload)
-app.use("/imagens/fotos-conselheiros", express.static(PHOTO_DIR));
+app.use(
+  "/imagens/fotos-conselheiros",
+  express.static(PHOTO_DIR, {
+    setHeaders: (res) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    },
+  })
+);
 
 
 // rotas API

@@ -84,11 +84,13 @@
     { id: 'cargofuncao',       label: 'Cargo / Função',      type: 'text' },
   ];
 
-  const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
+  const PHOTO_DIR_REMOTE = `${API}/imagens/fotos-conselheiros`;
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const photoCacheGlobal = new Map();
   let photoIndexPromiseGlobal = null;
+  let photoIndexLocal = new Map();
+  let photoIndexRemote = new Map();
 
   /* ===============================
    * Helpers DOM/UX
@@ -370,11 +372,13 @@
     grid.style.setProperty('--grid-rows', ROWS);
     grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
 
-    const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
-    const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
+    const PHOTO_DIR = PHOTO_DIR_REMOTE;
+    const PHOTO_MANIFEST_URL = `${PHOTO_DIR_REMOTE}/manifest.json`;
     const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
     const photoCache = new Map();
     let photoIndexPromise = null;
+    let photoIndexLocal = new Map();
+    let photoIndexRemote = new Map();
     const photoAliases = new Map([
       ['allex albert rodrigues', 'Allex-albert.svg'],
     ]);
@@ -445,17 +449,20 @@
           return Array.isArray(list) ? list : [];
         };
         let list = [];
-        try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
-        if (!list.length) {
-          const localUrl = `${PHOTO_DIR_LOCAL}/manifest.json`;
-          try { list = await tryFetch(localUrl); } catch {}
-        }
+        try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
         list.forEach((file) => {
           if (typeof file !== 'string') return;
           const key = normalizeNameKey(file);
-          if (key) map.set(key, file);
+          if (key) photoIndexLocal.set(key, file);
         });
-        return map;
+        let listRemote = [];
+        try { listRemote = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
+        listRemote.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const key = normalizeNameKey(file);
+          if (key) photoIndexRemote.set(key, file);
+        });
+        return { local: photoIndexLocal, remote: photoIndexRemote };
       })();
       return photoIndexPromise;
     }
@@ -466,19 +473,29 @@
       if (photoCache.has(key)) return photoCache.get(key);
 
       const index = await loadPhotoIndex();
-      let filename = index.get(key) || photoAliases.get(key);
+      let filename = index.local.get(key) || index.remote.get(key) || photoAliases.get(key);
       if (!filename) {
         const nameTokens = new Set(key.split(' ').filter(Boolean));
         let bestKey = '';
-        index.forEach((_file, idxKey) => {
+        index.local.forEach((_file, idxKey) => {
           const idxTokens = idxKey.split(' ').filter(Boolean);
           if (idxTokens.length < 2) return;
           const allPresent = idxTokens.every(t => nameTokens.has(t));
           if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
         });
-        if (bestKey) filename = index.get(bestKey);
+        index.remote.forEach((_file, idxKey) => {
+          const idxTokens = idxKey.split(' ').filter(Boolean);
+          if (idxTokens.length < 2) return;
+          const allPresent = idxTokens.every(t => nameTokens.has(t));
+          if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
+        });
+        if (bestKey) {
+          filename = index.local.get(bestKey) || index.remote.get(bestKey);
+        }
       }
-      const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+      const url = filename
+        ? (index.local.has(normalizeNameKey(filename)) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR}/${filename}`)
+        : DEFAULT_PHOTO_URL;
       photoCache.set(key, url);
       return url;
     }
@@ -623,7 +640,7 @@
         <label class="form-label" for="fotoFile">Foto</label>
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div class="mi-photo-preview">
-            <img id="miFotoPreview" src="${escapeHtml(getFotoUrl(data.foto))}" alt="Foto do conselheiro">
+            <img id="miFotoPreview" src="${escapeHtml(DEFAULT_PHOTO_URL)}" alt="Foto do conselheiro">
           </div>
           <div class="flex-grow-1">
             <input id="fotoFile" type="file" class="form-control" accept="image/*">
@@ -638,17 +655,22 @@
 
     if (perfil === 'Conselheiro') {
       wireFotoInput();
-      if (!data.foto && data.nome) {
-        resolvePhotoUrlByName(data.nome).then((url) => {
-          const preview = document.getElementById('miFotoPreview');
-          if (preview && url) preview.src = url;
-          const hidden = document.getElementById('foto');
-          if (hidden && !hidden.value && url) {
-            hidden.value = url.split('/').pop() || '';
-            state.data.foto = hidden.value;
-          }
-        });
-      }
+      loadPhotoIndexGlobal().then(() => {
+        const preview = document.getElementById('miFotoPreview');
+        if (!preview) return;
+        if (data.foto) {
+          preview.src = getFotoUrl(data.foto);
+        } else if (data.nome) {
+          resolvePhotoUrlByName(data.nome).then((url) => {
+            if (url) preview.src = url;
+            const hidden = document.getElementById('foto');
+            if (hidden && !hidden.value && url && !url.endsWith('/padrao.svg')) {
+              hidden.value = url.split('/').pop() || '';
+              state.data.foto = hidden.value;
+            }
+          });
+        }
+      });
     }
   }
 
@@ -729,7 +751,9 @@
     const v = String(value).trim();
     if (!v) return DEFAULT_PHOTO_URL;
     if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/')) return v;
-    return `${PHOTO_DIR}/${v}`;
+    if (photoIndexLocal.size === 0) return `${PHOTO_DIR_LOCAL}/${v}`;
+    if (photoIndexLocal.has(normalizeNameKeyGlobal(v))) return `${PHOTO_DIR_LOCAL}/${v}`;
+    return `${PHOTO_DIR_REMOTE}/${v}`;
   }
 
   const stripDiacriticsGlobal = (value) =>
@@ -749,7 +773,6 @@
   async function loadPhotoIndexGlobal() {
     if (photoIndexPromiseGlobal) return photoIndexPromiseGlobal;
     photoIndexPromiseGlobal = (async () => {
-      const map = new Map();
       const tryFetch = async (url) => {
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) return [];
@@ -757,16 +780,20 @@
         return Array.isArray(list) ? list : [];
       };
       let list = [];
-      try { list = await tryFetch(`${PHOTO_DIR}/manifest.json`); } catch {}
-      if (!list.length) {
-        try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
-      }
+      try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
       list.forEach((file) => {
         if (typeof file !== 'string') return;
         const key = normalizeNameKeyGlobal(file);
-        if (key) map.set(key, file);
+        if (key) photoIndexLocal.set(key, file);
       });
-      return map;
+      let listRemote = [];
+      try { listRemote = await tryFetch(`${PHOTO_DIR_REMOTE}/manifest.json`); } catch {}
+      listRemote.forEach((file) => {
+        if (typeof file !== 'string') return;
+        const key = normalizeNameKeyGlobal(file);
+        if (key) photoIndexRemote.set(key, file);
+      });
+      return { local: photoIndexLocal, remote: photoIndexRemote };
     })();
     return photoIndexPromiseGlobal;
   }
@@ -776,8 +803,10 @@
     if (!key) return null;
     if (photoCacheGlobal.has(key)) return photoCacheGlobal.get(key);
     const index = await loadPhotoIndexGlobal();
-    const filename = index.get(key);
-    const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+    const filename = index.local.get(key) || index.remote.get(key);
+    const url = filename
+      ? (index.local.has(key) ? `${PHOTO_DIR_LOCAL}/${filename}` : `${PHOTO_DIR_REMOTE}/${filename}`)
+      : DEFAULT_PHOTO_URL;
     photoCacheGlobal.set(key, url);
     return url;
   }
@@ -884,13 +913,18 @@
     const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
     $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + editarLink;
 
-    if (state.perfil === 'Conselheiro' && !d.foto && d.nome) {
-      resolvePhotoUrlByName(d.nome).then((url) => {
-        const img = document.getElementById('miReviewFoto');
-        if (img && url) img.src = url;
-        const filename = url ? url.split('/').pop() : '';
-        if (filename) {
-          state.data.foto = filename;
+    if (state.perfil === 'Conselheiro') {
+      loadPhotoIndexGlobal().then(() => {
+        if (!d.foto && d.nome) {
+          resolvePhotoUrlByName(d.nome).then((url) => {
+            const img = document.getElementById('miReviewFoto');
+            if (img && url) img.src = url;
+            const filename = url ? url.split('/').pop() : '';
+            if (filename && filename !== 'padrao.svg') state.data.foto = filename;
+          });
+        } else if (d.foto) {
+          const img = document.getElementById('miReviewFoto');
+          if (img) img.src = getFotoUrl(d.foto);
         }
       });
     }
