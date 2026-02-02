@@ -699,7 +699,7 @@
     convidadopor: 'Convidado por',
     email: 'E-mail'
   };
-  const HIDDEN_KEYS = new Set(['_rowIndex']);
+  const HIDDEN_KEYS = new Set(['_rowIndex', 'foto']);
 
   function prettyLabel(key) {
     if (LABELS[key]) return LABELS[key];
@@ -812,16 +812,16 @@
 
     if (state.perfil === 'Conselheiro') {
       loadPhotoIndexGlobal().then(() => {
-        if (!d.foto && d.nome) {
+        const img = document.getElementById('miReviewFoto');
+        if (!img) return;
+        if (d.foto) {
+          img.src = getFotoUrl(d.foto);
+          return;
+        }
+        if (d.nome) {
           resolvePhotoUrlByName(d.nome).then((url) => {
-            const img = document.getElementById('miReviewFoto');
-            if (img && url) img.src = url;
-            const filename = url ? url.split('/').pop() : '';
-            if (filename && filename !== 'padrao.svg') state.data.foto = filename;
+            if (url) img.src = url;
           });
-        } else if (d.foto) {
-          const img = document.getElementById('miReviewFoto');
-          if (img) img.src = getFotoUrl(d.foto);
         }
       });
     }
