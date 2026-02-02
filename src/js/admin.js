@@ -169,6 +169,9 @@
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
   const photoCache = new Map();
   let photoIndexPromise = null;
+  const photoAliases = new Map([
+    ['allex albert rodrigues', 'Allex Albert Rodrigues.png'],
+  ]);
 
   const fmtCPF = (v) => {
     const s = String(v || '').replace(/\D/g, '');
@@ -227,6 +230,7 @@
   async function loadPhotoIndex() {
     if (photoIndexPromise) return photoIndexPromise;
     photoIndexPromise = (async () => {
+      const map = new Map();
       const tryFetch = async (url) => {
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) return [];
@@ -250,7 +254,18 @@
     if (!key) return null;
     if (photoCache.has(key)) return photoCache.get(key);
     const index = await loadPhotoIndex();
-    const filename = index.get(key);
+    let filename = index.get(key) || photoAliases.get(key);
+    if (!filename) {
+      const nameTokens = new Set(key.split(' ').filter(Boolean));
+      let bestKey = '';
+      index.forEach((_file, idxKey) => {
+        const idxTokens = idxKey.split(' ').filter(Boolean);
+        if (idxTokens.length < 2) return;
+        const allPresent = idxTokens.every(t => nameTokens.has(t));
+        if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
+      });
+      if (bestKey) filename = index.get(bestKey);
+    }
     const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
     photoCache.set(key, url);
     return url;
