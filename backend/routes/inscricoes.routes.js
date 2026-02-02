@@ -72,9 +72,10 @@ const upload = multer({
       cb(null, PHOTO_DIR);
     },
     filename: (req, file, cb) => {
+      const requested = sanitizeFileBase(req.body?.filename);
       const nome = sanitizeFileBase(req.body?.nome);
       const cpf = String(req.body?.cpf || "").replace(/\D/g, "");
-      const base = nome || (cpf ? `CPF ${cpf}` : "conselheiro");
+      const base = requested || nome || (cpf ? `CPF ${cpf}` : "conselheiro");
       const ext = path.extname(file.originalname || "").toLowerCase() || ".jpg";
       cb(null, `${base}${ext}`);
     },

@@ -165,8 +165,9 @@
     state.adminPass ? { 'x-admin-pass': state.adminPass } : {};
 
   const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
+  const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
-  const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
+  const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const photoCache = new Map();
   let photoIndexPromise = null;
 
@@ -226,19 +227,27 @@
 
   async function loadPhotoIndex() {
     if (photoIndexPromise) return photoIndexPromise;
-    photoIndexPromise = fetch(PHOTO_MANIFEST_URL, { cache: 'no-cache' })
-      .then(res => (res.ok ? res.json() : []))
-      .then(list => {
-        const map = new Map();
-        if (!Array.isArray(list)) return map;
-        list.forEach((file) => {
-          if (typeof file !== 'string') return;
-          const key = normalizeNameKey(file);
-          if (key) map.set(key, file);
-        });
-        return map;
-      })
-      .catch(() => new Map());
+    photoIndexPromise = (async () => {
+      const map = new Map();
+      const tryFetch = async (url) => {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const list = await res.json().catch(() => []);
+        return Array.isArray(list) ? list : [];
+      };
+      let list = [];
+      try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
+      if (!list.length) {
+        const localUrl = `${PHOTO_DIR_LOCAL}/manifest.json`;
+        try { list = await tryFetch(localUrl); } catch {}
+      }
+      list.forEach((file) => {
+        if (typeof file !== 'string') return;
+        const key = normalizeNameKey(file);
+        if (key) map.set(key, file);
+      });
+      return map;
+    })();
     return photoIndexPromise;
   }
 
@@ -427,6 +436,12 @@
         img.src = url || DEFAULT_PHOTO_URL;
       });
       img.onerror = () => {
+        const filename = (img.src || '').split('/').pop();
+        const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
+        if (local && local !== DEFAULT_PHOTO_URL && img.src !== local) {
+          img.src = local;
+          return;
+        }
         if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
       };
     });

@@ -85,7 +85,10 @@
   ];
 
   const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
-  const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
+  const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
+  const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
+  const photoCacheGlobal = new Map();
+  let photoIndexPromiseGlobal = null;
 
   /* ===============================
    * Helpers DOM/UX
@@ -369,7 +372,7 @@
 
     const PHOTO_DIR = `${API}/imagens/fotos-conselheiros`;
     const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
-    const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
+    const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
     const photoCache = new Map();
     let photoIndexPromise = null;
     const photoAliases = new Map([
@@ -433,19 +436,27 @@
 
     async function loadPhotoIndex() {
       if (photoIndexPromise) return photoIndexPromise;
-      photoIndexPromise = fetch(PHOTO_MANIFEST_URL, { cache: 'no-cache' })
-        .then(res => (res.ok ? res.json() : []))
-        .then(list => {
-          const map = new Map();
-          if (!Array.isArray(list)) return map;
-          list.forEach((file) => {
-            if (typeof file !== 'string') return;
-            const key = normalizeNameKey(file);
-            if (key) map.set(key, file);
-          });
-          return map;
-        })
-        .catch(() => new Map());
+      photoIndexPromise = (async () => {
+        const map = new Map();
+        const tryFetch = async (url) => {
+          const res = await fetch(url, { cache: 'no-cache' });
+          if (!res.ok) return [];
+          const list = await res.json().catch(() => []);
+          return Array.isArray(list) ? list : [];
+        };
+        let list = [];
+        try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
+        if (!list.length) {
+          const localUrl = `${PHOTO_DIR_LOCAL}/manifest.json`;
+          try { list = await tryFetch(localUrl); } catch {}
+        }
+        list.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const key = normalizeNameKey(file);
+          if (key) map.set(key, file);
+        });
+        return map;
+      })();
       return photoIndexPromise;
     }
 
@@ -499,6 +510,12 @@
           img.alt = `Foto de ${nome}`;
           img.src = safeUrl;
           img.onerror = () => {
+            const file = (img.src || '').split('/').pop();
+            const local = file ? `${PHOTO_DIR_LOCAL}/${file}` : DEFAULT_PHOTO_URL;
+            if (local && local !== DEFAULT_PHOTO_URL && img.src !== local) {
+              img.src = local;
+              return;
+            }
             if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
           };
           card.appendChild(img);
@@ -621,6 +638,12 @@
 
     if (perfil === 'Conselheiro') {
       wireFotoInput();
+      if (!data.foto && data.nome) {
+        resolvePhotoUrlByName(data.nome).then((url) => {
+          const preview = document.getElementById('miFotoPreview');
+          if (preview && url) preview.src = url;
+        });
+      }
     }
   }
 
@@ -685,7 +708,7 @@
     email: 'E-mail',
     foto: 'Foto'
   };
-  const HIDDEN_KEYS = new Set(['_rowIndex']);
+  const HIDDEN_KEYS = new Set(['_rowIndex', 'foto']);
 
   function prettyLabel(key) {
     if (LABELS[key]) return LABELS[key];
@@ -702,6 +725,56 @@
     if (!v) return DEFAULT_PHOTO_URL;
     if (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/')) return v;
     return `${PHOTO_DIR}/${v}`;
+  }
+
+  const stripDiacriticsGlobal = (value) =>
+    String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  function normalizeNameKeyGlobal(value) {
+    return stripDiacriticsGlobal(value)
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  }
+
+  async function loadPhotoIndexGlobal() {
+    if (photoIndexPromiseGlobal) return photoIndexPromiseGlobal;
+    photoIndexPromiseGlobal = (async () => {
+      const map = new Map();
+      const tryFetch = async (url) => {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const list = await res.json().catch(() => []);
+        return Array.isArray(list) ? list : [];
+      };
+      let list = [];
+      try { list = await tryFetch(`${PHOTO_DIR}/manifest.json`); } catch {}
+      if (!list.length) {
+        try { list = await tryFetch(`${PHOTO_DIR_LOCAL}/manifest.json`); } catch {}
+      }
+      list.forEach((file) => {
+        if (typeof file !== 'string') return;
+        const key = normalizeNameKeyGlobal(file);
+        if (key) map.set(key, file);
+      });
+      return map;
+    })();
+    return photoIndexPromiseGlobal;
+  }
+
+  async function resolvePhotoUrlByName(nome) {
+    const key = normalizeNameKeyGlobal(nome);
+    if (!key) return null;
+    if (photoCacheGlobal.has(key)) return photoCacheGlobal.get(key);
+    const index = await loadPhotoIndexGlobal();
+    const filename = index.get(key);
+    const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
+    photoCacheGlobal.set(key, url);
+    return url;
   }
 
   function renderReviewValue(key, value) {
@@ -722,6 +795,16 @@
     const preview = document.getElementById('miFotoPreview');
     if (!input || !hidden || !preview) return;
 
+    preview.onerror = () => {
+      const filename = (preview.src || '').split('/').pop();
+      const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
+      if (local && local !== DEFAULT_PHOTO_URL && preview.src !== local) {
+        preview.src = local;
+        return;
+      }
+      if (preview.src !== DEFAULT_PHOTO_URL) preview.src = DEFAULT_PHOTO_URL;
+    };
+
     input.addEventListener('change', async () => {
       const file = input.files && input.files[0];
       if (!file) return;
@@ -733,6 +816,7 @@
         form.append('perfil', 'Conselheiro');
         form.append('nome', $('#nome')?.value || state.data?.nome || '');
         form.append('cpf', $('#cpf')?.value || state.data?.cpf || '');
+        if (hidden.value) form.append('filename', hidden.value);
 
         const res = await fetch(ROUTES.fotoUpload, { method: 'POST', body: form });
         if (!res.ok) {
@@ -745,6 +829,14 @@
 
         hidden.value = filename;
         preview.src = url;
+        preview.onerror = () => {
+          const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
+          if (preview.src !== local) {
+            preview.src = local;
+            return;
+          }
+          if (preview.src !== DEFAULT_PHOTO_URL) preview.src = DEFAULT_PHOTO_URL;
+        };
         state.data.foto = filename;
         if (state.step === 4) renderReview();
       } catch (e) {
@@ -765,11 +857,34 @@
       </div>`)
       .join('');
 
+    let fotoRow = '';
+    if (state.perfil === 'Conselheiro') {
+      const fotoUrl = d.foto ? getFotoUrl(d.foto) : DEFAULT_PHOTO_URL;
+      fotoRow = `
+        <div class="d-flex">
+          <div class="me-2 text-secondary" style="min-width:220px">Foto</div>
+          <div class="fw-semibold flex-grow-1">
+            <div class="mi-photo-preview">
+              <img id="miReviewFoto" src="${escapeHtml(fotoUrl)}" alt="Foto do conselheiro">
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     const editarLink = `<div class="mt-3">
       <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informações</button>
     </div>`;
 
-    $('#miReview').innerHTML = (rows || '<div class="text-muted">Sem dados para revisar.</div>') + editarLink;
+    const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
+    $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + editarLink;
+
+    if (state.perfil === 'Conselheiro' && !d.foto && d.nome) {
+      resolvePhotoUrlByName(d.nome).then((url) => {
+        const img = document.getElementById('miReviewFoto');
+        if (img && url) img.src = url;
+      });
+    }
 
     // Editar ? volta para passo 2
     $('#miEditarInfo')?.addEventListener('click', () => {
