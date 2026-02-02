@@ -112,6 +112,30 @@
 .vote-question-text{
   min-height:38px;
 }
+.vote-remove-question{
+  min-width:86px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#dc3545;
+  border-color:#dc3545;
+  color:#fff;
+}
+.vote-remove-question:hover,
+.vote-remove-question:focus{
+  background:#bb2d3b;
+  border-color:#bb2d3b;
+  color:#fff;
+}
+.vote-remove-question .bi{
+  color:inherit;
+}
+.vote-remove-option{
+  min-width:86px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
 .vote-option-input{
   display:flex;
   gap:8px;

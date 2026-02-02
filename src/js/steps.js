@@ -681,7 +681,7 @@
       .join('');
 
     const editarLink = `<div class="mt-3">
-      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informAções</button>
+      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informações</button>
     </div>`;
 
     $('#miReview').innerHTML = (rows || '<div class="text-muted">Sem dados para revisar.</div>') + editarLink;
