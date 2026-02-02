@@ -300,10 +300,15 @@
   function renderList(targetEl, pagerEl, data, status){
     if (!targetEl || !pagerEl) return;
 
-    // OrdenAção especial nos FINALIZADOS: MAIOR ? MENOR por Número do protocolo
     let toRender = Array.isArray(data) ? [...data] : [];
+    if (status === 'ativos') {
+      // Mostra apenas inscrições já feitas (com número) e ordena menor -> maior
+      toRender = toRender.filter(it => String(it?.numerodeinscricao || '').trim());
+      toRender.sort((a, b) => protoKey(a?.numerodeinscricao) - protoKey(b?.numerodeinscricao));
+    }
     if (status === 'finalizados') {
-      toRender.sort((a, b) => protoKey(b?.numerodeinscricao) - protoKey(a?.numerodeinscricao));
+      // Mantém apenas finalizados e ordena por nome (A->Z)
+      toRender.sort((a, b) => String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity: 'base' }));
     }
 
     targetEl.innerHTML = (toRender && toRender.length)
