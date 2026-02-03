@@ -696,7 +696,11 @@
     const resolveThemeIdFromVote = (vote) => {
       const raw = vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module
         || vote?.tema?.id || vote?.theme?.id || vote?.modulo?.id || vote?.module?.id;
-      if (raw) return raw;
+      if (raw) {
+        const norm = normalizeToken(raw);
+        const match = THEMES.find((t) => normalizeToken(t.id) === norm || normalizeToken(t.name) === norm);
+        if (match) return match.id;
+      }
       const title = normalizeToken(vote?.title || vote?.titulo || '');
       if (title.includes('membros rotativos')) return 'membros-rotativos';
       if (title.includes('membros cnrpps')) return 'membros-cnrpps';
