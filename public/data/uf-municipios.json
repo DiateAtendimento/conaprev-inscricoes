@@ -1,0 +1,31 @@
+{
+  "states": [
+    { "uf": "AC", "region": "NORTE", "cities": [] },
+    { "uf": "AL", "region": "NORDESTE", "cities": [] },
+    { "uf": "AP", "region": "NORTE", "cities": [] },
+    { "uf": "AM", "region": "NORTE", "cities": [] },
+    { "uf": "BA", "region": "NORDESTE", "cities": [] },
+    { "uf": "CE", "region": "NORDESTE", "cities": [] },
+    { "uf": "DF", "region": "CENTRO-OESTE", "cities": [] },
+    { "uf": "ES", "region": "SUDESTE", "cities": [] },
+    { "uf": "GO", "region": "CENTRO-OESTE", "cities": [] },
+    { "uf": "MA", "region": "NORDESTE", "cities": [] },
+    { "uf": "MT", "region": "CENTRO-OESTE", "cities": [] },
+    { "uf": "MS", "region": "CENTRO-OESTE", "cities": [] },
+    { "uf": "MG", "region": "SUDESTE", "cities": [] },
+    { "uf": "PA", "region": "NORTE", "cities": [] },
+    { "uf": "PB", "region": "NORDESTE", "cities": [] },
+    { "uf": "PR", "region": "SUL", "cities": [] },
+    { "uf": "PE", "region": "NORDESTE", "cities": [] },
+    { "uf": "PI", "region": "NORDESTE", "cities": [] },
+    { "uf": "RJ", "region": "SUDESTE", "cities": [] },
+    { "uf": "RN", "region": "NORDESTE", "cities": [] },
+    { "uf": "RS", "region": "SUL", "cities": [] },
+    { "uf": "RO", "region": "NORTE", "cities": [] },
+    { "uf": "RR", "region": "NORTE", "cities": [] },
+    { "uf": "SC", "region": "SUL", "cities": [] },
+    { "uf": "SP", "region": "SUDESTE", "cities": [] },
+    { "uf": "SE", "region": "NORDESTE", "cities": [] },
+    { "uf": "TO", "region": "NORTE", "cities": [] }
+  ]
+}

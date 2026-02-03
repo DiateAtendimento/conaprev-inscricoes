@@ -16,6 +16,77 @@
     { id: 'pro-gestao', name: 'PRÓ GESTÃO', title: 'Pró Gestão', icon: 'bi-patch-check' },
   ];
 
+  const REGION_IMAGE_DIR = '/imagens/membros-rotat-mun';
+  const REGION_IMAGE_DEFAULT = `${REGION_IMAGE_DIR}/PADRAO.svg`;
+  const CITY_DATA_URL = '/data/uf-municipios.json';
+
+  const REGION_LABELS = {
+    NORTE: 'Norte',
+    NORDESTE: 'Nordeste',
+    'CENTRO-OESTE': 'Centro Oeste',
+    SUDESTE: 'Sudeste',
+    SUL: 'Sul',
+  };
+
+  const UF_REGION = {
+    AC: 'NORTE',
+    AM: 'NORTE',
+    AP: 'NORTE',
+    PA: 'NORTE',
+    RO: 'NORTE',
+    RR: 'NORTE',
+    TO: 'NORTE',
+    AL: 'NORDESTE',
+    BA: 'NORDESTE',
+    CE: 'NORDESTE',
+    MA: 'NORDESTE',
+    PB: 'NORDESTE',
+    PE: 'NORDESTE',
+    PI: 'NORDESTE',
+    RN: 'NORDESTE',
+    SE: 'NORDESTE',
+    DF: 'CENTRO-OESTE',
+    GO: 'CENTRO-OESTE',
+    MS: 'CENTRO-OESTE',
+    MT: 'CENTRO-OESTE',
+    ES: 'SUDESTE',
+    MG: 'SUDESTE',
+    RJ: 'SUDESTE',
+    SP: 'SUDESTE',
+    PR: 'SUL',
+    RS: 'SUL',
+    SC: 'SUL',
+  };
+
+  const normalizeRegionKey = (value) => String(value || '')
+    .replace(/^regiao/i, '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '-');
+
+  const getRegionKeyByUf = (uf) => UF_REGION[String(uf || '').trim().toUpperCase()] || '';
+
+  const formatRegionLabel = (key) => {
+    if (!key) return '';
+    const label = REGION_LABELS[key] || key.replace(/-/g, ' ');
+    return `Região ${label}`;
+  };
+
+  const resolveRegionImageUrl = (key) =>
+    (key ? `${REGION_IMAGE_DIR}/REGIAO-${key}.png` : REGION_IMAGE_DEFAULT);
+
+  const simulateProGestao = (city, uf) => {
+    const seed = `${String(city || '').trim().toLowerCase()}|${String(uf || '').trim().toLowerCase()}`;
+    if (!seed.trim()) return 1;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i += 1) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    const level = Math.abs(hash) % 4;
+    return level + 1;
+  };
+
   const getAdminPass = () => sessionStorage.getItem(ADMIN_PASS_KEY) || '';
 
   const apiFetch = async (path, opts = {}) => {
@@ -580,12 +651,9 @@
     let isEdit = false;
     let isRotativos = themeId === 'membros-rotativos';
 
-    const FLAG_DIR = '/imagens/membros-rotat-mun';
-    const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
-    const DEFAULT_FLAG_URL = `${FLAG_DIR}/PADRAO.svg`;
-    const flagCache = new Map();
-    let flagIndexPromise = null;
-    let flagEntriesPromise = null;
+    const REGION_DIR = REGION_IMAGE_DIR;
+    const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
+    let cityDataPromise = null;
 
     const themeMeta = themeId ? THEMES.find((t) => t.id === themeId) : null;
     if (titleInput && themeMeta) {
@@ -614,66 +682,41 @@
       return `${c}|${u}`;
     };
 
-    const parseFlagFilename = (filename) => {
-      const base = String(filename || '').replace(/\.[^.]+$/, '');
-      const parts = base.split('-').filter(Boolean);
-      if (!parts.length) return null;
-      let ufIndex = -1;
-      for (let i = parts.length - 1; i >= 0; i -= 1) {
-        if (parts[i].length === 2) {
-          ufIndex = i;
-          break;
+    const loadCityData = async () => {
+      if (cityDataPromise) return cityDataPromise;
+      cityDataPromise = (async () => {
+        const res = await fetch(CITY_DATA_URL, { cache: 'no-cache' });
+        if (!res.ok) return { states: [] };
+        const data = await res.json().catch(() => null);
+        if (!data) return { states: [] };
+        if (Array.isArray(data.states)) return data;
+        if (Array.isArray(data)) return { states: data };
+        if (typeof data === 'object') {
+          const states = Object.entries(data).map(([uf, cities]) => ({
+            uf,
+            region: getRegionKeyByUf(uf),
+            cities: Array.isArray(cities) ? cities : [],
+          }));
+          return { states };
         }
-      }
-      if (ufIndex <= 0) return null;
-      const city = parts.slice(0, ufIndex).join(' ');
-      const uf = parts[ufIndex];
-      const key = normalizeCityUfKey(city, uf);
-      return key ? { key, filename } : null;
-    };
-
-    const loadFlagIndex = async () => {
-      if (flagIndexPromise) return flagIndexPromise;
-      flagIndexPromise = (async () => {
-        const map = new Map();
-        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
-        if (!res.ok) return map;
-        const list = await res.json().catch(() => []);
-        if (!Array.isArray(list)) return map;
-        list.forEach((file) => {
-          if (typeof file !== 'string') return;
-          const parsed = parseFlagFilename(file);
-          if (parsed?.key) map.set(parsed.key, file);
-        });
-        return map;
+        return { states: [] };
       })();
-      return flagIndexPromise;
+      return cityDataPromise;
     };
 
-    const loadFlagEntries = async () => {
-      if (flagEntriesPromise) return flagEntriesPromise;
-      flagEntriesPromise = (async () => {
-        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
-        if (!res.ok) return [];
-        const list = await res.json().catch(() => []);
-        if (!Array.isArray(list)) return [];
-        return list
-          .map(parseFlagFilename)
-          .filter(Boolean)
-          .map((entry) => entry);
-      })();
-      return flagEntriesPromise;
+    const getCityStates = async () => {
+      const data = await loadCityData();
+      return Array.isArray(data.states) ? data.states : [];
     };
 
-    const resolveFlagUrl = async (city, uf) => {
-      const key = normalizeCityUfKey(city, uf);
-      if (!key) return null;
-      if (flagCache.has(key)) return flagCache.get(key);
-      const index = await loadFlagIndex();
-      const filename = index.get(key);
-      const url = filename ? `${FLAG_DIR}/${filename}` : null;
-      flagCache.set(key, url);
-      return url;
+    const cityExistsInUf = async (city, uf) => {
+      const stateUf = String(uf || '').trim().toUpperCase();
+      if (!stateUf) return true;
+      const states = await getCityStates();
+      const state = states.find((s) => String(s.uf || '').trim().toUpperCase() === stateUf);
+      if (!state || !Array.isArray(state.cities) || !state.cities.length) return true;
+      const target = normalizeToken(city);
+      return state.cities.some((name) => normalizeToken(name) === target);
     };
 
     const parseCityUfFromText = (text) => {
@@ -735,34 +778,33 @@
       return { ...opt, id: opt?.id || createId('o'), text };
     };
 
+    const ensureUfDatalist = () => {
+      if (!isRotativos) return;
+      if (document.getElementById('voteUfDatalist')) return;
+      const list = document.createElement('datalist');
+      list.id = 'voteUfDatalist';
+      Object.keys(UF_REGION).forEach((uf) => {
+        const option = document.createElement('option');
+        option.value = uf;
+        list.appendChild(option);
+      });
+      document.body.appendChild(list);
+    };
+
     const ensureCityDatalist = async () => {
       if (!isRotativos) return;
       if (document.getElementById('voteCityDatalist')) return;
       const list = document.createElement('datalist');
       list.id = 'voteCityDatalist';
-      const entries = await loadFlagEntries();
-      const used = new Set();
-      entries.forEach((entry) => {
-        const filename = entry?.filename || '';
-        if (!filename) return;
-        const key = entry.key;
-        if (used.has(key)) return;
-        used.add(key);
-        const parts = filename.replace(/\.[^.]+$/, '').split('-').filter(Boolean);
-        let ufIndex = -1;
-        for (let i = parts.length - 1; i >= 0; i -= 1) {
-          if (parts[i].length === 2) {
-            ufIndex = i;
-            break;
-          }
-        }
-        if (ufIndex <= 0) return;
-        const city = parts.slice(0, ufIndex).join(' ');
-        const uf = parts[ufIndex];
-        const label = `${city.toUpperCase()} - ${uf.toUpperCase()}`;
-        const option = document.createElement('option');
-        option.value = label;
-        list.appendChild(option);
+      const states = await getCityStates();
+      states.forEach((state) => {
+        const uf = String(state.uf || '').trim().toUpperCase();
+        (state.cities || []).forEach((city) => {
+          const label = `${String(city || '').toUpperCase()} - ${uf}`;
+          const option = document.createElement('option');
+          option.value = label;
+          list.appendChild(option);
+        });
       });
       document.body.appendChild(list);
     };
@@ -780,10 +822,10 @@
       const img = preview?.querySelector('img');
       const placeholder = preview?.querySelector('.vote-flag-placeholder');
       if (!preview || !img) return;
-      const finalUrl = url || DEFAULT_FLAG_URL;
+      const finalUrl = url || DEFAULT_REGION_URL;
       if (finalUrl) {
         img.src = finalUrl;
-        img.alt = 'Bandeira selecionada';
+        img.alt = 'Região selecionada';
         preview.classList.remove('is-empty');
         placeholder?.classList.add('d-none');
       }
@@ -798,24 +840,28 @@
         else input.removeAttribute('disabled');
       });
       if (!confirmBtn) return;
-      if (confirmed) {
-        confirmBtn.textContent = 'Confirmado';
-        confirmBtn.classList.remove('btn-outline-success');
-        confirmBtn.classList.add('btn-success');
-      } else {
-        confirmBtn.textContent = 'Confirmar';
-        confirmBtn.classList.remove('btn-success');
-        confirmBtn.classList.add('btn-outline-success');
-      }
+      confirmBtn.setAttribute('aria-label', confirmed ? 'Confirmado' : 'Confirmar');
+      confirmBtn.classList.toggle('is-confirmed', confirmed);
     };
 
     const updateFlagFromInputs = async (row) => {
       const city = row.querySelector('.vote-option-city')?.value || '';
       const uf = row.querySelector('.vote-option-uf')?.value || '';
-      const url = await resolveFlagUrl(city, uf);
+      const regionKey = getRegionKeyByUf(uf);
+      const regionInput = row.querySelector('.vote-option-region');
+      const proInput = row.querySelector('.vote-option-progestao');
+      const regionLabel = formatRegionLabel(regionKey);
+      const proValue = (city || uf) ? simulateProGestao(city, uf) : '';
+
+      if (regionInput) regionInput.value = regionLabel;
+      if (proInput) proInput.value = proValue ? String(proValue) : '';
+
+      const url = resolveRegionImageUrl(regionKey);
       setFlagPreview(row, url || null);
-      row.dataset.flagFound = url ? '1' : '0';
-      return url;
+      row.dataset.flagFound = regionKey ? '1' : '0';
+      row.dataset.regionKey = regionKey;
+      row.dataset.proGestao = proValue ? String(proValue) : '';
+      return { regionKey, proGestao: proValue };
     };
 
     const createOptionEl = (option) => {
@@ -830,26 +876,41 @@
         return wrap;
       }
       const parsed = parseCityUfFromText(option.text);
+      const city = option.city || parsed.city || '';
+      const uf = option.uf || parsed.uf || '';
+      const regionKey = normalizeRegionKey(option.region) || getRegionKeyByUf(uf);
+      const regionLabel = formatRegionLabel(regionKey);
+      const proGestao = (option.proGestao || option.pro_gestao || option.proGestaoLevel)
+        ?? ((city || uf) ? simulateProGestao(city, uf) : '');
       wrap.innerHTML = `
         <div class="vote-flag-preview is-empty">
-          <img class="vote-flag-img" alt="Bandeira padrão" src="${DEFAULT_FLAG_URL}">
-          <span class="vote-flag-placeholder d-none">Sem bandeira</span>
+          <img class="vote-flag-img" alt="Região padrão" src="${DEFAULT_REGION_URL}">
+          <span class="vote-flag-placeholder d-none">Sem região</span>
         </div>
         <div class="vote-flag-fields">
+          <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2" list="voteUfDatalist">
           <input type="text" class="form-control vote-option-city" placeholder="Município" list="voteCityDatalist">
-          <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
+          <input type="text" class="form-control vote-option-region" placeholder="Região" readonly>
+          <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm vote-flag-search">Pesquisar</button>
-        <button type="button" class="btn btn-outline-success btn-sm vote-flag-confirm">Confirmar</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm vote-flag-clear">Limpar</button>
-        <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
+        <div class="vote-flag-actions" role="group" aria-label="Ações">
+          <button type="button" class="vote-flag-action is-search vote-flag-search" aria-label="Pesquisar"><i class="bi bi-search"></i></button>
+          <button type="button" class="vote-flag-action is-clear vote-flag-clear" aria-label="Limpar"><i class="bi bi-eraser"></i></button>
+          <button type="button" class="vote-flag-action is-confirm vote-flag-confirm" aria-label="Confirmar"><i class="bi bi-check-circle"></i></button>
+          <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
+        </div>
       `;
       const cityInput = wrap.querySelector('.vote-option-city');
       const ufInput = wrap.querySelector('.vote-option-uf');
-      if (cityInput) cityInput.value = parsed.city || '';
-      if (ufInput) ufInput.value = parsed.uf || '';
+      const regionInput = wrap.querySelector('.vote-option-region');
+      const proInput = wrap.querySelector('.vote-option-progestao');
+      if (cityInput) cityInput.value = city;
+      if (ufInput) ufInput.value = uf;
+      if (regionInput) regionInput.value = regionLabel;
+      if (proInput) proInput.value = proGestao ? String(proGestao) : '';
+      ensureUfDatalist();
       ensureCityDatalist();
-      if (parsed.city && parsed.uf) {
+      if (city && uf) {
         updateFlagFromInputs(wrap);
       }
       return wrap;
@@ -947,6 +1008,7 @@
           } else if (inferRotativosFromOptions(questions)) {
             isRotativos = true;
           }
+          ensureUfDatalist();
           await ensureCityDatalist();
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
@@ -980,6 +1042,7 @@
       updateNumbers();
     };
 
+    ensureUfDatalist();
     ensureCityDatalist();
     hydrate();
 
@@ -1011,11 +1074,17 @@
         if (!row) return;
         const cityInput = row.querySelector('.vote-option-city');
         const ufInput = row.querySelector('.vote-option-uf');
+        const regionInput = row.querySelector('.vote-option-region');
+        const proInput = row.querySelector('.vote-option-progestao');
         if (cityInput) cityInput.value = '';
         if (ufInput) ufInput.value = '';
+        if (regionInput) regionInput.value = '';
+        if (proInput) proInput.value = '';
         setConfirmState(row, false);
         setFlagPreview(row, null);
         row.dataset.flagFound = '0';
+        row.dataset.regionKey = '';
+        row.dataset.proGestao = '';
         return;
       }
 
@@ -1023,11 +1092,22 @@
       if (searchBtn) {
         const row = event.target.closest('.vote-option-input');
         if (!row) return;
-        const url = await updateFlagFromInputs(row);
-        if (!url) {
+        const city = row.querySelector('.vote-option-city')?.value || '';
+        const uf = row.querySelector('.vote-option-uf')?.value || '';
+        const ok = await cityExistsInUf(city, uf);
+        if (!ok) {
           await showUiModal({
             title: 'Aviso',
-            message: 'Bandeira não encontrada para este município/UF.',
+            message: 'Município não encontrado para esta UF.',
+            variant: 'warning',
+          });
+          return;
+        }
+        const { regionKey } = await updateFlagFromInputs(row);
+        if (!regionKey) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'UF inválida. Verifique e tente novamente.',
             variant: 'warning',
           });
         }
@@ -1048,11 +1128,20 @@
           });
           return;
         }
-        const url = await updateFlagFromInputs(row);
-        if (!url) {
+        const ok = await cityExistsInUf(city, uf);
+        if (!ok) {
           await showUiModal({
             title: 'Aviso',
-            message: 'Bandeira não encontrada para este município/UF.',
+            message: 'Município não encontrado para esta UF.',
+            variant: 'warning',
+          });
+          return;
+        }
+        const { regionKey } = await updateFlagFromInputs(row);
+        if (!regionKey) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'UF inválida. Verifique e tente novamente.',
             variant: 'warning',
           });
           return;
@@ -1118,6 +1207,7 @@
             ufInput.value = parsed.uf.toUpperCase();
           }
         }
+        updateFlagFromInputs(row);
       }
     });
 
@@ -1144,9 +1234,19 @@
           if (isRotativos) {
             const city = optEl.querySelector('.vote-option-city')?.value || '';
             const uf = optEl.querySelector('.vote-option-uf')?.value || '';
+            const regionKey = optEl.dataset.regionKey || getRegionKeyByUf(uf);
+            const proGestaoRaw = optEl.dataset.proGestao || optEl.querySelector('.vote-option-progestao')?.value || '';
+            const proGestao = parseInt(String(proGestaoRaw || '0'), 10) || simulateProGestao(city, uf);
             const text = formatCityUfText(city, uf);
-            if (!text) invalidRotativos = true;
-            return { id: optEl.dataset.oid || createId('o'), text };
+            if (!text || !regionKey) invalidRotativos = true;
+            return {
+              id: optEl.dataset.oid || createId('o'),
+              text,
+              city: city.trim(),
+              uf: uf.trim().toUpperCase(),
+              region: regionKey,
+              proGestao,
+            };
           }
           return {
             id: optEl.dataset.oid || createId('o'),
@@ -1156,7 +1256,7 @@
         if (isRotativos && invalidRotativos) {
           await showUiModal({
             title: 'Aviso',
-            message: 'Preencha município e UF em todas as opções.',
+            message: 'Preencha município e UF válidos em todas as opções.',
             variant: 'warning',
           });
           return;
@@ -1279,11 +1379,8 @@
     const photoCache = new Map();
     let photoIndexPromise = null;
 
-    const FLAG_DIR = '/imagens/membros-rotat-mun';
-    const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
-    const DEFAULT_FLAG_URL = `${FLAG_DIR}/PADRAO.svg`;
-    let flagIndexPromise = null;
-    let flagMetaPromise = null;
+    const REGION_DIR = REGION_IMAGE_DIR;
+    const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
 
     const stripDiacritics = (value) =>
       String(value || '')
@@ -1298,80 +1395,7 @@
         .replace(/\s+/g, ' ')
         .toLowerCase();
 
-    const normalizeCityUfKey = (city, uf) => {
-      const c = normalizeToken(city);
-      const u = normalizeToken(uf).replace(/\s+/g, '');
-      if (!c || !u) return '';
-      return `${c}|${u}`;
-    };
-
-    const parseFlagFilename = (filename) => {
-      const base = String(filename || '').replace(/\.[^.]+$/, '');
-      const parts = base.split('-').filter(Boolean);
-      if (!parts.length) return null;
-      let ufIndex = -1;
-      for (let i = parts.length - 1; i >= 0; i -= 1) {
-        if (parts[i].length === 2) {
-          ufIndex = i;
-          break;
-        }
-      }
-      if (ufIndex <= 0) return null;
-      const city = parts.slice(0, ufIndex).join(' ');
-      const uf = parts[ufIndex];
-      const regionParts = parts.slice(ufIndex + 1);
-      let region = '';
-      if (regionParts.length) {
-        const cleaned = regionParts[0] === 'REGIAO' ? regionParts.slice(1) : regionParts;
-        if (cleaned.length) region = cleaned.join(' ');
-      }
-      const key = normalizeCityUfKey(city, uf);
-      return key ? { key, filename, region } : null;
-    };
-
-    const loadFlagIndex = async () => {
-      if (flagIndexPromise) return flagIndexPromise;
-      flagIndexPromise = (async () => {
-        const map = new Map();
-        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
-        if (!res.ok) return map;
-        const list = await res.json().catch(() => []);
-        if (!Array.isArray(list)) return map;
-        list.forEach((file) => {
-          if (typeof file !== 'string') return;
-          const parsed = parseFlagFilename(file);
-          if (parsed?.key) map.set(parsed.key, parsed);
-        });
-        return map;
-      })();
-      return flagIndexPromise;
-    };
-
-    const loadFlagMeta = async () => {
-      if (flagMetaPromise) return flagMetaPromise;
-      flagMetaPromise = (async () => {
-        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
-        if (!res.ok) return [];
-        const list = await res.json().catch(() => []);
-        if (!Array.isArray(list)) return [];
-        return list
-          .map(parseFlagFilename)
-          .filter(Boolean);
-      })();
-      return flagMetaPromise;
-    };
-
-    const resolveFlagData = async (city, uf) => {
-      const key = normalizeCityUfKey(city, uf);
-      if (!key) return { url: DEFAULT_FLAG_URL, region: '' };
-      const index = await loadFlagIndex();
-      const entry = index.get(key);
-      if (!entry?.filename) return { url: DEFAULT_FLAG_URL, region: '' };
-      return {
-        url: `${FLAG_DIR}/${entry.filename}`,
-        region: entry.region || '',
-      };
-    };
+    // Região e Pró-Gestão vêm do UF/município já salvo na opção.
 
     const parseCityUfFromText = (text) => {
       const raw = String(text || '').trim();
@@ -1539,32 +1563,38 @@
       return res.json();
     };
 
-    const buildRotativosOptions = async (q) => {
+    const buildRotativosOptions = (q) => {
       const options = q.options || [];
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
-      const cards = await Promise.all(options.map(async (opt) => {
-        const parsed = parseCityUfFromText(opt.text || '');
-        const flagData = await resolveFlagData(parsed.city, parsed.uf);
-        const title = formatCityUfTitle(parsed.city, parsed.uf);
-        const region = formatRegionTitle(flagData.region);
-        const labelId = `${q.id}_${opt.id}`;
+      const cards = options.map((opt) => {
+        const base = (typeof opt === 'string') ? { text: opt } : opt;
+        const parsed = parseCityUfFromText(base?.text || '');
+        const city = base?.city || parsed.city || '';
+        const uf = base?.uf || parsed.uf || '';
+        const regionKey = normalizeRegionKey(base?.region) || getRegionKeyByUf(uf);
+        const proGestao = base?.proGestao || base?.pro_gestao || simulateProGestao(city, uf);
+        const title = formatCityUfTitle(city, uf);
+        const region = formatRegionLabel(regionKey);
+        const proLabel = proGestao ? `Pró-Gestão ${proGestao}` : '';
+        const labelId = `${q.id}_${base?.id || opt?.id}`;
         return `
           <label class="vote-flag-card" for="${labelId}">
             <span class="vote-flag-select">
-              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${opt.id}">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
             </span>
             <span class="vote-flag-media">
-              <img src="${flagData.url}" alt="Bandeira de ${title || 'município'}">
+              <img src="${resolveRegionImageUrl(regionKey)}" alt="Região de ${title || 'município'}">
             </span>
             <span class="vote-flag-text">
               <span class="vote-flag-name">${title || 'Município'}</span>
               ${region ? `<span class="vote-flag-region">${region}</span>` : ''}
+              ${proLabel ? `<span class="vote-flag-pro">${proLabel}</span>` : ''}
             </span>
           </label>
         `;
-      }));
+      });
       return `
         <div class="vote-flag-grid" style="--vote-cols:${cols}">
           ${cards.join('')}
@@ -1679,18 +1709,16 @@
         `;
       }).join('');
       if (currentThemeId === 'membros-rotativos') {
-        loadFlagMeta().then(() => {
-          const cards = Array.from(questionsWrap.querySelectorAll('.vote-public-rotativos'));
-          const jobs = cards.map(async (cardEl) => {
-            const qid = cardEl.dataset.qid;
-            const q = (currentVote.questions || []).find((item) => item.id === qid);
-            if (!q) return;
-            const grid = await buildRotativosOptions(q);
-            const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
-            if (wrap) wrap.innerHTML = grid;
-          });
-          Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
+        const cards = Array.from(questionsWrap.querySelectorAll('.vote-public-rotativos'));
+        const jobs = cards.map(async (cardEl) => {
+          const qid = cardEl.dataset.qid;
+          const q = (currentVote.questions || []).find((item) => item.id === qid);
+          if (!q) return;
+          const grid = await buildRotativosOptions(q);
+          const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
+          if (wrap) wrap.innerHTML = grid;
         });
+        Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
       }
       if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
       if (currentThemeId !== 'membros-rotativos') {

@@ -136,6 +136,9 @@
   align-items:center;
   justify-content:center;
 }
+.vote-option-input.is-flag-option .vote-remove-option{
+  min-width:auto;
+}
 .vote-option-input{
   display:flex;
   gap:8px;
@@ -179,15 +182,56 @@
   padding:6px;
 }
 .vote-flag-fields{
-  display:grid;
-  gap:6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
   min-width:240px;
   flex:1;
-  grid-template-columns: 1fr 90px;
   align-items:center;
 }
-.vote-option-input.is-flag-option .btn{
+.vote-option-uf{
+  width:90px;
+}
+.vote-option-city{
+  flex:1 1 180px;
+}
+.vote-option-region{
+  flex:1 1 180px;
+}
+.vote-option-progestao{
+  width:120px;
+}
+.vote-flag-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
   align-self:center;
+}
+.vote-flag-action{
+  border:none;
+  background:transparent;
+  padding:6px;
+  font-size:18px;
+  line-height:1;
+  cursor:pointer;
+}
+.vote-flag-action.is-search{
+  color:#0d6efd;
+}
+.vote-flag-action.is-clear{
+  color:#fd7e14;
+}
+.vote-flag-action.is-confirm{
+  color:#198754;
+}
+.vote-flag-action.is-confirm.is-confirmed{
+  color:#157347;
+}
+.vote-flag-action.is-remove{
+  color:#dc3545;
+}
+.vote-flag-action:disabled{
+  opacity:.5;
 }
 .vote-option-input.is-confirmed{
   background:#f8fafc;
@@ -272,6 +316,10 @@
 .vote-flag-region{
   font-size:13px;
   color:#64748b;
+}
+.vote-flag-pro{
+  font-size:13px;
+  color:#0f766e;
 }
 @media (max-width: 900px){
   .vote-flag-grid{
