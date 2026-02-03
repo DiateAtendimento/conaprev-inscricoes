@@ -461,7 +461,7 @@
     params.set('perfil', state.perfil);
     params.set('status', status);
     if (state.q) params.set('q', state.q);
-    if (status === 'ativos') params.set('hasProtocol', '1');
+    params.set('hasProtocol', '1');
     params.set('limit', String(state.limit));
     const offset = (status === 'ativos') ? state.ativosOffset : state.finalOffset;
     params.set('offset', String(offset));

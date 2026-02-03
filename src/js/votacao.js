@@ -578,6 +578,12 @@
 
     let currentVote = null;
     let isEdit = false;
+    let isRotativos = themeId === 'membros-rotativos';
+
+    const FLAG_DIR = '/imagens/membros-rotat-mun';
+    const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
+    const flagCache = new Map();
+    let flagIndexPromise = null;
 
     const themeMeta = themeId ? THEMES.find((t) => t.id === themeId) : null;
     if (titleInput && themeMeta) {
@@ -585,6 +591,93 @@
     }
 
     const createId = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+    const stripDiacritics = (value) =>
+      String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const normalizeToken = (value) =>
+      stripDiacritics(value)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+
+    const normalizeCityUfKey = (city, uf) => {
+      const c = normalizeToken(city);
+      const u = normalizeToken(uf).replace(/\s+/g, '');
+      if (!c || !u) return '';
+      return `${c}|${u}`;
+    };
+
+    const parseFlagFilename = (filename) => {
+      const base = String(filename || '').replace(/\.[^.]+$/, '');
+      const parts = base.split('-').filter(Boolean);
+      if (!parts.length) return null;
+      let ufIndex = -1;
+      for (let i = parts.length - 1; i >= 0; i -= 1) {
+        if (parts[i].length === 2) {
+          ufIndex = i;
+          break;
+        }
+      }
+      if (ufIndex <= 0) return null;
+      const city = parts.slice(0, ufIndex).join(' ');
+      const uf = parts[ufIndex];
+      const key = normalizeCityUfKey(city, uf);
+      return key ? { key, filename } : null;
+    };
+
+    const loadFlagIndex = async () => {
+      if (flagIndexPromise) return flagIndexPromise;
+      flagIndexPromise = (async () => {
+        const map = new Map();
+        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return map;
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return map;
+        list.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const parsed = parseFlagFilename(file);
+          if (parsed?.key) map.set(parsed.key, file);
+        });
+        return map;
+      })();
+      return flagIndexPromise;
+    };
+
+    const resolveFlagUrl = async (city, uf) => {
+      const key = normalizeCityUfKey(city, uf);
+      if (!key) return null;
+      if (flagCache.has(key)) return flagCache.get(key);
+      const index = await loadFlagIndex();
+      const filename = index.get(key);
+      const url = filename ? `${FLAG_DIR}/${filename}` : null;
+      flagCache.set(key, url);
+      return url;
+    };
+
+    const parseCityUfFromText = (text) => {
+      const raw = String(text || '').trim();
+      if (!raw) return { city: '', uf: '' };
+      const match = raw.match(/^(.+?)[\s\-\/]+([A-Za-z]{2})$/);
+      if (match) {
+        return { city: match[1].trim(), uf: match[2].trim() };
+      }
+      return { city: raw, uf: '' };
+    };
+
+    const formatCityUfText = (city, uf) => {
+      const c = String(city || '').trim();
+      const u = String(uf || '').trim();
+      if (!c || !u) return '';
+      return `${c.toUpperCase()} - ${u.toUpperCase()}`;
+    };
+
+    const resolveThemeIdFromVote = (vote) =>
+      vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module;
 
     const updateNumbers = () => {
       const cards = Array.from(builder.querySelectorAll('.vote-question-card'));
@@ -594,14 +687,85 @@
       });
     };
 
+    const setFlagPreview = (row, url) => {
+      const preview = row.querySelector('.vote-flag-preview');
+      const img = preview?.querySelector('img');
+      const placeholder = preview?.querySelector('.vote-flag-placeholder');
+      if (!preview || !img) return;
+      if (url) {
+        img.src = url;
+        img.alt = 'Bandeira selecionada';
+        preview.classList.remove('is-empty');
+        placeholder?.classList.add('d-none');
+      } else {
+        img.removeAttribute('src');
+        img.alt = 'Sem bandeira';
+        preview.classList.add('is-empty');
+        placeholder?.classList.remove('d-none');
+      }
+    };
+
+    const setConfirmState = (row, confirmed) => {
+      const confirmBtn = row.querySelector('.vote-flag-confirm');
+      const inputs = row.querySelectorAll('.vote-option-city, .vote-option-uf');
+      row.classList.toggle('is-confirmed', confirmed);
+      inputs.forEach((input) => {
+        if (confirmed) input.setAttribute('disabled', 'disabled');
+        else input.removeAttribute('disabled');
+      });
+      if (!confirmBtn) return;
+      if (confirmed) {
+        confirmBtn.textContent = 'Confirmado';
+        confirmBtn.classList.remove('btn-outline-success');
+        confirmBtn.classList.add('btn-success');
+      } else {
+        confirmBtn.textContent = 'Confirmar';
+        confirmBtn.classList.remove('btn-success');
+        confirmBtn.classList.add('btn-outline-success');
+      }
+    };
+
+    const updateFlagFromInputs = async (row) => {
+      const city = row.querySelector('.vote-option-city')?.value || '';
+      const uf = row.querySelector('.vote-option-uf')?.value || '';
+      const url = await resolveFlagUrl(city, uf);
+      setFlagPreview(row, url);
+      row.dataset.flagFound = url ? '1' : '0';
+      return url;
+    };
+
     const createOptionEl = (option) => {
       const wrap = document.createElement('div');
-      wrap.className = 'vote-option-input';
+      wrap.className = isRotativos ? 'vote-option-input is-flag-option' : 'vote-option-input';
       wrap.dataset.oid = option.id;
+      if (!isRotativos) {
+        wrap.innerHTML = `
+          <input type="text" class="form-control vote-option-text" placeholder="Opção" value="${option.text || ''}" />
+          <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
+        `;
+        return wrap;
+      }
+      const parsed = parseCityUfFromText(option.text);
       wrap.innerHTML = `
-        <input type="text" class="form-control vote-option-text" placeholder="Opção" value="${option.text || ''}" />
+        <div class="vote-flag-preview is-empty">
+          <img class="vote-flag-img" alt="Sem bandeira">
+          <span class="vote-flag-placeholder">Sem bandeira</span>
+        </div>
+        <div class="vote-flag-fields">
+          <input type="text" class="form-control vote-option-city" placeholder="Município">
+          <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm vote-flag-search">Pesquisar</button>
+        <button type="button" class="btn btn-outline-success btn-sm vote-flag-confirm">Confirmar</button>
         <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
       `;
+      const cityInput = wrap.querySelector('.vote-option-city');
+      const ufInput = wrap.querySelector('.vote-option-uf');
+      if (cityInput) cityInput.value = parsed.city || '';
+      if (ufInput) ufInput.value = parsed.uf || '';
+      if (parsed.city && parsed.uf) {
+        updateFlagFromInputs(wrap);
+      }
       return wrap;
     };
 
@@ -690,6 +854,8 @@
         if (res.ok) {
           currentVote = await res.json();
           isEdit = true;
+          const voteThemeId = resolveThemeIdFromVote(currentVote);
+          if (voteThemeId) isRotativos = voteThemeId === 'membros-rotativos';
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
           (currentVote.questions || []).forEach((q) => addQuestion(q.type || 'options'));
@@ -745,6 +911,49 @@
         optionsWrap.appendChild(createOptionEl(option));
       }
 
+      const searchBtn = event.target.closest('.vote-flag-search');
+      if (searchBtn) {
+        const row = event.target.closest('.vote-option-input');
+        if (!row) return;
+        const url = await updateFlagFromInputs(row);
+        if (!url) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Bandeira não encontrada para este município/UF.',
+            variant: 'warning',
+          });
+        }
+        return;
+      }
+
+      const confirmBtn = event.target.closest('.vote-flag-confirm');
+      if (confirmBtn) {
+        const row = event.target.closest('.vote-option-input');
+        if (!row) return;
+        const city = row.querySelector('.vote-option-city')?.value || '';
+        const uf = row.querySelector('.vote-option-uf')?.value || '';
+        if (!city.trim() || !uf.trim()) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Informe município e UF antes de confirmar.',
+            variant: 'warning',
+          });
+          return;
+        }
+        const url = await updateFlagFromInputs(row);
+        if (!url) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Bandeira não encontrada para este município/UF.',
+            variant: 'warning',
+          });
+          return;
+        }
+        const confirmed = !row.classList.contains('is-confirmed');
+        setConfirmState(row, confirmed);
+        return;
+      }
+
       const removeOptionBtn = event.target.closest('.vote-remove-option');
       if (removeOptionBtn) {
         const optionRow = event.target.closest('.vote-option-input');
@@ -783,6 +992,19 @@
       if (limits) limits.classList.toggle('d-none', !toggle.checked);
     });
 
+    builder.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.classList.contains('vote-option-uf')) {
+        target.value = target.value.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
+      }
+      if (target.classList.contains('vote-option-city') || target.classList.contains('vote-option-uf')) {
+        const row = target.closest('.vote-option-input');
+        if (!row) return;
+        if (row.classList.contains('is-confirmed')) setConfirmState(row, false);
+      }
+    });
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const questions = [];
@@ -801,10 +1023,28 @@
         }
 
         const optionEls = Array.from(card.querySelectorAll('.vote-option-input'));
-        const options = optionEls.map((optEl) => ({
-          id: optEl.dataset.oid || createId('o'),
-          text: (optEl.querySelector('.vote-option-text')?.value || '').trim(),
-        })).filter((opt) => opt.text);
+        let invalidRotativos = false;
+        const options = optionEls.map((optEl) => {
+          if (isRotativos) {
+            const city = optEl.querySelector('.vote-option-city')?.value || '';
+            const uf = optEl.querySelector('.vote-option-uf')?.value || '';
+            const text = formatCityUfText(city, uf);
+            if (!text) invalidRotativos = true;
+            return { id: optEl.dataset.oid || createId('o'), text };
+          }
+          return {
+            id: optEl.dataset.oid || createId('o'),
+            text: (optEl.querySelector('.vote-option-text')?.value || '').trim(),
+          };
+        }).filter((opt) => opt.text);
+        if (isRotativos && invalidRotativos) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Preencha município e UF em todas as opções.',
+            variant: 'warning',
+          });
+          return;
+        }
         if (options.length < 2) {
           await showUiModal({
             title: 'Aviso',
