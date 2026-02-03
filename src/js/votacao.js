@@ -1223,6 +1223,131 @@
     let currentVote = null;
     let startedAt = 0;
     let pollTimer = null;
+    let currentThemeId = null;
+
+    const FLAG_DIR = '/imagens/membros-rotat-mun';
+    const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
+    const DEFAULT_FLAG_URL = `${FLAG_DIR}/PADRAO.svg`;
+    let flagIndexPromise = null;
+    let flagMetaPromise = null;
+
+    const stripDiacritics = (value) =>
+      String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+    const normalizeToken = (value) =>
+      stripDiacritics(value)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+
+    const normalizeCityUfKey = (city, uf) => {
+      const c = normalizeToken(city);
+      const u = normalizeToken(uf).replace(/\s+/g, '');
+      if (!c || !u) return '';
+      return `${c}|${u}`;
+    };
+
+    const parseFlagFilename = (filename) => {
+      const base = String(filename || '').replace(/\.[^.]+$/, '');
+      const parts = base.split('-').filter(Boolean);
+      if (!parts.length) return null;
+      let ufIndex = -1;
+      for (let i = parts.length - 1; i >= 0; i -= 1) {
+        if (parts[i].length === 2) {
+          ufIndex = i;
+          break;
+        }
+      }
+      if (ufIndex <= 0) return null;
+      const city = parts.slice(0, ufIndex).join(' ');
+      const uf = parts[ufIndex];
+      const regionParts = parts.slice(ufIndex + 1);
+      let region = '';
+      if (regionParts.length) {
+        const cleaned = regionParts[0] === 'REGIAO' ? regionParts.slice(1) : regionParts;
+        if (cleaned.length) region = cleaned.join(' ');
+      }
+      const key = normalizeCityUfKey(city, uf);
+      return key ? { key, filename, region } : null;
+    };
+
+    const loadFlagIndex = async () => {
+      if (flagIndexPromise) return flagIndexPromise;
+      flagIndexPromise = (async () => {
+        const map = new Map();
+        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return map;
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return map;
+        list.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const parsed = parseFlagFilename(file);
+          if (parsed?.key) map.set(parsed.key, parsed);
+        });
+        return map;
+      })();
+      return flagIndexPromise;
+    };
+
+    const loadFlagMeta = async () => {
+      if (flagMetaPromise) return flagMetaPromise;
+      flagMetaPromise = (async () => {
+        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return [];
+        return list
+          .map(parseFlagFilename)
+          .filter(Boolean);
+      })();
+      return flagMetaPromise;
+    };
+
+    const resolveFlagData = async (city, uf) => {
+      const key = normalizeCityUfKey(city, uf);
+      if (!key) return { url: DEFAULT_FLAG_URL, region: '' };
+      const index = await loadFlagIndex();
+      const entry = index.get(key);
+      if (!entry?.filename) return { url: DEFAULT_FLAG_URL, region: '' };
+      return {
+        url: `${FLAG_DIR}/${entry.filename}`,
+        region: entry.region || '',
+      };
+    };
+
+    const parseCityUfFromText = (text) => {
+      const raw = String(text || '').trim();
+      if (!raw) return { city: '', uf: '' };
+      const match = raw.match(/^(.+?)[\s\-\/]+([A-Za-z]{2})$/);
+      if (match) {
+        return { city: match[1].trim(), uf: match[2].trim() };
+      }
+      return { city: raw, uf: '' };
+    };
+
+    const toTitleCase = (value) =>
+      String(value || '')
+        .toLowerCase()
+        .split(' ')
+        .filter(Boolean)
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join(' ');
+
+    const formatCityUfTitle = (city, uf) => {
+      const c = toTitleCase(city);
+      const u = String(uf || '').toUpperCase();
+      if (!c || !u) return c || u || '';
+      return `${c} / ${u}`;
+    };
+
+    const formatRegionTitle = (region) => {
+      if (!region) return '';
+      return `Região ${toTitleCase(region)}`;
+    };
 
     const setUserMenu = (user) => {
       if (!userMenu || !userName) return;
@@ -1277,6 +1402,39 @@
       return res.json();
     };
 
+    const buildRotativosOptions = async (q) => {
+      const options = q.options || [];
+      const isMulti = !!q.allowMultiple;
+      const inputType = isMulti ? 'checkbox' : 'radio';
+      const cols = Math.min(4, Math.max(1, options.length));
+      const cards = await Promise.all(options.map(async (opt) => {
+        const parsed = parseCityUfFromText(opt.text || '');
+        const flagData = await resolveFlagData(parsed.city, parsed.uf);
+        const title = formatCityUfTitle(parsed.city, parsed.uf);
+        const region = formatRegionTitle(flagData.region);
+        const labelId = `${q.id}_${opt.id}`;
+        return `
+          <label class="vote-flag-card" for="${labelId}">
+            <span class="vote-flag-select">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${opt.id}">
+            </span>
+            <span class="vote-flag-media">
+              <img src="${flagData.url}" alt="Bandeira de ${title || 'município'}">
+            </span>
+            <span class="vote-flag-text">
+              <span class="vote-flag-name">${title || 'Município'}</span>
+              ${region ? `<span class="vote-flag-region">${region}</span>` : ''}
+            </span>
+          </label>
+        `;
+      }));
+      return `
+        <div class="vote-flag-grid" style="--vote-cols:${cols}">
+          ${cards.join('')}
+        </div>
+      `;
+    };
+
     const startPolling = () => {
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(async () => {
@@ -1290,6 +1448,22 @@
         title: 'Aviso',
         message: msg || 'Desculpe! Ação não permitida.',
         variant: 'denied',
+      });
+    };
+
+    const applyPreviousAnswers = (answers) => {
+      if (!Array.isArray(answers)) return;
+      answers.forEach((ans) => {
+        if (ans.type === 'text') {
+          const area = questionsWrap.querySelector(`textarea[name="${ans.questionId}"]`);
+          if (area) area.value = ans.value || '';
+          return;
+        }
+        const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+        ids.forEach((oid) => {
+          const input = document.getElementById(`${ans.questionId}_${oid}`);
+          if (input) input.checked = true;
+        });
       });
     };
 
@@ -1331,6 +1505,7 @@
         return;
       }
       const themeId = card.dataset.theme;
+      currentThemeId = themeId;
       const stop = startLoading('Carregando questionário...');
       const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
       stop();
@@ -1339,6 +1514,7 @@
       if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       currentVote = data.vote;
       startedAt = Date.now();
+      const pendingAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
       formWrap?.classList.remove('d-none');
       successMsg?.classList.add('d-none');
       questionsWrap.innerHTML = (currentVote.questions || []).map((q, index) => {
@@ -1350,35 +1526,38 @@
             </div>
           `;
         }
+        const isRotativos = currentThemeId === 'membros-rotativos';
         const isMulti = !!q.allowMultiple;
-        const inputType = isMulti ? 'checkbox' : 'radio';
-        const options = (q.options || []).map((opt) => `
+        const options = isRotativos ? '' : (q.options || []).map((opt) => `
           <div class="form-check">
-            <input class="form-check-input" type="${inputType}" name="${q.id}" id="${q.id}_${opt.id}" value="${opt.id}">
-            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Opçãoo'}</label>
+            <input class="form-check-input" type="${isMulti ? 'checkbox' : 'radio'}" name="${q.id}" id="${q.id}_${opt.id}" value="${opt.id}">
+            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Opção'}</label>
           </div>
         `).join('');
         return `
-          <div class="card vote-public-card p-3" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
+          <div class="card vote-public-card p-3 ${isRotativos ? 'vote-public-rotativos' : ''}" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
             <div class="fw-semibold mb-2">${index + 1}. ${q.text || 'Pergunta'}</div>
-            <div class="vstack gap-2">${options}</div>
+            ${isRotativos ? `<div class="vote-flag-grid-wrap">${options}</div>` : `<div class="vstack gap-2">${options}</div>`}
           </div>
         `;
       }).join('');
-      if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
-      if (Array.isArray(data.previousAnswers)) {
-        data.previousAnswers.forEach((ans) => {
-          if (ans.type === 'text') {
-            const area = questionsWrap.querySelector(`textarea[name="${ans.questionId}"]`);
-            if (area) area.value = ans.value || '';
-            return;
-          }
-          const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
-          ids.forEach((oid) => {
-            const input = document.getElementById(`${ans.questionId}_${oid}`);
-            if (input) input.checked = true;
+      if (currentThemeId === 'membros-rotativos') {
+        loadFlagMeta().then(() => {
+          const cards = Array.from(questionsWrap.querySelectorAll('.vote-public-rotativos'));
+          const jobs = cards.map(async (cardEl) => {
+            const qid = cardEl.dataset.qid;
+            const q = (currentVote.questions || []).find((item) => item.id === qid);
+            if (!q) return;
+            const grid = await buildRotativosOptions(q);
+            const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
+            if (wrap) wrap.innerHTML = grid;
           });
+          Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
         });
+      }
+      if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
+      if (currentThemeId !== 'membros-rotativos') {
+        applyPreviousAnswers(pendingAnswers);
       }
     });
 
