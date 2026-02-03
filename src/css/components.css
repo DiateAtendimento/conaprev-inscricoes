@@ -414,11 +414,11 @@ body.vote-admin-page::after{
   margin:20px auto 0;
 }
 .vote-public-hero{
-  background:linear-gradient(135deg, rgba(11,77,73,.18), rgba(8,145,178,.12));
+  background:linear-gradient(135deg, rgba(11,77,73,.1), rgba(255,183,3,.15));
   color:#0f172a;
   border-radius:18px;
   padding:18px 22px;
-  border:1px solid rgba(11,77,73,.2);
+  border:1px solid rgba(11,77,73,.15);
 }
 .vote-public-hero h2{
   font-weight:800;
@@ -434,8 +434,9 @@ body.vote-admin-page::after{
   gap:16px;
   padding:16px 20px;
   border-radius:16px;
-  background:linear-gradient(135deg, rgba(11,77,73,.22), rgba(255,204,0,.18));
-  border:1px solid rgba(11,77,73,.2);
+  background:linear-gradient(135deg, rgba(11,77,73,.1), rgba(255,183,3,.15));
+  border:1px solid rgba(11,77,73,.15);
+  color:#0f172a;
 }
 .vote-form-header h2{
   font-weight:800;
