@@ -694,7 +694,8 @@
     };
 
     const resolveThemeIdFromVote = (vote) => {
-      const raw = vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module;
+      const raw = vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module
+        || vote?.tema?.id || vote?.theme?.id || vote?.modulo?.id || vote?.module?.id;
       if (raw) return raw;
       const title = normalizeToken(vote?.title || vote?.titulo || '');
       if (title.includes('membros rotativos')) return 'membros-rotativos';
@@ -705,6 +706,9 @@
       return '';
     };
 
+    const getQuestionsFromVote = (vote) =>
+      vote?.questions || vote?.perguntas || vote?.questoes || [];
+
     const inferRotativosFromOptions = (questions = []) => {
       const isCityUf = (text) => {
         const raw = String(text || '').trim();
@@ -712,7 +716,7 @@
         return /[A-Za-z].+[\-\/]\s*[A-Za-z]{2}\b/.test(raw);
       };
       return (questions || []).some((q) =>
-        (q?.options || []).some((opt) => {
+        (q?.options || q?.opcoes || q?.alternativas || []).some((opt) => {
           const txt = (typeof opt === 'string') ? opt : opt?.text;
           return isCityUf(txt);
         })
@@ -932,27 +936,29 @@
         if (res.ok) {
           currentVote = await res.json();
           isEdit = true;
+          const questions = getQuestionsFromVote(currentVote);
           const voteThemeId = resolveThemeIdFromVote(currentVote);
           if (voteThemeId) {
             isRotativos = voteThemeId === 'membros-rotativos';
-          } else if (inferRotativosFromOptions(currentVote?.questions)) {
+          } else if (inferRotativosFromOptions(questions)) {
             isRotativos = true;
           }
           await ensureCityDatalist();
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
-          (currentVote.questions || []).forEach((q) => addQuestion(q.type || 'options'));
+          (questions || []).forEach((q) => addQuestion(q.type || q.tipo || 'options'));
           const cards = Array.from(builder.querySelectorAll('.vote-question-card'));
           cards.forEach((card, idx) => {
-            const q = currentVote.questions[idx];
+            const q = (questions || [])[idx];
             if (!q) return;
-            card.dataset.qid = q.id;
-            card.dataset.type = q.type || 'options';
-            card.querySelector('.vote-question-text').value = q.text || '';
-            if (q.type === 'options') {
+            card.dataset.qid = q.id || createId('q');
+            card.dataset.type = q.type || q.tipo || 'options';
+            card.querySelector('.vote-question-text').value = q.text || q.titulo || '';
+            if ((q.type || q.tipo || 'options') === 'options') {
               const optionsWrap = card.querySelector('.vote-options');
               optionsWrap.innerHTML = '';
-              (q.options || []).forEach((opt) => optionsWrap.appendChild(createOptionEl(normalizeOption(opt))));
+              const rawOptions = q.options || q.opcoes || q.alternativas || [];
+              rawOptions.forEach((opt) => optionsWrap.appendChild(createOptionEl(normalizeOption(opt))));
               const toggle = card.querySelector('.vote-multi-toggle');
               const limits = card.querySelector('.vote-multi-limits');
               const limitType = card.querySelector('.vote-limit-type');
