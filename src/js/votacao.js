@@ -712,8 +712,19 @@
         return /[A-Za-z].+[\-\/]\s*[A-Za-z]{2}\b/.test(raw);
       };
       return (questions || []).some((q) =>
-        (q?.options || []).some((opt) => isCityUf(opt?.text))
+        (q?.options || []).some((opt) => {
+          const txt = (typeof opt === 'string') ? opt : opt?.text;
+          return isCityUf(txt);
+        })
       );
+    };
+
+    const normalizeOption = (opt) => {
+      if (typeof opt === 'string') {
+        return { id: createId('o'), text: opt };
+      }
+      const text = opt?.text ?? opt?.label ?? '';
+      return { ...opt, id: opt?.id || createId('o'), text };
     };
 
     const ensureCityDatalist = async () => {
@@ -927,6 +938,7 @@
           } else if (inferRotativosFromOptions(currentVote?.questions)) {
             isRotativos = true;
           }
+          await ensureCityDatalist();
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
           (currentVote.questions || []).forEach((q) => addQuestion(q.type || 'options'));
@@ -940,7 +952,7 @@
             if (q.type === 'options') {
               const optionsWrap = card.querySelector('.vote-options');
               optionsWrap.innerHTML = '';
-              (q.options || []).forEach((opt) => optionsWrap.appendChild(createOptionEl(opt)));
+              (q.options || []).forEach((opt) => optionsWrap.appendChild(createOptionEl(normalizeOption(opt))));
               const toggle = card.querySelector('.vote-multi-toggle');
               const limits = card.querySelector('.vote-multi-limits');
               const limitType = card.querySelector('.vote-limit-type');
