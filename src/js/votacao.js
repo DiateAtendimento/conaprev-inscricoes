@@ -693,8 +693,17 @@
       return `${c.toUpperCase()} - ${u.toUpperCase()}`;
     };
 
-    const resolveThemeIdFromVote = (vote) =>
-      vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module;
+    const resolveThemeIdFromVote = (vote) => {
+      const raw = vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module;
+      if (raw) return raw;
+      const title = normalizeToken(vote?.title || vote?.titulo || '');
+      if (title.includes('membros rotativos')) return 'membros-rotativos';
+      if (title.includes('membros cnrpps')) return 'membros-cnrpps';
+      if (title.includes('comite da compensacao')) return 'comite-compensacao';
+      if (title.includes('certificacao profissional')) return 'certificacao-profissional';
+      if (title.includes('pro gestao')) return 'pro-gestao';
+      return '';
+    };
 
     const ensureCityDatalist = async () => {
       if (!isRotativos) return;
@@ -1210,6 +1219,8 @@
     const userMenu = document.getElementById('voteUserMenu');
     const userName = document.getElementById('voteUserName');
     const userLogout = document.getElementById('voteUserLogout');
+    const userAvatar = document.getElementById('voteUserAvatar');
+    const userAvatarWrap = userAvatar?.closest('.vote-user-avatar');
     const deniedModalEl = document.getElementById('voteDeniedModal');
     const deniedBody = document.getElementById('voteDeniedBody');
     const unavailableModalEl = document.getElementById('voteUnavailableModal');
@@ -1224,6 +1235,12 @@
     let startedAt = 0;
     let pollTimer = null;
     let currentThemeId = null;
+
+    const PHOTO_DIR = '/imagens/fotos-conselheiros';
+    const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
+    const DEFAULT_USER_PHOTO = `${PHOTO_DIR}/padrao.svg`;
+    const photoCache = new Map();
+    let photoIndexPromise = null;
 
     const FLAG_DIR = '/imagens/membros-rotat-mun';
     const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
@@ -1349,15 +1366,87 @@
       return `Região ${toTitleCase(region)}`;
     };
 
+    const normalizeNameKey = (value) =>
+      stripDiacritics(value)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+
+    const loadPhotoIndex = async () => {
+      if (photoIndexPromise) return photoIndexPromise;
+      photoIndexPromise = (async () => {
+        const map = new Map();
+        const res = await fetch(PHOTO_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return map;
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return map;
+        list.forEach((file) => {
+          if (typeof file !== 'string') return;
+          const key = normalizeNameKey(file);
+          if (key) map.set(key, file);
+        });
+        return map;
+      })();
+      return photoIndexPromise;
+    };
+
+    const resolvePhotoUrlByName = async (name) => {
+      const key = normalizeNameKey(name);
+      if (!key) return DEFAULT_USER_PHOTO;
+      if (photoCache.has(key)) return photoCache.get(key);
+      const index = await loadPhotoIndex();
+      const filename = index.get(key);
+      const safeName = filename ? encodeURIComponent(filename) : '';
+      const url = filename ? `${PHOTO_DIR}/${safeName}` : DEFAULT_USER_PHOTO;
+      photoCache.set(key, url);
+      return url;
+    };
+
+    const resolveUserPhoto = async (user) => {
+      if (!user) return DEFAULT_USER_PHOTO;
+      const direct = user.foto || user.photo || user.photoUrl || user.fotoUrl;
+      if (direct) {
+        const raw = String(direct).trim();
+        if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) return raw;
+        return `${PHOTO_DIR}/${encodeURIComponent(raw)}`;
+      }
+      if (user.nome) return resolvePhotoUrlByName(user.nome);
+      return DEFAULT_USER_PHOTO;
+    };
+
+    const setUserAvatar = (user) => {
+      if (!userAvatar || !userAvatarWrap) return;
+      if (!user) {
+        userAvatar.removeAttribute('src');
+        userAvatarWrap.classList.add('is-fallback');
+        return;
+      }
+      resolveUserPhoto(user).then((url) => {
+        userAvatar.src = url || DEFAULT_USER_PHOTO;
+        userAvatarWrap.classList.remove('is-fallback');
+      });
+      userAvatar.onerror = () => {
+        if (userAvatar.src !== DEFAULT_USER_PHOTO) {
+          userAvatar.src = DEFAULT_USER_PHOTO;
+          return;
+        }
+        userAvatarWrap.classList.add('is-fallback');
+      };
+    };
+
     const setUserMenu = (user) => {
       if (!userMenu || !userName) return;
       if (!user) {
         userMenu.classList.add('d-none');
         userName.textContent = '';
+        setUserAvatar(null);
         return;
       }
       userName.textContent = user.nome || 'Usuário';
       userMenu.classList.remove('d-none');
+      setUserAvatar(user);
     };
 
     const formatCpf = (value) => {
