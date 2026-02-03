@@ -181,8 +181,10 @@
 .vote-flag-fields{
   display:grid;
   gap:6px;
-  min-width:220px;
+  min-width:240px;
   flex:1;
+  grid-template-columns: 1fr 90px;
+  align-items:center;
 }
 .vote-option-input.is-flag-option .btn{
   align-self:center;

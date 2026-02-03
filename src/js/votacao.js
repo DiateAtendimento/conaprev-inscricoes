@@ -582,8 +582,10 @@
 
     const FLAG_DIR = '/imagens/membros-rotat-mun';
     const FLAG_MANIFEST_URL = `${FLAG_DIR}/manifest.json`;
+    const DEFAULT_FLAG_URL = `${FLAG_DIR}/PADRAO.svg`;
     const flagCache = new Map();
     let flagIndexPromise = null;
+    let flagEntriesPromise = null;
 
     const themeMeta = themeId ? THEMES.find((t) => t.id === themeId) : null;
     if (titleInput && themeMeta) {
@@ -648,6 +650,21 @@
       return flagIndexPromise;
     };
 
+    const loadFlagEntries = async () => {
+      if (flagEntriesPromise) return flagEntriesPromise;
+      flagEntriesPromise = (async () => {
+        const res = await fetch(FLAG_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return [];
+        return list
+          .map(parseFlagFilename)
+          .filter(Boolean)
+          .map((entry) => entry);
+      })();
+      return flagEntriesPromise;
+    };
+
     const resolveFlagUrl = async (city, uf) => {
       const key = normalizeCityUfKey(city, uf);
       if (!key) return null;
@@ -679,6 +696,38 @@
     const resolveThemeIdFromVote = (vote) =>
       vote?.tema || vote?.themeId || vote?.theme || vote?.modulo || vote?.module;
 
+    const ensureCityDatalist = async () => {
+      if (!isRotativos) return;
+      if (document.getElementById('voteCityDatalist')) return;
+      const list = document.createElement('datalist');
+      list.id = 'voteCityDatalist';
+      const entries = await loadFlagEntries();
+      const used = new Set();
+      entries.forEach((entry) => {
+        const filename = entry?.filename || '';
+        if (!filename) return;
+        const key = entry.key;
+        if (used.has(key)) return;
+        used.add(key);
+        const parts = filename.replace(/\.[^.]+$/, '').split('-').filter(Boolean);
+        let ufIndex = -1;
+        for (let i = parts.length - 1; i >= 0; i -= 1) {
+          if (parts[i].length === 2) {
+            ufIndex = i;
+            break;
+          }
+        }
+        if (ufIndex <= 0) return;
+        const city = parts.slice(0, ufIndex).join(' ');
+        const uf = parts[ufIndex];
+        const label = `${city.toUpperCase()} - ${uf.toUpperCase()}`;
+        const option = document.createElement('option');
+        option.value = label;
+        list.appendChild(option);
+      });
+      document.body.appendChild(list);
+    };
+
     const updateNumbers = () => {
       const cards = Array.from(builder.querySelectorAll('.vote-question-card'));
       cards.forEach((card, idx) => {
@@ -692,16 +741,12 @@
       const img = preview?.querySelector('img');
       const placeholder = preview?.querySelector('.vote-flag-placeholder');
       if (!preview || !img) return;
-      if (url) {
-        img.src = url;
+      const finalUrl = url || DEFAULT_FLAG_URL;
+      if (finalUrl) {
+        img.src = finalUrl;
         img.alt = 'Bandeira selecionada';
         preview.classList.remove('is-empty');
         placeholder?.classList.add('d-none');
-      } else {
-        img.removeAttribute('src');
-        img.alt = 'Sem bandeira';
-        preview.classList.add('is-empty');
-        placeholder?.classList.remove('d-none');
       }
     };
 
@@ -729,7 +774,7 @@
       const city = row.querySelector('.vote-option-city')?.value || '';
       const uf = row.querySelector('.vote-option-uf')?.value || '';
       const url = await resolveFlagUrl(city, uf);
-      setFlagPreview(row, url);
+      setFlagPreview(row, url || null);
       row.dataset.flagFound = url ? '1' : '0';
       return url;
     };
@@ -748,21 +793,23 @@
       const parsed = parseCityUfFromText(option.text);
       wrap.innerHTML = `
         <div class="vote-flag-preview is-empty">
-          <img class="vote-flag-img" alt="Sem bandeira">
-          <span class="vote-flag-placeholder">Sem bandeira</span>
+          <img class="vote-flag-img" alt="Bandeira padrão" src="${DEFAULT_FLAG_URL}">
+          <span class="vote-flag-placeholder d-none">Sem bandeira</span>
         </div>
         <div class="vote-flag-fields">
-          <input type="text" class="form-control vote-option-city" placeholder="Município">
+          <input type="text" class="form-control vote-option-city" placeholder="Município" list="voteCityDatalist">
           <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
         </div>
         <button type="button" class="btn btn-outline-primary btn-sm vote-flag-search">Pesquisar</button>
         <button type="button" class="btn btn-outline-success btn-sm vote-flag-confirm">Confirmar</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm vote-flag-clear">Limpar</button>
         <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
       `;
       const cityInput = wrap.querySelector('.vote-option-city');
       const ufInput = wrap.querySelector('.vote-option-uf');
       if (cityInput) cityInput.value = parsed.city || '';
       if (ufInput) ufInput.value = parsed.uf || '';
+      ensureCityDatalist();
       if (parsed.city && parsed.uf) {
         updateFlagFromInputs(wrap);
       }
@@ -887,6 +934,7 @@
       updateNumbers();
     };
 
+    ensureCityDatalist();
     hydrate();
 
     addQuestionBtn?.addEventListener('click', () => {
@@ -909,6 +957,20 @@
         if (!optionsWrap) return;
         const option = { id: createId('o'), text: '' };
         optionsWrap.appendChild(createOptionEl(option));
+      }
+
+      const clearBtn = event.target.closest('.vote-flag-clear');
+      if (clearBtn) {
+        const row = event.target.closest('.vote-option-input');
+        if (!row) return;
+        const cityInput = row.querySelector('.vote-option-city');
+        const ufInput = row.querySelector('.vote-option-uf');
+        if (cityInput) cityInput.value = '';
+        if (ufInput) ufInput.value = '';
+        setConfirmState(row, false);
+        setFlagPreview(row, null);
+        row.dataset.flagFound = '0';
+        return;
       }
 
       const searchBtn = event.target.closest('.vote-flag-search');
@@ -1002,6 +1064,14 @@
         const row = target.closest('.vote-option-input');
         if (!row) return;
         if (row.classList.contains('is-confirmed')) setConfirmState(row, false);
+        if (target.classList.contains('vote-option-city')) {
+          const ufInput = row.querySelector('.vote-option-uf');
+          const parsed = parseCityUfFromText(target.value);
+          if (parsed?.uf && ufInput) {
+            target.value = parsed.city || '';
+            ufInput.value = parsed.uf.toUpperCase();
+          }
+        }
       }
     });
 
