@@ -705,6 +705,17 @@
       return '';
     };
 
+    const inferRotativosFromOptions = (questions = []) => {
+      const isCityUf = (text) => {
+        const raw = String(text || '').trim();
+        if (!raw) return false;
+        return /[A-Za-z].+[\-\/]\s*[A-Za-z]{2}\b/.test(raw);
+      };
+      return (questions || []).some((q) =>
+        (q?.options || []).some((opt) => isCityUf(opt?.text))
+      );
+    };
+
     const ensureCityDatalist = async () => {
       if (!isRotativos) return;
       if (document.getElementById('voteCityDatalist')) return;
@@ -911,7 +922,11 @@
           currentVote = await res.json();
           isEdit = true;
           const voteThemeId = resolveThemeIdFromVote(currentVote);
-          if (voteThemeId) isRotativos = voteThemeId === 'membros-rotativos';
+          if (voteThemeId) {
+            isRotativos = voteThemeId === 'membros-rotativos';
+          } else if (inferRotativosFromOptions(currentVote?.questions)) {
+            isRotativos = true;
+          }
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
           (currentVote.questions || []).forEach((q) => addQuestion(q.type || 'options'));
@@ -1397,7 +1412,18 @@
       if (!key) return DEFAULT_USER_PHOTO;
       if (photoCache.has(key)) return photoCache.get(key);
       const index = await loadPhotoIndex();
-      const filename = index.get(key);
+      let filename = index.get(key);
+      if (!filename) {
+        const nameTokens = new Set(key.split(' ').filter(Boolean));
+        let bestKey = '';
+        index.forEach((_file, idxKey) => {
+          const idxTokens = idxKey.split(' ').filter(Boolean);
+          if (idxTokens.length < 2) return;
+          const allPresent = idxTokens.every((t) => nameTokens.has(t));
+          if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
+        });
+        if (bestKey) filename = index.get(bestKey);
+      }
       const safeName = filename ? encodeURIComponent(filename) : '';
       const url = filename ? `${PHOTO_DIR}/${safeName}` : DEFAULT_USER_PHOTO;
       photoCache.set(key, url);
