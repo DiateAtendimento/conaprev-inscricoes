@@ -390,43 +390,6 @@ body.vote-admin-page.vote-module-bg::before{
   box-shadow:0 24px 60px rgba(15,23,42,.12);
   border:1px solid rgba(15,23,42,.08);
 }
-.vote-admin-header{
-  width:100%;
-  padding:22px 20px 10px;
-}
-.vote-admin-header-inner{
-  width:min(1100px, 100%);
-  margin:0 auto;
-  padding:14px 18px;
-  border-radius:18px;
-  background:rgba(255,255,255,.75);
-  border:1px solid rgba(15,23,42,.08);
-  backdrop-filter: blur(8px);
-  box-shadow:0 14px 30px rgba(15,23,42,.10);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-}
-.vote-admin-brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.vote-admin-brand img{
-  width:52px;
-  height:52px;
-  object-fit:contain;
-}
-.vote-admin-brand-title{
-  font-weight:800;
-  font-size:18px;
-  color:#0f172a;
-}
-.vote-admin-brand-sub{
-  font-size:13px;
-  color:#475569;
-}
 .vote-admin-footer{
   width:100%;
   padding:10px 20px 28px;
@@ -440,23 +403,15 @@ body.vote-admin-page.vote-module-bg::before{
   border:1px solid rgba(15,23,42,.08);
   backdrop-filter: blur(8px);
   box-shadow:0 14px 30px rgba(15,23,42,.08);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-}
-.vote-footer-label{
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:.4px;
-  color:#64748b;
-  text-transform:uppercase;
+  display:block;
 }
 .vote-footer-logos{
   display:flex;
   align-items:center;
+  justify-content:space-evenly;
   gap:16px;
   flex-wrap:wrap;
+  width:100%;
 }
 .vote-footer-logos img{
   height:36px;
@@ -554,12 +509,13 @@ body.vote-admin-page.vote-module-bg::before{
   margin:20px auto 0;
 }
 .vote-public-hero{
-  background:linear-gradient(135deg, rgba(11,77,73,.16), rgba(255,183,3,.22)), #e3f2ed;
+  background:linear-gradient(140deg, rgba(11,77,73,.22), rgba(255,204,0,.22)), rgba(255,255,255,.78);
   color:#0f172a;
   border-radius:18px;
-  padding:18px 22px;
-  border:1px solid rgba(11,77,73,.2);
+  padding:20px 24px;
+  border:1px solid rgba(11,77,73,.18);
   backdrop-filter: blur(6px);
+  box-shadow:0 10px 24px rgba(15,23,42,.08);
 }
 .vote-public-hero h2{
   font-weight:800;
