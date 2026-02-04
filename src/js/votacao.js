@@ -650,6 +650,9 @@
     let currentVote = null;
     let isEdit = false;
     let isRotativos = themeId === 'membros-rotativos';
+    if (themeId) {
+      document.body?.classList.add('vote-module-bg');
+    }
 
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;

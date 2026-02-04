@@ -361,6 +361,9 @@ body.vote-login-page::after{
   background:#f8fafc;
   min-height:100vh;
 }
+.vote-admin-page.vote-module-bg{
+  background:#f8fafc url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat fixed;
+}
 body.vote-admin-page::after{
   display:none;
 }
