@@ -398,13 +398,15 @@ body.vote-admin-page.vote-module-bg::before{
 .vote-admin-footer-inner{
   width:100%;
   margin:0;
-  padding:10px 16px;
+  padding:0 16px;
   border-radius:18px;
   background:rgba(255,255,255,.75);
   border:1px solid rgba(15,23,42,.08);
   backdrop-filter: blur(8px);
   box-shadow:0 14px 30px rgba(15,23,42,.08);
-  display:block;
+  display:flex;
+  align-items:center;
+  height:11rem;
 }
 .vote-footer-logos{
   display:flex;
@@ -413,17 +415,18 @@ body.vote-admin-page.vote-module-bg::before{
   gap:16px;
   flex-wrap:wrap;
   width:100%;
+  height:100%;
 }
 .vote-footer-logos img{
-  height:48px;
+  height:7rem;
   width:auto;
   object-fit:contain;
 }
 .vote-footer-logos img:last-child{
-  height:48px;
+  height:7rem;
 }
 .vote-footer-logos .vote-logo-govbr{
-  height:70px;
+  height:10rem;
 }
 .vote-login-shell{
   min-height:100vh;
