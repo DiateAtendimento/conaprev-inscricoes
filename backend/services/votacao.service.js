@@ -206,15 +206,16 @@ function parseResponsesText(text, vote) {
     const q = questions[index];
     if (!q) return;
     const respLine = lines.find((l) => l.toLowerCase().startsWith("resposta:"));
-    const respText = respLine ? cleanAnswerText(respLine.replace(/^resposta:\s*/i, "")) : "";
+    let respText = respLine ? cleanAnswerText(respLine.replace(/^resposta:\s*/i, "")) : "";
+    if (respText === "-") respText = "";
     if (q.type === "text") {
-      parsed.push({ questionId: q.id, type: "text", value: respText });
+      if (respText) parsed.push({ questionId: q.id, type: "text", value: respText });
       return;
     }
     const parts = respText
       ? respText.split(/[;,]/).map((p) => cleanAnswerText(p)).filter(Boolean)
       : [];
-    parsed.push({ questionId: q.id, type: "options", optionTexts: parts });
+    if (parts.length) parsed.push({ questionId: q.id, type: "options", optionTexts: parts });
   });
   return { answers: parsed, durationMs };
 }
@@ -598,7 +599,9 @@ export async function getVoteResults(voteId) {
         }).filter(Boolean);
         return { questionId: ans.questionId, type: "options", optionTexts: optTexts };
       });
-      responses.push({ answers: mapped, durationMs: Number(json.durationMs || 0) || 0 });
+      if (mapped.length) {
+        responses.push({ answers: mapped, durationMs: Number(json.durationMs || 0) || 0 });
+      }
     }
   });
 

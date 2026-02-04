@@ -388,14 +388,23 @@
 
     const renderList = (votes = []) => {
       if (!elList || !elEmptyState) return;
+      const cardColors = [
+        '#f8fafc',
+        '#f0f9ff',
+        '#f0fdf4',
+        '#fff7ed',
+        '#fdf2f8',
+        '#f5f3ff',
+      ];
       elEmptyState.classList.toggle('d-none', votes.length > 0);
-      elList.innerHTML = votes.map((vote) => {
+      elList.innerHTML = votes.map((vote, index) => {
+        const cardBg = cardColors[index % cardColors.length];
         const status = vote.active ? 'Ativa' : 'Inativa';
         const linkUrl = `${location.origin}/votacao.html`;
         const toggleClass = vote.active ? 'btn-success' : 'btn-danger';
         const toggleLabel = vote.active ? 'Desativar' : 'Ativar';
         return `
-          <div class="card voting-card" data-id="${vote.id}">
+          <div class="card voting-card" data-id="${vote.id}" style="--vote-card-bg:${cardBg}">
             <div class="card-body d-flex flex-wrap align-items-center gap-3">
               <div class="flex-grow-1">
                 <div class="text-muted small">${status}</div>
@@ -403,19 +412,21 @@
                 <div class="small text-muted">Atualizada em ${formatDate(vote.updatedAt || vote.createdAt)}</div>
               </div>
               <div class="voting-actions" role="group" aria-label="Ações">
-                <button type="button" class="btn btn-warning btn-sm" data-action="edit">
-                  <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar
+                <button type="button" class="btn btn-sm vote-action-btn is-edit" data-action="edit" aria-label="Editar">
+                  <i class="bi bi-pencil-square" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="btn btn-danger btn-sm" data-action="delete">
-                  <i class="bi bi-trash" aria-hidden="true"></i> Excluir
+                <button type="button" class="btn btn-sm vote-action-btn is-delete" data-action="delete" aria-label="Excluir">
+                  <i class="bi bi-trash" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="btn btn-info btn-sm" data-action="link" data-link="${linkUrl}">
-                  <i class="bi bi-link-45deg" aria-hidden="true"></i> Link
+                <button type="button" class="btn btn-sm vote-action-btn is-link" data-action="link" data-link="${linkUrl}" aria-label="Copiar link">
+                  <i class="bi bi-link-45deg" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" data-action="results">
-                  <i class="bi bi-eye" aria-hidden="true"></i> Ver
+                <button type="button" class="btn btn-sm vote-action-btn is-results" data-action="results" aria-label="Ver respostas">
+                  <i class="bi bi-eye" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="btn ${toggleClass} btn-sm" data-action="toggle" data-active="${vote.active ? '1' : '0'}">${toggleLabel}</button>
+                <button type="button" class="btn btn-sm vote-action-btn ${vote.active ? 'is-toggle-on' : 'is-toggle-off'}" data-action="toggle" data-active="${vote.active ? '1' : '0'}" aria-label="${vote.active ? 'Desativar' : 'Ativar'}">
+                  <i class="bi ${vote.active ? 'bi-toggle-on' : 'bi-toggle-off'}" aria-hidden="true"></i>
+                </button>
               </div>
             </div>
           </div>
