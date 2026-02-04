@@ -781,43 +781,136 @@
       return { ...opt, id: opt?.id || createId('o'), text };
     };
 
-    const ensureUfDatalist = () => {
-      if (!isRotativos) return;
-      if (document.getElementById('voteUfDatalist')) return;
-      const list = document.createElement('datalist');
-      list.id = 'voteUfDatalist';
-      Object.keys(UF_REGION).forEach((uf) => {
-        const option = document.createElement('option');
-        option.value = uf;
-        list.appendChild(option);
-      });
-      document.body.appendChild(list);
-    };
-
-    const ensureCityDatalist = () => {
-      if (!isRotativos) return null;
-      let list = document.getElementById('voteCityDatalist');
-      if (list) return list;
-      list = document.createElement('datalist');
-      list.id = 'voteCityDatalist';
-      document.body.appendChild(list);
-      return list;
-    };
-
-    const updateCityDatalist = async (uf) => {
-      if (!isRotativos) return;
-      const list = ensureCityDatalist();
-      if (!list) return;
-      list.innerHTML = '';
+    const getCitiesByUf = async (uf) => {
+      if (!isRotativos) return [];
       const key = String(uf || '').trim().toUpperCase();
-      if (!key) return;
+      if (!key) return [];
       const states = await getCityStates();
       const state = states.find((s) => String(s.uf || '').trim().toUpperCase() === key);
-      (state?.cities || []).forEach((city) => {
-        const option = document.createElement('option');
-        option.value = String(city || '').trim();
-        list.appendChild(option);
-      });
+      return (state?.cities || []).map((city) => String(city || '').trim()).filter(Boolean);
+    };
+
+    const createAutocomplete = (input, getItems, opts = {}) => {
+      if (!input) return null;
+      const maxItems = opts.maxItems || 12;
+      const minChars = opts.minChars || 0;
+      const emptyMessage = opts.emptyMessage || '';
+      const wrapper = input.closest('.vote-field') || input.parentElement;
+      if (!wrapper) return null;
+
+      const menu = document.createElement('div');
+      menu.className = 'vote-autocomplete-menu d-none';
+      menu.setAttribute('role', 'listbox');
+      wrapper.appendChild(menu);
+
+      let activeIndex = -1;
+      let currentItems = [];
+
+      const normalizeSearch = (value) =>
+        String(value || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .trim();
+
+      const closeMenu = () => {
+        menu.classList.add('d-none');
+        menu.innerHTML = '';
+        activeIndex = -1;
+      };
+
+      const renderMenu = (items) => {
+        menu.innerHTML = '';
+        if (!items.length) {
+          if (emptyMessage) {
+            const empty = document.createElement('div');
+            empty.className = 'vote-autocomplete-empty';
+            empty.textContent = emptyMessage;
+            menu.appendChild(empty);
+            menu.classList.remove('d-none');
+          } else {
+            closeMenu();
+          }
+          return;
+        }
+        items.slice(0, maxItems).forEach((item, idx) => {
+          const el = document.createElement('div');
+          el.className = 'vote-autocomplete-item';
+          el.setAttribute('role', 'option');
+          el.textContent = item;
+          el.addEventListener('mouseenter', () => {
+            activeIndex = idx;
+            updateActive();
+          });
+          el.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            selectItem(item);
+          });
+          menu.appendChild(el);
+        });
+        menu.classList.remove('d-none');
+        updateActive();
+      };
+
+      const updateActive = () => {
+        const items = Array.from(menu.querySelectorAll('.vote-autocomplete-item'));
+        items.forEach((el, idx) => el.classList.toggle('is-active', idx === activeIndex));
+      };
+
+      const selectItem = (value) => {
+        input.value = value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        closeMenu();
+      };
+
+      const refresh = async () => {
+        const query = normalizeSearch(input.value);
+        if (query.length < minChars) {
+          closeMenu();
+          return;
+        }
+        const list = await Promise.resolve(getItems());
+        currentItems = Array.isArray(list) ? list : [];
+        const filtered = query
+          ? currentItems.filter((item) => normalizeSearch(item).includes(query))
+          : currentItems;
+        activeIndex = filtered.length ? 0 : -1;
+        renderMenu(filtered);
+      };
+
+      const onKeyDown = (event) => {
+        if (menu.classList.contains('d-none')) return;
+        const items = Array.from(menu.querySelectorAll('.vote-autocomplete-item'));
+        if (!items.length) return;
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          activeIndex = (activeIndex + 1) % items.length;
+          updateActive();
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          activeIndex = (activeIndex - 1 + items.length) % items.length;
+          updateActive();
+        } else if (event.key === 'Enter') {
+          if (activeIndex >= 0 && items[activeIndex]) {
+            event.preventDefault();
+            selectItem(items[activeIndex].textContent || '');
+          }
+        } else if (event.key === 'Escape') {
+          closeMenu();
+        }
+      };
+
+      input.addEventListener('focus', refresh);
+      input.addEventListener('input', refresh);
+      input.addEventListener('keydown', onKeyDown);
+
+      const outsideHandler = (event) => {
+        if (wrapper.contains(event.target)) return;
+        closeMenu();
+      };
+      document.addEventListener('click', outsideHandler);
+
+      return { refresh, close: closeMenu };
     };
 
     const updateNumbers = () => {
@@ -899,10 +992,18 @@
           <span class="vote-flag-placeholder d-none">Sem região</span>
         </div>
         <div class="vote-flag-fields">
-          <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2" list="voteUfDatalist">
-          <input type="text" class="form-control vote-option-city" placeholder="Município" list="voteCityDatalist">
-          <input type="text" class="form-control vote-option-region" placeholder="Região" readonly>
-          <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
+          <div class="vote-field">
+            <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
+          </div>
+          <div class="vote-field">
+            <input type="text" class="form-control vote-option-city" placeholder="Município">
+          </div>
+          <div class="vote-field">
+            <input type="text" class="form-control vote-option-region" placeholder="Região" readonly>
+          </div>
+          <div class="vote-field">
+            <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
+          </div>
         </div>
         <div class="vote-flag-actions" role="group" aria-label="Ações">
           <button type="button" class="vote-flag-action is-clear vote-flag-clear" aria-label="Limpar"><i class="bi bi-eraser"></i></button>
@@ -917,22 +1018,22 @@
       if (ufInput) ufInput.value = uf;
       if (regionInput) regionInput.value = regionLabel;
       if (proInput) proInput.value = proGestao ? String(proGestao) : '';
+
+      const ufAuto = createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
+      const cityAuto = createAutocomplete(
+        cityInput,
+        () => getCitiesByUf(ufInput?.value),
+        { maxItems: 12, emptyMessage: 'Selecione uma UF' }
+      );
       if (ufInput) {
-        const syncCityList = () => {
+        const syncCity = () => {
           if (cityInput) cityInput.value = '';
-          updateCityDatalist(ufInput.value);
+          cityAuto?.refresh();
         };
-        ufInput.addEventListener('input', syncCityList);
-        ufInput.addEventListener('change', syncCityList);
+        ufInput.addEventListener('input', syncCity);
+        ufInput.addEventListener('change', syncCity);
       }
-      if (cityInput) {
-        cityInput.addEventListener('focus', () => updateCityDatalist(ufInput?.value));
-        cityInput.addEventListener('click', () => updateCityDatalist(ufInput?.value));
-      }
-      ensureUfDatalist();
-      ensureCityDatalist();
       if (city && uf) {
-        updateCityDatalist(uf);
         updateFlagFromInputs(wrap);
       }
       return wrap;
@@ -1064,8 +1165,6 @@
       updateNumbers();
     };
 
-    ensureUfDatalist();
-    ensureCityDatalist();
     hydrate();
 
     addQuestionBtn?.addEventListener('click', () => {
@@ -1153,7 +1252,6 @@
       if (!(target instanceof HTMLInputElement)) return;
       if (target.classList.contains('vote-option-uf')) {
         target.value = target.value.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
-        updateCityDatalist(target.value);
       }
       if (target.classList.contains('vote-option-city') || target.classList.contains('vote-option-uf')) {
         const row = target.closest('.vote-option-input');
@@ -1165,7 +1263,6 @@
           if (parsed?.uf && ufInput) {
             target.value = parsed.city || '';
             ufInput.value = parsed.uf.toUpperCase();
-            updateCityDatalist(ufInput.value);
           }
         }
         updateFlagFromInputs(row);
