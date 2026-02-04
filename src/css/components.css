@@ -350,6 +350,9 @@
   background:#f8fafc;
   min-height:100vh;
 }
+.vote-login-page.vote-module-bg{
+  background:#f8fafc url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat fixed;
+}
 body.vote-login-page::after{
   display:none;
 }

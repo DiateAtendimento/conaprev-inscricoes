@@ -1367,6 +1367,10 @@
     const deniedModal = deniedModalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(deniedModalEl) : null;
     const unavailableModal = unavailableModalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(unavailableModalEl) : null;
 
+    const setModuleBackground = (enabled) => {
+      document.body?.classList.toggle('vote-module-bg', !!enabled);
+    };
+
     let currentUser = null;
     let currentVote = null;
     let startedAt = 0;
@@ -1683,6 +1687,7 @@
       startedAt = Date.now();
       const pendingAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
       formWrap?.classList.remove('d-none');
+      setModuleBackground(true);
       successMsg?.classList.add('d-none');
       questionsWrap.innerHTML = (currentVote.questions || []).map((q, index) => {
         if (q.type === 'text') {
@@ -1728,12 +1733,14 @@
 
     backBtn?.addEventListener('click', () => {
       formWrap?.classList.add('d-none');
+      setModuleBackground(false);
     });
 
     userLogout?.addEventListener('click', () => {
       sessionStorage.removeItem(USER_KEY);
       currentUser = null;
       currentVote = null;
+      setModuleBackground(false);
       setUserMenu(null);
       loginCard?.classList.remove('d-none');
       modules?.classList.add('d-none');
