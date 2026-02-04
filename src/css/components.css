@@ -153,7 +153,7 @@
 }
 .vote-option-input.is-flag-option{
   display:grid;
-  grid-template-columns: 64px minmax(0, 1fr) 88px;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   align-items:center;
   gap:12px;
 }
@@ -192,30 +192,31 @@
 }
 .vote-flag-fields{
   display:grid;
-  grid-template-columns: 56px minmax(0, 1.05fr) minmax(0, .85fr) minmax(0, 86px);
+  grid-template-columns: 72px minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 120px);
   gap:8px;
   min-width:0;
   align-items:center;
+  width:100%;
 }
 .vote-flag-fields .form-control{
   min-width:0;
+  width:100%;
 }
 .vote-field{
   position:relative;
   width:100%;
 }
 .vote-option-uf{
-  width:auto;
+  width:72px;
 }
 .vote-option-city{
-  min-width:140px;
+  min-width:0;
 }
 .vote-option-region{
-  min-width:140px;
+  min-width:0;
 }
 .vote-option-progestao{
-  width:auto;
-  min-width:100px;
+  min-width:0;
 }
 .vote-flag-actions{
   display:flex;
@@ -223,8 +224,25 @@
   align-items:center;
   align-self:center;
   justify-self:end;
-  min-width:96px;
+  min-width:72px;
   z-index:2;
+}
+@media (max-width: 1200px){
+  .vote-flag-fields{
+    grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .vote-option-progestao{
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 768px){
+  .vote-option-input.is-flag-option{
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items:start;
+  }
+  .vote-flag-actions{
+    justify-self:start;
+  }
 }
 
 .vote-autocomplete-menu{
