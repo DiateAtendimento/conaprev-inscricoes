@@ -442,18 +442,21 @@
 
 /* ===== LOGIN VOTACAO ===== */
 .vote-login-page{
-  background:linear-gradient(135deg, #63d3e6 0%, #2e88d8 55%, #0b4da8 100%);
+  background:#f8fafc;
   min-height:100vh;
   color:#0f172a;
 }
 .vote-login-page.vote-module-bg{
-  background:linear-gradient(135deg, #63d3e6 0%, #2e88d8 55%, #0b4da8 100%);
+  background:#f8fafc;
+}
+body.vote-login-page::before{
+  background: url('/imagens/bg/bg-usuario-votacao.svg') center/cover no-repeat fixed;
 }
 body.vote-login-page::after{
   display:none;
 }
 body.vote-login-page.vote-module-bg::before{
-  background:transparent;
+  background: url('/imagens/bg/bg-usuario-votacao.svg') center/cover no-repeat fixed;
 }
 
 .vote-admin-page{
@@ -635,8 +638,8 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-login-right img{
   max-width:85%;
-  max-height:380px;
-  height:auto;
+  max-height:25rem;
+  height:20rem;
 }
 
 .vote-public-section{
