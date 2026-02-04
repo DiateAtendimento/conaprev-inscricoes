@@ -471,6 +471,9 @@ body.vote-login-page.vote-module-bg::before{
 body.vote-admin-page::after{
   display:none;
 }
+body.vote-admin-page::before{
+  background: url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat fixed;
+}
 body.vote-admin-page.vote-module-bg::before{
   background: url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat;
 }
@@ -623,6 +626,14 @@ body.vote-admin-page.vote-module-bg::before{
 .vote-login-page .btn-primary:hover{
   background:#093e86;
   border-color:#093e86;
+}
+.vote-login-page #votePublicForm > .btn{
+  background:#16a34a;
+  border-color:#16a34a;
+}
+.vote-login-page #votePublicForm > .btn:hover{
+  background:#12823a;
+  border-color:#12823a;
 }
 .vote-login-msg{
   color:#b91c1c;
