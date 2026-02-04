@@ -154,7 +154,7 @@
 .vote-option-input.is-flag-option{
   align-items:center;
   gap:12px;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
 }
 .vote-flag-preview{
   width:64px;
@@ -221,6 +221,7 @@
   align-items:center;
   align-self:center;
   flex:0 0 auto;
+  margin-left:auto;
 }
 
 .vote-autocomplete-menu{
@@ -567,12 +568,17 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-public-hero{
   background:#55a3a2;
-  color:#0f172a;
+  color:#fff;
   border-radius:18px;
   padding:20px 24px;
   border:1px solid rgba(11,77,73,.18);
   backdrop-filter: blur(6px);
   box-shadow:0 10px 24px rgba(15,23,42,.08);
+}
+.vote-public-hero h1,
+.vote-public-hero h2,
+.vote-public-hero p{
+  color:#fff;
 }
 .vote-public-hero h2{
   font-weight:800;
