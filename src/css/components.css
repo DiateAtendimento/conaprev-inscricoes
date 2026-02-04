@@ -396,10 +396,10 @@ body.vote-admin-page.vote-module-bg::before{
   margin-top:18px;
 }
 .vote-admin-footer-inner{
-  width:calc(100% + 56px);
-  margin:0 -28px;
-  padding:10px 28px;
-  border-radius:0 0 18px 18px;
+  width:100%;
+  margin:0;
+  padding:10px 16px;
+  border-radius:18px;
   background:rgba(255,255,255,.75);
   border:1px solid rgba(15,23,42,.08);
   backdrop-filter: blur(8px);
@@ -423,7 +423,7 @@ body.vote-admin-page.vote-module-bg::before{
   height:48px;
 }
 .vote-footer-logos .vote-logo-govbr{
-  height:58px;
+  height:70px;
 }
 .vote-login-shell{
   min-height:100vh;
@@ -513,7 +513,7 @@ body.vote-admin-page.vote-module-bg::before{
   margin:20px auto 0;
 }
 .vote-public-hero{
-  background:linear-gradient(140deg, rgba(11,77,73,.22), rgba(255,204,0,.22)), rgba(255,255,255,.78);
+  background:#55a3a2;
   color:#0f172a;
   border-radius:18px;
   padding:20px 24px;
