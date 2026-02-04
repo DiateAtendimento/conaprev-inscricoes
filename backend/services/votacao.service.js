@@ -591,14 +591,15 @@ export async function getVoteResults(voteId) {
     if (json && json.voteId === voteId) {
       const mapped = (json.answers || []).map((ans) => {
         if (ans.type === "text") {
-          return { questionId: ans.questionId, type: "text", value: String(ans.value || "") };
+          const value = String(ans.value || "").trim();
+          return value && value !== "-" ? { questionId: ans.questionId, type: "text", value } : null;
         }
         const optTexts = (ans.optionIds || []).map((oid) => {
           const opt = (vote.questions || []).flatMap((q) => q.options || []).find((o) => o.id === oid);
           return opt?.text || "";
-        }).filter(Boolean);
-        return { questionId: ans.questionId, type: "options", optionTexts: optTexts };
-      });
+        }).filter((text) => String(text || "").trim() && String(text || "").trim() !== "-");
+        return optTexts.length ? { questionId: ans.questionId, type: "options", optionTexts: optTexts } : null;
+      }).filter(Boolean);
       if (mapped.length) {
         responses.push({ answers: mapped, durationMs: Number(json.durationMs || 0) || 0 });
       }

@@ -106,6 +106,7 @@
   background:#f8fafc;
   border-radius:10px;
   border:1px solid #e2e8f0;
+  box-shadow:inset 3px 0 0 var(--vote-rank-color, #cbd5f0);
 }
 .voting-option-count{
   font-weight:600;

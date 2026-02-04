@@ -449,6 +449,14 @@
       `;
 
       const questions = payload.questions || [];
+      const rankColors = [
+        '#22c55e',
+        '#60a5fa',
+        '#f59e0b',
+        '#fb7185',
+        '#a78bfa',
+        '#94a3b8',
+      ];
       elResultsBody.innerHTML = questions.map((q, index) => {
         const stat = (payload.stats || []).find((s) => s.questionId === q.id) || {};
         if (q.type === 'text') {
@@ -460,12 +468,25 @@
           `;
         }
         const counts = stat.counts || {};
-        const rows = (q.options || []).map((opt) => `
-          <div class="voting-option-row">
-            <span>${opt.text || 'Opção'}</span>
-            <span class="voting-option-count">${counts[opt.id] || 0}</span>
-          </div>
-        `).join('');
+        const options = (q.options || []).map((opt) => ({
+          ...opt,
+          count: counts[opt.id] || 0,
+        }));
+        const hasVotes = options.some((opt) => opt.count > 0);
+        const sorted = options.sort((a, b) => {
+          if (!hasVotes) return String(a.text || '').localeCompare(String(b.text || ''), 'pt-BR');
+          if (b.count !== a.count) return b.count - a.count;
+          return String(a.text || '').localeCompare(String(b.text || ''), 'pt-BR');
+        });
+        const rows = sorted.map((opt, idx) => {
+          const color = rankColors[idx] || rankColors[rankColors.length - 1];
+          return `
+            <div class="voting-option-row" style="--vote-rank-color:${color}">
+              <span>${opt.text || 'Opção'}</span>
+              <span class="voting-option-count">${opt.count || 0}</span>
+            </div>
+          `;
+        }).join('');
         return `
           <div class="voting-question">
             <h6>${index + 1}. ${q.text || 'Pergunta'}</h6>
