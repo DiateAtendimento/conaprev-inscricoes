@@ -794,22 +794,30 @@
       document.body.appendChild(list);
     };
 
-    const ensureCityDatalist = async () => {
-      if (!isRotativos) return;
-      if (document.getElementById('voteCityDatalist')) return;
-      const list = document.createElement('datalist');
+    const ensureCityDatalist = () => {
+      if (!isRotativos) return null;
+      let list = document.getElementById('voteCityDatalist');
+      if (list) return list;
+      list = document.createElement('datalist');
       list.id = 'voteCityDatalist';
-      const states = await getCityStates();
-      states.forEach((state) => {
-        const uf = String(state.uf || '').trim().toUpperCase();
-        (state.cities || []).forEach((city) => {
-          const label = `${String(city || '').toUpperCase()} - ${uf}`;
-          const option = document.createElement('option');
-          option.value = label;
-          list.appendChild(option);
-        });
-      });
       document.body.appendChild(list);
+      return list;
+    };
+
+    const updateCityDatalist = async (uf) => {
+      if (!isRotativos) return;
+      const list = ensureCityDatalist();
+      if (!list) return;
+      list.innerHTML = '';
+      const key = String(uf || '').trim().toUpperCase();
+      if (!key) return;
+      const states = await getCityStates();
+      const state = states.find((s) => String(s.uf || '').trim().toUpperCase() === key);
+      (state?.cities || []).forEach((city) => {
+        const option = document.createElement('option');
+        option.value = String(city || '').trim();
+        list.appendChild(option);
+      });
     };
 
     const updateNumbers = () => {
@@ -897,9 +905,7 @@
           <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
         </div>
         <div class="vote-flag-actions" role="group" aria-label="Ações">
-          <button type="button" class="vote-flag-action is-search vote-flag-search" aria-label="Pesquisar"><i class="bi bi-search"></i></button>
           <button type="button" class="vote-flag-action is-clear vote-flag-clear" aria-label="Limpar"><i class="bi bi-eraser"></i></button>
-          <button type="button" class="vote-flag-action is-confirm vote-flag-confirm" aria-label="Confirmar"><i class="bi bi-check-circle"></i></button>
           <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
         </div>
       `;
@@ -911,9 +917,19 @@
       if (ufInput) ufInput.value = uf;
       if (regionInput) regionInput.value = regionLabel;
       if (proInput) proInput.value = proGestao ? String(proGestao) : '';
+      if (ufInput) {
+        ufInput.addEventListener('input', () => {
+          if (cityInput) cityInput.value = '';
+          updateCityDatalist(ufInput.value);
+        });
+      }
+      if (cityInput) {
+        cityInput.addEventListener('focus', () => updateCityDatalist(ufInput?.value));
+      }
       ensureUfDatalist();
       ensureCityDatalist();
       if (city && uf) {
+        updateCityDatalist(uf);
         updateFlagFromInputs(wrap);
       }
       return wrap;
@@ -1091,69 +1107,6 @@
         return;
       }
 
-      const searchBtn = event.target.closest('.vote-flag-search');
-      if (searchBtn) {
-        const row = event.target.closest('.vote-option-input');
-        if (!row) return;
-        const city = row.querySelector('.vote-option-city')?.value || '';
-        const uf = row.querySelector('.vote-option-uf')?.value || '';
-        const ok = await cityExistsInUf(city, uf);
-        if (!ok) {
-          await showUiModal({
-            title: 'Aviso',
-            message: 'Município não encontrado para esta UF.',
-            variant: 'warning',
-          });
-          return;
-        }
-        const { regionKey } = await updateFlagFromInputs(row);
-        if (!regionKey) {
-          await showUiModal({
-            title: 'Aviso',
-            message: 'UF inválida. Verifique e tente novamente.',
-            variant: 'warning',
-          });
-        }
-        return;
-      }
-
-      const confirmBtn = event.target.closest('.vote-flag-confirm');
-      if (confirmBtn) {
-        const row = event.target.closest('.vote-option-input');
-        if (!row) return;
-        const city = row.querySelector('.vote-option-city')?.value || '';
-        const uf = row.querySelector('.vote-option-uf')?.value || '';
-        if (!city.trim() || !uf.trim()) {
-          await showUiModal({
-            title: 'Aviso',
-            message: 'Informe município e UF antes de confirmar.',
-            variant: 'warning',
-          });
-          return;
-        }
-        const ok = await cityExistsInUf(city, uf);
-        if (!ok) {
-          await showUiModal({
-            title: 'Aviso',
-            message: 'Município não encontrado para esta UF.',
-            variant: 'warning',
-          });
-          return;
-        }
-        const { regionKey } = await updateFlagFromInputs(row);
-        if (!regionKey) {
-          await showUiModal({
-            title: 'Aviso',
-            message: 'UF inválida. Verifique e tente novamente.',
-            variant: 'warning',
-          });
-          return;
-        }
-        const confirmed = !row.classList.contains('is-confirmed');
-        setConfirmState(row, confirmed);
-        return;
-      }
-
       const removeOptionBtn = event.target.closest('.vote-remove-option');
       if (removeOptionBtn) {
         const optionRow = event.target.closest('.vote-option-input');
@@ -1197,6 +1150,7 @@
       if (!(target instanceof HTMLInputElement)) return;
       if (target.classList.contains('vote-option-uf')) {
         target.value = target.value.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
+        updateCityDatalist(target.value);
       }
       if (target.classList.contains('vote-option-city') || target.classList.contains('vote-option-uf')) {
         const row = target.closest('.vote-option-input');
@@ -1208,6 +1162,7 @@
           if (parsed?.uf && ufInput) {
             target.value = parsed.city || '';
             ufInput.value = parsed.uf.toUpperCase();
+            updateCityDatalist(ufInput.value);
           }
         }
         updateFlagFromInputs(row);
