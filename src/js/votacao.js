@@ -707,6 +707,12 @@
       return cityDataPromise;
     };
 
+    const ensureUfDatalist = () => Promise.resolve();
+
+    const ensureCityDatalist = async () => {
+      await loadCityData();
+    };
+
     const getCityStates = async () => {
       const data = await loadCityData();
       return Array.isArray(data.states) ? data.states : [];
