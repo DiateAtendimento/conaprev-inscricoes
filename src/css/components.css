@@ -392,12 +392,12 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-admin-footer{
   width:100%;
-  padding:10px 20px 28px;
+  padding:0 20px 16px;
 }
 .vote-admin-footer-inner{
   width:min(1100px, 100%);
   margin:0 auto;
-  padding:12px 18px;
+  padding:10px 16px;
   border-radius:18px;
   background:rgba(255,255,255,.75);
   border:1px solid rgba(15,23,42,.08);
@@ -414,12 +414,12 @@ body.vote-admin-page.vote-module-bg::before{
   width:100%;
 }
 .vote-footer-logos img{
-  height:36px;
+  height:48px;
   width:auto;
   object-fit:contain;
 }
 .vote-footer-logos img:last-child{
-  height:32px;
+  height:48px;
 }
 .vote-login-shell{
   min-height:100vh;
