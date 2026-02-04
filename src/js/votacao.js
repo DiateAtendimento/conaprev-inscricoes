@@ -1454,6 +1454,12 @@
     const userLogout = document.getElementById('voteUserLogout');
     const userAvatar = document.getElementById('voteUserAvatar');
     const userAvatarWrap = userAvatar?.closest('.vote-user-avatar');
+    const userIntro = document.getElementById('voteUserIntro');
+    const userIntroName = document.getElementById('voteUserIntroName');
+    const userIntroRole = document.getElementById('voteUserIntroRole');
+    const userIntroId = document.getElementById('voteUserIntroId');
+    const userIntroAvatar = document.getElementById('voteUserIntroAvatar');
+    const userIntroAvatarWrap = userIntroAvatar?.closest('.vote-user-intro-avatar');
     const deniedModalEl = document.getElementById('voteDeniedModal');
     const deniedBody = document.getElementById('voteDeniedBody');
     const unavailableModalEl = document.getElementById('voteUnavailableModal');
@@ -1608,6 +1614,26 @@
       };
     };
 
+    const setIntroAvatar = (user) => {
+      if (!userIntroAvatar || !userIntroAvatarWrap) return;
+      if (!user) {
+        userIntroAvatar.removeAttribute('src');
+        userIntroAvatarWrap.classList.add('is-fallback');
+        return;
+      }
+      resolveUserPhoto(user).then((url) => {
+        userIntroAvatar.src = url || DEFAULT_USER_PHOTO;
+        userIntroAvatarWrap.classList.remove('is-fallback');
+      });
+      userIntroAvatar.onerror = () => {
+        if (userIntroAvatar.src !== DEFAULT_USER_PHOTO) {
+          userIntroAvatar.src = DEFAULT_USER_PHOTO;
+          return;
+        }
+        userIntroAvatarWrap.classList.add('is-fallback');
+      };
+    };
+
     const setUserMenu = (user) => {
       if (!userMenu || !userName) return;
       if (!user) {
@@ -1619,6 +1645,28 @@
       userName.textContent = user.nome || 'Usuário';
       userMenu.classList.remove('d-none');
       setUserAvatar(user);
+    };
+
+    const showUserIntro = (user) => {
+      if (!userIntro) return Promise.resolve();
+      if (userIntroName) userIntroName.textContent = user?.nome || 'Usuário';
+      if (userIntroRole) userIntroRole.textContent = 'Conselheiro';
+      if (userIntroId) {
+        userIntroId.textContent = user?.numerodeinscricao || '';
+        userIntroId.classList.toggle('d-none', !user?.numerodeinscricao);
+      }
+      setIntroAvatar(user);
+      userIntro.classList.remove('d-none');
+      requestAnimationFrame(() => userIntro.classList.add('is-visible'));
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          userIntro.classList.remove('is-visible');
+          setTimeout(() => {
+            userIntro.classList.add('d-none');
+            resolve();
+          }, 350);
+        }, 2000);
+      });
     };
 
     const formatCpf = (value) => {
@@ -1759,6 +1807,7 @@
       sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser));
       setUserMenu(currentUser);
       loginCard?.classList.add('d-none');
+      await showUserIntro(currentUser);
       modules?.classList.remove('d-none');
       startPolling();
       const themes = await fetchThemes();
