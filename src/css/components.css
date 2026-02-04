@@ -356,6 +356,9 @@
 body.vote-login-page::after{
   display:none;
 }
+body.vote-login-page.vote-module-bg::before{
+  background: url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat;
+}
 
 .vote-admin-page{
   background:#f8fafc;
@@ -366,6 +369,9 @@ body.vote-login-page::after{
 }
 body.vote-admin-page::after{
   display:none;
+}
+body.vote-admin-page.vote-module-bg::before{
+  background: url('/imagens/bg/bg-admin-votacao.svg') center/cover no-repeat;
 }
 .vote-admin-shell{
   min-height:100vh;
