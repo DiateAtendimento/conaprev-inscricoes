@@ -918,13 +918,16 @@
       if (regionInput) regionInput.value = regionLabel;
       if (proInput) proInput.value = proGestao ? String(proGestao) : '';
       if (ufInput) {
-        ufInput.addEventListener('input', () => {
+        const syncCityList = () => {
           if (cityInput) cityInput.value = '';
           updateCityDatalist(ufInput.value);
-        });
+        };
+        ufInput.addEventListener('input', syncCityList);
+        ufInput.addEventListener('change', syncCityList);
       }
       if (cityInput) {
         cityInput.addEventListener('focus', () => updateCityDatalist(ufInput?.value));
+        cityInput.addEventListener('click', () => updateCityDatalist(ufInput?.value));
       }
       ensureUfDatalist();
       ensureCityDatalist();
