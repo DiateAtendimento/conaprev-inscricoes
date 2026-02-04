@@ -392,11 +392,12 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-admin-footer{
   width:100%;
-  padding:0 20px 16px;
+  padding:0;
+  margin-top:18px;
 }
 .vote-admin-footer-inner{
-  width:min(1100px, 100%);
-  margin:0 auto;
+  width:100%;
+  margin:0;
   padding:10px 16px;
   border-radius:18px;
   background:rgba(255,255,255,.75);
