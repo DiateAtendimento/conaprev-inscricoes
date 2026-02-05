@@ -14,6 +14,7 @@
     criar:     `${API}/api/inscricoes/criar`,
     atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
+    cancelar:  `${API}/api/inscricoes/cancelar`,
     assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
   };
 
@@ -25,6 +26,11 @@
   async function apiAtualizar(payload){
     const res = await fetch(ROUTES.atualizar, { method:'POST', headers:defaultHeaders, body:JSON.stringify({ formData:payload, perfil: state.perfil })});
     if(!res.ok){ const j=await res.json().catch(()=>null); throw new Error(j?.error||'Erro ao atualizar'); }
+    return res.json(); // { ok:true }
+  }
+  async function apiCancelar(_rowIndex){
+    const res = await fetch(ROUTES.cancelar, { method:'POST', headers:defaultHeaders, body:JSON.stringify({ _rowIndex, perfil: state.perfil })});
+    if(!res.ok){ const j=await res.json().catch(()=>null); throw new Error(j?.error||'Erro ao cancelar'); }
     return res.json(); // { ok:true }
   }
 
@@ -795,8 +801,17 @@
       `;
     }
 
-    const editarLink = `<div class="mt-3">
+    const allowedCancel = new Set(['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff']);
+    const showCancel = allowedCancel.has(state.perfil) && !!d._rowIndex;
+    const cancelBtn = showCancel ? `
+      <button type="button" id="miCancelarInscricao" class="btn btn-outline-danger btn-sm">
+        Cancelar inscrição
+      </button>
+    ` : '';
+
+    const editarLink = `<div class="mt-3 d-flex flex-wrap align-items-center gap-3">
       <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informações</button>
+      ${cancelBtn}
     </div>`;
 
     const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
@@ -818,6 +833,27 @@
     $('#miEditarInfo')?.addEventListener('click', () => {
       state.step = 2;
       renderStep();
+    });
+
+    $('#miCancelarInscricao')?.addEventListener('click', async () => {
+      const idx = Number(d._rowIndex || 0);
+      if (!idx) return;
+      const ok = window.confirm('Tem certeza que deseja cancelar esta inscrição? O número será liberado.');
+      if (!ok) return;
+      try {
+        openLottie('saving', 'Cancelando inscrição…');
+        await apiCancelar(idx);
+        closeLottie();
+        state.data.numerodeinscricao = '';
+        state.protocolo = null;
+        const numInput = document.getElementById('numerodeinscricao');
+        if (numInput) numInput.value = '';
+        updateFinalStepLabel();
+        renderReview();
+      } catch (e) {
+        openLottie('error', e.message || 'Erro ao cancelar.');
+        setTimeout(closeLottie, 1600);
+      }
     });
   }
 

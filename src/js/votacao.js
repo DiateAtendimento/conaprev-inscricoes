@@ -996,7 +996,7 @@
       const proValue = (city || uf) ? simulateProGestao(city, uf) : '';
 
       if (regionInput) regionInput.value = regionLabel;
-      if (proInput) proInput.value = proValue ? String(proValue) : '';
+      if (proInput) proInput.value = formatProGestaoValue(proValue);
 
       const url = resolveRegionImageUrl(regionKey);
       setFlagPreview(row, url || null);
@@ -1055,7 +1055,7 @@
       if (cityInput) cityInput.value = city;
       if (ufInput) ufInput.value = uf;
       if (regionInput) regionInput.value = regionLabel;
-      if (proInput) proInput.value = proGestao ? String(proGestao) : '';
+      if (proInput) proInput.value = formatProGestaoValue(proGestao);
 
       const ufAuto = createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
       const cityAuto = createAutocomplete(
@@ -1532,6 +1532,12 @@
       const u = String(uf || '').toUpperCase();
       if (!c || !u) return c || u || '';
       return `${c} / ${u}`;
+    };
+
+    const formatProGestaoValue = (value) => {
+      const num = parseInt(String(value || ''), 10);
+      if (!Number.isFinite(num) || num <= 0) return '';
+      return { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
     };
 
     const formatRegionTitle = (region) => {
