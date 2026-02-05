@@ -1247,13 +1247,14 @@ body.gate-active .topbar{ display:none !important; }
   object-fit:cover;
 }
 .mi-photo-preview--staff{
-  border-width:3px;
+  border:none;
+  background:transparent;
 }
 .mi-photo-preview--staff.is-male{
-  border-color:#2563eb;
+  border:none;
 }
 .mi-photo-preview--staff.is-female{
-  border-color:#ec4899;
+  border:none;
 }
 
 .mi-staff-grid{
@@ -1270,28 +1271,41 @@ body.gate-active .topbar{ display:none !important; }
   margin:0 auto 10px;
   border-radius:50%;
   overflow:hidden;
-  border:3px solid #2563eb;
-  background:#f8fafc;
+  border:none;
+  background:transparent;
   display:flex;
   align-items:center;
   justify-content:center;
-}
-.mi-staff-card.is-female .mi-staff-photo{
-  border-color:#ec4899;
-}
-.mi-staff-card.is-male .mi-staff-photo{
-  border-color:#2563eb;
 }
 .mi-staff-photo img{
   width:100%;
   height:100%;
   object-fit:cover;
   object-position:center;
-  transform:scale(1.15);
+  display:block;
+  border-radius:50%;
+  outline:3px solid #2563eb;
+  outline-offset:0;
+  transform:scale(1.25);
+}
+.mi-staff-card.is-female .mi-staff-photo img{
+  outline-color:#ec4899;
+}
+.mi-staff-card.is-male .mi-staff-photo img{
+  outline-color:#2563eb;
 }
 .mi-photo-preview--staff img{
+  border-radius:50%;
+  outline:3px solid #2563eb;
+  outline-offset:0;
   object-position:center;
-  transform:scale(1.15);
+  transform:scale(1.25);
+}
+.mi-photo-preview--staff.is-female img{
+  outline-color:#ec4899;
+}
+.mi-photo-preview--staff.is-male img{
+  outline-color:#2563eb;
 }
 .mi-staff-name{
   font-weight:600;
