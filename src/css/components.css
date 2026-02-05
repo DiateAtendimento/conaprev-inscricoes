@@ -445,6 +445,7 @@
   background:#f8fafc;
   min-height:100vh;
   color:#0f172a;
+  overflow-x:hidden;
 }
 .vote-login-page.vote-module-bg{
   background:#f8fafc;
@@ -551,10 +552,10 @@ body.vote-admin-page.vote-module-bg::before{
   height:8.5rem;
 }
 .vote-login-shell{
-  min-height:100vh;
+  min-height:auto;
   display:grid;
   place-items:center;
-  padding:24px;
+  padding:24px 24px 8px;
 }
 .vote-login-card{
   width:min(980px, 100%);

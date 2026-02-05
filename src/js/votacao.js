@@ -1539,6 +1539,12 @@
       return `Região ${toTitleCase(region)}`;
     };
 
+    const formatVoteTitle = (title) => {
+      if (!title) return 'Questionário';
+      const year = new Date().getFullYear();
+      return String(title).replace(/^\d{4}/, String(year));
+    };
+
     const formatProGestaoLabel = (value) => {
       const num = parseInt(String(value || ''), 10);
       if (!Number.isFinite(num) || num <= 0) return '';
@@ -1896,8 +1902,9 @@
         });
         Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
       }
-      if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
-      if (formModalTitle) formModalTitle.textContent = currentVote.title || 'Questionário';
+      const displayTitle = formatVoteTitle(currentVote.title);
+      if (formTitle) formTitle.textContent = displayTitle;
+      if (formModalTitle) formModalTitle.textContent = displayTitle;
       if (formModalBody && formWrap && formWrap.parentElement !== formModalBody) {
         formModalBody.appendChild(formWrap);
       }
