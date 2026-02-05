@@ -356,6 +356,30 @@ export async function getConselheiroSeats() {
   return seats;
 }
 
+export async function listStaffGallery() {
+  const sheetName = sheetForPerfil("Staff");
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
+  const normHdrs = headers.map(h => normalizeKey(h));
+  const idxCode = normHdrs.indexOf("numerodeinscricao");
+  const idxName = normHdrs.indexOf("nome");
+  const idxSigla = normHdrs.indexOf("sigladaentidade");
+  if (idxCode < 0 || idxName < 0) throw new Error('Cabeçalhos "Número de Inscrição" ou "Nome" não encontrados.');
+
+  const out = [];
+  rows.forEach(r => {
+    const code = r[idxCode];
+    const name = r[idxName];
+    if (!String(code || "").trim() || !String(name || "").trim()) return;
+    out.push({
+      numerodeinscricao: code,
+      nome: name,
+      sigladaentidade: idxSigla >= 0 ? r[idxSigla] : ""
+    });
+  });
+  out.sort((a, b) => protoKey(a.numerodeinscricao) - protoKey(b.numerodeinscricao));
+  return out;
+}
+
 
 export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false } = {}) {
   const sheetName = sheetForPerfil(perfil);

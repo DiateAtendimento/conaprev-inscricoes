@@ -1246,5 +1246,55 @@ body.gate-active .topbar{ display:none !important; }
   height:100%;
   object-fit:cover;
 }
+.mi-photo-preview--staff{
+  border-width:3px;
+}
+.mi-photo-preview--staff.is-male{
+  border-color:#2563eb;
+}
+.mi-photo-preview--staff.is-female{
+  border-color:#ec4899;
+}
+
+.mi-staff-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+  gap:18px;
+}
+.mi-staff-card{
+  text-align:center;
+}
+.mi-staff-photo{
+  width:96px;
+  height:96px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  overflow:hidden;
+  border:3px solid #2563eb;
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.mi-staff-card.is-female .mi-staff-photo{
+  border-color:#ec4899;
+}
+.mi-staff-card.is-male .mi-staff-photo{
+  border-color:#2563eb;
+}
+.mi-staff-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.mi-staff-name{
+  font-weight:600;
+  color:#0f172a;
+}
+.mi-staff-entity,
+.mi-staff-code{
+  font-size:0.85rem;
+  color:#64748b;
+}
 
 

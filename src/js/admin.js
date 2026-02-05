@@ -169,14 +169,24 @@
   const headersAdmin = () =>
     state.adminPass ? { 'x-admin-pass': state.adminPass } : {};
 
-  const PHOTO_DIR = '/imagens/fotos-conselheiros';
-  const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
-  const DEFAULT_PHOTO_URL = `${PHOTO_DIR}/padrao.svg`;
+  const PHOTO_CONFIGS = {
+    Conselheiro: {
+      dir: '/imagens/fotos-conselheiros',
+      manifest: '/imagens/fotos-conselheiros/manifest.json',
+      defaultUrl: '/imagens/fotos-conselheiros/padrao.svg',
+      aliases: new Map([
+        ['allex albert rodrigues', 'Allex Albert Rodrigues.png'],
+      ])
+    },
+    Staff: {
+      dir: '/imagens/fotos-staff',
+      manifest: '/imagens/fotos-staff/manifest.json',
+      defaultUrl: '/imagens/cards/staff.svg',
+      aliases: new Map()
+    }
+  };
   const photoCache = new Map();
-  let photoIndexPromise = null;
-  const photoAliases = new Map([
-    ['allex albert rodrigues', 'Allex Albert Rodrigues.png'],
-  ]);
+  const photoIndexPromises = new Map();
 
   const fmtCPF = (v) => {
     const s = String(v || '').replace(/\D/g, '');
@@ -232,9 +242,15 @@
       .toLowerCase();
   }
 
-  async function loadPhotoIndex() {
-    if (photoIndexPromise) return photoIndexPromise;
-    photoIndexPromise = (async () => {
+  function getPhotoConfig(perfil) {
+    return PHOTO_CONFIGS[perfil] || null;
+  }
+
+  async function loadPhotoIndex(perfil) {
+    const config = getPhotoConfig(perfil);
+    if (!config) return new Map();
+    if (photoIndexPromises.has(perfil)) return photoIndexPromises.get(perfil);
+    const promise = (async () => {
       const map = new Map();
       const tryFetch = async (url) => {
         const res = await fetch(url, { cache: 'no-cache' });
@@ -243,7 +259,7 @@
         return Array.isArray(list) ? list : [];
       };
       let list = [];
-      try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
+      try { list = await tryFetch(config.manifest); } catch {}
       list.forEach((file) => {
         if (typeof file !== 'string') return;
         const key = normalizeNameKey(file);
@@ -251,16 +267,21 @@
       });
       return map;
     })();
-    return photoIndexPromise;
+    photoIndexPromises.set(perfil, promise);
+    return promise;
   }
 
-  async function resolvePhotoUrl(name) {
-    const key = normalizeNameKey(name);
+  async function resolvePhotoUrl(perfil, name) {
+    const config = getPhotoConfig(perfil);
+    if (!config) return null;
+    const safeName = String(name || '').trim();
+    const key = normalizeNameKey(safeName);
     if (!key) return null;
-    if (photoCache.has(key)) return photoCache.get(key);
-    const index = await loadPhotoIndex();
-    let filename = index.get(key) || photoAliases.get(key);
-    if (!filename) {
+    const cacheKey = `${perfil}:${key}`;
+    if (photoCache.has(cacheKey)) return photoCache.get(cacheKey);
+    const index = await loadPhotoIndex(perfil);
+    let filename = index.get(key) || config.aliases?.get(key);
+    if (!filename && perfil === 'Conselheiro') {
       const nameTokens = new Set(key.split(' ').filter(Boolean));
       let bestKey = '';
       index.forEach((_file, idxKey) => {
@@ -271,8 +292,12 @@
       });
       if (bestKey) filename = index.get(bestKey);
     }
-    const url = filename ? `${PHOTO_DIR}/${filename}` : DEFAULT_PHOTO_URL;
-    photoCache.set(key, url);
+    if (!filename && perfil === 'Staff' && safeName) {
+      filename = `${safeName}.png`;
+    }
+    const safeFile = filename ? encodeURIComponent(filename) : '';
+    const url = safeFile ? `${config.dir}/${safeFile}` : config.defaultUrl;
+    photoCache.set(cacheKey, url);
     return url;
   }
 
@@ -341,10 +366,12 @@
       ? 'border-left:6px solid #28a745; background: rgba(40,167,69,0.08);'
       : '';
 
-    const showPhoto = (state.perfil === 'Conselheiro');
+    const showPhoto = (state.perfil === 'Conselheiro' || state.perfil === 'Staff');
+    const photoConfig = showPhoto ? getPhotoConfig(state.perfil) : null;
+    const defaultPhoto = photoConfig?.defaultUrl || '';
     const photoHtml = showPhoto ? `
       <div class="admin-photo-wrap me-3">
-        <img class="admin-photo" data-name="${item.nome || ''}" src="${DEFAULT_PHOTO_URL}" alt="Foto de ${item.nome || 'Conselheiro'}">
+        <img class="admin-photo" data-name="${item.nome || ''}" src="${defaultPhoto}" alt="Foto de ${item.nome || 'Inscrito'}">
       </div>
     ` : '';
 
@@ -402,8 +429,8 @@
       ? toRender.map(item => rowCardHtml(item, status === 'finalizados')).join('')
       : `<div class="text-muted">Nenhum registro encontrado.</div>`;
 
-    if (state.perfil === 'Conselheiro' && toRender.length) {
-      hydrateConselheiroPhotos(targetEl);
+    if ((state.perfil === 'Conselheiro' || state.perfil === 'Staff') && toRender.length) {
+      hydrateProfilePhotos(targetEl, state.perfil);
     }
 
     // Eventos do bot�o de m�o
@@ -466,23 +493,20 @@
     });
   }
 
-  async function hydrateConselheiroPhotos(rootEl) {
+  async function hydrateProfilePhotos(rootEl, perfil) {
     const imgs = rootEl.querySelectorAll('img.admin-photo[data-name]');
     if (!imgs.length) return;
-    await loadPhotoIndex();
+    await loadPhotoIndex(perfil);
+    const config = getPhotoConfig(perfil);
     imgs.forEach((img) => {
       const nome = img.getAttribute('data-name') || '';
-      resolvePhotoUrl(nome).then((url) => {
-        img.src = url || DEFAULT_PHOTO_URL;
+      resolvePhotoUrl(perfil, nome).then((url) => {
+        img.src = url || config?.defaultUrl || '';
       });
       img.onerror = () => {
-        const filename = (img.src || '').split('/').pop();
-        const local = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
-        if (local && local !== DEFAULT_PHOTO_URL && img.src !== local) {
-          img.src = local;
-          return;
+        if (config?.defaultUrl && img.src !== config.defaultUrl) {
+          img.src = config.defaultUrl;
         }
-        if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
       };
     });
   }

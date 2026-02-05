@@ -9,6 +9,7 @@ import {
   confirmarInscricao,
   cancelarInscricao,
   getConselheiroSeats,
+  listStaffGallery,
   listarInscricoes,
   marcarConferido,
 } from "../services/sheets.service.js";
@@ -274,6 +275,19 @@ r.get("/assentos/conselheiros", async (_req, res) => {
   } catch (e) {
     console.error("[GET /inscricoes/assentos/conselheiros]", e);
     // Para esse endpoint, preferimos não estourar erro no front:
+    return res.json([]);
+  }
+});
+
+/**
+ * GET /api/inscricoes/staffs
+ */
+r.get("/staffs", async (_req, res) => {
+  try {
+    const list = await listStaffGallery();
+    return res.json(Array.isArray(list) ? list : []);
+  } catch (e) {
+    console.error("[GET /inscricoes/staffs]", e);
     return res.json([]);
   }
 });

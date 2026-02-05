@@ -15,7 +15,8 @@
     atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
     cancelar:  `${API}/api/inscricoes/cancelar`,
-    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`
+    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`,
+    staffs: `${API}/api/inscricoes/staffs`
   };
 
   async function apiCriar(payload){
@@ -95,7 +96,9 @@
   ];
 
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
+  const PHOTO_DIR_STAFF = '/imagens/fotos-staff';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
+  const DEFAULT_STAFF_PHOTO_URL = '/imagens/cards/staff.svg';
   const photoCacheGlobal = new Map();
   let photoIndexPromiseGlobal = null;
   let photoIndexLocal = new Map();
@@ -252,6 +255,16 @@
     `;
     pane.appendChild(seatsWrap);
 
+    const staffWrap = document.createElement('div');
+    staffWrap.id = 'miStaffWrap';
+    staffWrap.className = 'mt-4 d-none';
+    staffWrap.innerHTML = `
+      <div class="fw-semibold mb-2">Equipe Staff</div>
+      <div id="miStaffMsg" class="small text-muted"></div>
+      <div id="miStaffGrid" class="mi-staff-grid"></div>
+    `;
+    pane.appendChild(staffWrap);
+
     pane.dataset.enhanced = '1';
     btnSearch.addEventListener('click', onPesquisarCpf);
   }
@@ -285,6 +298,13 @@
     el.className = `small ${tone}`;
   }
 
+  function setStaffMsg(text, tone = 'text-muted') {
+    const el = document.getElementById('miStaffMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = `small ${tone}`;
+  }
+
   function buildOccMap(data) {
     const occ = {};
     (data || []).forEach(s => {
@@ -298,11 +318,19 @@
   async function renderSeats() {
     const wrap = $('#miSeatsWrap');
     const grid = $('#miSeatGrid');
+    const staffWrap = $('#miStaffWrap');
     if (!wrap || !grid) return;
     if (state.perfil !== 'Conselheiro') {
       wrap.classList.add('d-none');
+      if (state.perfil === 'Staff') {
+        staffWrap?.classList.remove('d-none');
+        await renderStaffGallery();
+      } else {
+        staffWrap?.classList.add('d-none');
+      }
       return;
     }
+    staffWrap?.classList.add('d-none');
     wrap.classList.remove('d-none');
     grid.innerHTML = '';
 
@@ -650,6 +678,67 @@
     }
   }
 
+  async function renderStaffGallery() {
+    const wrap = $('#miStaffWrap');
+    const grid = $('#miStaffGrid');
+    if (!wrap || !grid) return;
+    if (state.perfil !== 'Staff') {
+      wrap.classList.add('d-none');
+      return;
+    }
+    wrap.classList.remove('d-none');
+    grid.innerHTML = '';
+
+    try {
+      setStaffMsg('Carregando equipe...', 'text-muted');
+      const res = await fetch(ROUTES.staffs, { method: 'GET' });
+      const data = res.ok ? await res.json() : [];
+      const list = Array.isArray(data) ? data : [];
+      if (!list.length) {
+        setStaffMsg('Nenhuma inscrição de staff encontrada.', 'text-muted');
+        return;
+      }
+      setStaffMsg('', 'text-muted');
+      list.forEach((item) => {
+        const nome = String(item?.nome || '').trim();
+        const sigla = String(item?.sigladaentidade || '').trim();
+        const codigo = String(item?.numerodeinscricao || '').trim();
+        const gender = guessGenderByName(nome);
+        const card = document.createElement('div');
+        card.className = `mi-staff-card ${gender === 'female' ? 'is-female' : 'is-male'}`;
+        card.innerHTML = `
+          <div class="mi-staff-photo">
+            <img alt="Foto de ${escapeHtml(nome || 'Staff')}" src="${DEFAULT_STAFF_PHOTO_URL}">
+          </div>
+          <div class="mi-staff-name">${escapeHtml(nome || 'Staff')}</div>
+          ${sigla ? `<div class="mi-staff-entity">${escapeHtml(sigla)}</div>` : ''}
+          ${codigo ? `<div class="mi-staff-code">${escapeHtml(codigo)}</div>` : ''}
+        `;
+        grid.appendChild(card);
+        const img = card.querySelector('img');
+        if (img && nome) {
+          resolveStaffPhotoUrlByName(nome).then((url) => {
+            if (url) img.src = url;
+          });
+          img.onerror = () => {
+            if (img.src !== DEFAULT_STAFF_PHOTO_URL) img.src = DEFAULT_STAFF_PHOTO_URL;
+          };
+        }
+      });
+    } catch {
+      setStaffMsg('Falha ao carregar o staff.', 'text-danger');
+    }
+  }
+
+  function guessGenderByName(nome) {
+    const n = normalizeNameKeyGlobal(nome).split(' ')[0] || '';
+    if (!n) return 'male';
+    const maleExceptions = new Set(['luca', 'lucca', 'lucca', 'josue', 'jonas', 'matias', 'baltazar']);
+    if (maleExceptions.has(n)) return 'male';
+    if (n.endsWith('a')) return 'female';
+    return 'male';
+  }
+
   /* ===============================
    * Leitura/Validação + rascunho
    * =============================== */
@@ -777,6 +866,34 @@
     return url;
   }
 
+  async function resolveStaffPhotoUrlByName(nome) {
+    const safeName = String(nome || '').trim();
+    const key = normalizeNameKeyGlobal(safeName);
+    if (!key) return null;
+    if (photoCacheGlobal.has(`staff:${key}`)) return photoCacheGlobal.get(`staff:${key}`);
+    let filename = '';
+    try {
+      const res = await fetch(`${PHOTO_DIR_STAFF}/manifest.json`, { cache: 'no-cache' });
+      if (res.ok) {
+        const list = await res.json().catch(() => []);
+        if (Array.isArray(list)) {
+          list.forEach((file) => {
+            if (typeof file !== 'string') return;
+            const k = normalizeNameKeyGlobal(file);
+            if (k && k === key) filename = file;
+          });
+        }
+      }
+    } catch {}
+    if (!filename && safeName) {
+      filename = `${safeName}.png`;
+    }
+    const safeFile = filename ? encodeURIComponent(filename) : '';
+    const url = safeFile ? `${PHOTO_DIR_STAFF}/${safeFile}` : DEFAULT_STAFF_PHOTO_URL;
+    photoCacheGlobal.set(`staff:${key}`, url);
+    return url;
+  }
+
   function renderReviewValue(key, value) {
     return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
   }
@@ -792,14 +909,21 @@
       .join('');
 
     let fotoRow = '';
-    if (state.perfil === 'Conselheiro') {
-      const fotoUrl = d.foto ? getFotoUrl(d.foto) : DEFAULT_PHOTO_URL;
+    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff') {
+      const isStaff = state.perfil === 'Staff';
+      const staffGender = isStaff ? guessGenderByName(d.nome || state.data?.nome || '') : '';
+      const staffClass = isStaff
+        ? `mi-photo-preview--staff ${staffGender === 'female' ? 'is-female' : 'is-male'}`
+        : '';
+      const fotoUrl = d.foto
+        ? getFotoUrl(d.foto)
+        : (isStaff ? DEFAULT_STAFF_PHOTO_URL : DEFAULT_PHOTO_URL);
       fotoRow = `
         <div class="d-flex">
           <div class="me-2 text-secondary" style="min-width:220px">Foto</div>
           <div class="fw-semibold flex-grow-1">
-            <div class="mi-photo-preview">
-              <img id="miReviewFoto" src="${escapeHtml(fotoUrl)}" alt="Foto do conselheiro">
+            <div class="mi-photo-preview ${staffClass}">
+              <img id="miReviewFoto" src="${escapeHtml(fotoUrl)}" alt="Foto do inscrito">
             </div>
           </div>
         </div>
@@ -822,15 +946,21 @@
     const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
     $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + editarLink;
 
-    if (state.perfil === 'Conselheiro') {
+    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff') {
       loadPhotoIndexGlobal().then(() => {
         const img = document.getElementById('miReviewFoto');
         if (!img) return;
         const nome = d.nome || state.data?.nome || $('#nome')?.value || '';
         if (!nome) return;
-        resolvePhotoUrlByName(nome).then((url) => {
-          if (url) img.src = url;
-        });
+        if (state.perfil === 'Staff') {
+          resolveStaffPhotoUrlByName(nome).then((url) => {
+            if (url) img.src = url;
+          });
+        } else {
+          resolvePhotoUrlByName(nome).then((url) => {
+            if (url) img.src = url;
+          });
+        }
       });
     }
 
