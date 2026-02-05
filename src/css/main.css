@@ -291,7 +291,7 @@ body{ overflow-x:clip; }
   -webkit-backdrop-filter: blur(8px) saturate(120%);
   box-shadow: 0 12px 26px rgba(0,0,0,.22);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  height: clamp(220px, 30vh, 260px);
+  height: clamp(260px, 34vh, 320px);
   cursor: pointer;
 }
 .profile-card::after{
