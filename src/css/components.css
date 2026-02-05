@@ -657,6 +657,7 @@ body.vote-admin-page.vote-module-bg::before{
 .vote-public-section{
   width:min(1100px, 100%);
   margin:20px auto 0;
+  margin-bottom:28rem;
 }
 .vote-form-modal{
   border-radius:20px;
