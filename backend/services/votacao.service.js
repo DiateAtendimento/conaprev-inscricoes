@@ -457,6 +457,8 @@ export async function validateVoter(cpf) {
       cpf: clean,
       nome: user.nome || "",
       numerodeinscricao: user.numerodeinscricao || "",
+      representatividade: user.representatividade || "",
+      titularidade: user.titularidade || "",
     },
   };
 }

@@ -1456,10 +1456,14 @@
     const userAvatarWrap = userAvatar?.closest('.vote-user-avatar');
     const userIntro = document.getElementById('voteUserIntro');
     const userIntroName = document.getElementById('voteUserIntroName');
-    const userIntroRole = document.getElementById('voteUserIntroRole');
+    const userIntroTitularidade = document.getElementById('voteUserIntroTitularidade');
+    const userIntroRepresentatividade = document.getElementById('voteUserIntroRepresentatividade');
     const userIntroId = document.getElementById('voteUserIntroId');
     const userIntroAvatar = document.getElementById('voteUserIntroAvatar');
     const userIntroAvatarWrap = userIntroAvatar?.closest('.vote-user-intro-avatar');
+    const formModalEl = document.getElementById('voteFormModal');
+    const formModalBody = document.getElementById('voteFormModalBody');
+    const formModalTitle = document.getElementById('voteFormModalTitle');
     const deniedModalEl = document.getElementById('voteDeniedModal');
     const deniedBody = document.getElementById('voteDeniedBody');
     const unavailableModalEl = document.getElementById('voteUnavailableModal');
@@ -1468,6 +1472,7 @@
 
     const deniedModal = deniedModalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(deniedModalEl) : null;
     const unavailableModal = unavailableModalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(unavailableModalEl) : null;
+    const formModal = formModalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(formModalEl) : null;
 
     const setModuleBackground = (enabled) => {
       document.body?.classList.toggle('vote-module-bg', !!enabled);
@@ -1478,6 +1483,7 @@
     let startedAt = 0;
     let pollTimer = null;
     let currentThemeId = null;
+    let lastThemes = null;
 
     const PHOTO_DIR = '/imagens/fotos-conselheiros';
     const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
@@ -1531,6 +1537,13 @@
     const formatRegionTitle = (region) => {
       if (!region) return '';
       return `Região ${toTitleCase(region)}`;
+    };
+
+    const formatProGestaoLabel = (value) => {
+      const num = parseInt(String(value || ''), 10);
+      if (!Number.isFinite(num) || num <= 0) return '';
+      const roman = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
+      return `Pró-Gestão ${roman}`;
     };
 
     const normalizeNameKey = (value) =>
@@ -1650,7 +1663,14 @@
     const showUserIntro = (user) => {
       if (!userIntro) return Promise.resolve();
       if (userIntroName) userIntroName.textContent = user?.nome || 'Usuário';
-      if (userIntroRole) userIntroRole.textContent = 'Conselheiro';
+      if (userIntroTitularidade) {
+        userIntroTitularidade.textContent = user?.titularidade || '';
+        userIntroTitularidade.classList.toggle('d-none', !user?.titularidade);
+      }
+      if (userIntroRepresentatividade) {
+        userIntroRepresentatividade.textContent = user?.representatividade || '';
+        userIntroRepresentatividade.classList.toggle('d-none', !user?.representatividade);
+      }
       if (userIntroId) {
         userIntroId.textContent = user?.numerodeinscricao || '';
         userIntroId.classList.toggle('d-none', !user?.numerodeinscricao);
@@ -1707,7 +1727,7 @@
 
     const fetchThemes = async () => {
       const res = await apiFetch('/api/votacao/temas');
-      if (!res.ok) return [];
+      if (!res.ok) return null;
       return res.json();
     };
 
@@ -1725,7 +1745,7 @@
         const proGestao = base?.proGestao || base?.pro_gestao || simulateProGestao(city, uf);
         const title = formatCityUfTitle(city, uf);
         const region = formatRegionLabel(regionKey);
-        const proLabel = proGestao ? `Pró-Gestão ${proGestao}` : '';
+        const proLabel = formatProGestaoLabel(proGestao);
         const labelId = `${q.id}_${base?.id || opt?.id}`;
         return `
           <label class="vote-flag-card" for="${labelId}">
@@ -1754,7 +1774,10 @@
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(async () => {
         const themes = await fetchThemes();
-        renderModules(themes);
+        if (themes && themes.length) {
+          lastThemes = themes;
+          renderModules(themes);
+        }
       }, 2000);
     };
 
@@ -1811,7 +1834,10 @@
       modules?.classList.remove('d-none');
       startPolling();
       const themes = await fetchThemes();
-      renderModules(themes);
+      if (themes && themes.length) {
+        lastThemes = themes;
+        renderModules(themes);
+      }
     });
 
     moduleGrid.addEventListener('click', async (event) => {
@@ -1871,12 +1897,21 @@
         Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
       }
       if (formTitle) formTitle.textContent = currentVote.title || 'Questionário';
+      if (formModalTitle) formModalTitle.textContent = currentVote.title || 'Questionário';
+      if (formModalBody && formWrap && formWrap.parentElement !== formModalBody) {
+        formModalBody.appendChild(formWrap);
+      }
+      formModal?.show();
       if (currentThemeId !== 'membros-rotativos') {
         applyPreviousAnswers(pendingAnswers);
       }
     });
 
     backBtn?.addEventListener('click', () => {
+      formModal?.hide();
+    });
+
+    formModalEl?.addEventListener('hidden.bs.modal', () => {
       formWrap?.classList.add('d-none');
       setModuleBackground(false);
     });
@@ -1995,7 +2030,12 @@
         loginCard?.classList.add('d-none');
         modules?.classList.remove('d-none');
         startPolling();
-        fetchThemes().then(renderModules);
+        fetchThemes().then((themes) => {
+          if (themes && themes.length) {
+            lastThemes = themes;
+            renderModules(themes);
+          }
+        });
       }
     } catch {}
   };

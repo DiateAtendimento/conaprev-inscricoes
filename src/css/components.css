@@ -548,7 +548,7 @@ body.vote-admin-page.vote-module-bg::before{
   box-shadow:0 14px 30px rgba(15,23,42,.08);
   display:flex;
   align-items:center;
-  height:11rem;
+  height:10rem;
 }
 .vote-login-shell{
   min-height:100vh;
@@ -657,6 +657,18 @@ body.vote-admin-page.vote-module-bg::before{
   width:min(1100px, 100%);
   margin:20px auto 0;
 }
+.vote-form-modal{
+  border-radius:20px;
+  border:1px solid rgba(11,77,168,.18);
+  box-shadow:0 24px 60px rgba(15,23,42,.2);
+}
+.vote-form-modal .modal-body{
+  padding:20px;
+}
+.vote-form-modal .vote-public-section{
+  width:100%;
+  margin:0;
+}
 .vote-public-hero{
   background:linear-gradient(135deg, rgba(46,136,216,.95), rgba(83,194,222,.95));
   color:#fff;
@@ -706,12 +718,13 @@ body.vote-admin-page.vote-module-bg::before{
 .vote-user-info{
   display:flex;
   align-items:center;
-  gap:10px;
-  padding:10px 14px;
-  border-radius:16px;
-  background:#fff;
-  box-shadow:0 12px 28px rgba(15,23,42,.15);
-  border:1px solid rgba(15,23,42,.08);
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 18px 36px rgba(15,23,42,.18);
+  border:1px solid rgba(11,77,168,.18);
+  backdrop-filter: blur(8px);
 }
 .vote-user-avatar{
   width:40px;
@@ -743,8 +756,13 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-user-name{
   font-weight:700;
-  font-size:13px;
+  font-size:14px;
   color:#0f172a;
+}
+.vote-user-info .btn{
+  padding:4px 12px;
+  border-radius:999px;
+  font-weight:600;
 }
 
 .vote-user-intro{
@@ -796,12 +814,17 @@ body.vote-admin-page.vote-module-bg::before{
   display:none;
 }
 .vote-user-intro-name{
-  font-size:34px;
+  font-size:32px;
   font-weight:800;
 }
 .vote-user-intro-role{
   font-size:16px;
   margin-top:6px;
+  opacity:.9;
+}
+.vote-user-intro-meta{
+  font-size:15px;
+  margin-top:4px;
   opacity:.9;
 }
 .vote-user-intro-id{

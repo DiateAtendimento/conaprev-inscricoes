@@ -57,6 +57,7 @@ const HEADER_ALIASES = {
   nomenoprismacracha: "nomenoprismacracha",
   ufsigla: "ufsigla",
   representatividade: "representatividade",
+  titularidade: "titularidade",
   cargofuncao: "cargofuncao",
   sigladaentidade: "sigladaentidade",
   identificacao: "identificacao",
