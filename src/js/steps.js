@@ -42,6 +42,11 @@
   const modalEl = document.getElementById('modalInscricao');
   if (!modalEl) { console.error('Faltou o HTML do modal #modalInscricao no index.html'); return; }
   const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+  const cancelModalEl = document.getElementById('cancelInscricaoModal');
+  const cancelModal = cancelModalEl ? new bootstrap.Modal(cancelModalEl, { backdrop: 'static', keyboard: true }) : null;
+  const cancelMsgEl = document.getElementById('cancelInscricaoMsg');
+  const cancelYesBtn = document.getElementById('cancelInscricaoYes');
+  const cancelNoBtn = document.getElementById('cancelInscricaoNo');
 
   const STEP_MIN = 1, STEP_MAX = 6;
   const initialState = () => ({
@@ -838,22 +843,34 @@
     $('#miCancelarInscricao')?.addEventListener('click', async () => {
       const idx = Number(d._rowIndex || 0);
       if (!idx) return;
-      const ok = window.confirm('Tem certeza que deseja cancelar esta inscrição? O número será liberado.');
-      if (!ok) return;
+      if (cancelMsgEl) {
+        const nome = d.nome || '';
+        cancelMsgEl.textContent = `${nome || 'Usuário'}, Tem certeza que deseja cancelar sua inscrição?`;
+      }
+      cancelYesBtn?.classList.remove('d-none');
+      cancelModal?.show();
+      if (cancelNoBtn) {
+        cancelNoBtn.onclick = () => cancelModal?.hide();
+      }
+      if (!cancelYesBtn) return;
+      cancelYesBtn.onclick = async () => {
       try {
         openLottie('saving', 'Cancelando inscrição…');
         await apiCancelar(idx);
         closeLottie();
+        cancelModal?.hide();
         state.data.numerodeinscricao = '';
         state.protocolo = null;
         const numInput = document.getElementById('numerodeinscricao');
         if (numInput) numInput.value = '';
         updateFinalStepLabel();
         renderReview();
+        window.location.href = '/';
       } catch (e) {
         openLottie('error', e.message || 'Erro ao cancelar.');
         setTimeout(closeLottie, 1600);
       }
+      };
     });
   }
 
