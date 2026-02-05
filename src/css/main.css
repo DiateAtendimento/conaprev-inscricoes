@@ -1286,7 +1286,7 @@ body.gate-active .topbar{ display:none !important; }
   border-radius:50%;
   outline:3px solid #2563eb;
   outline-offset:0;
-  transform:scale(1.25);
+  transform:scale(1.6) !important;
 }
 .mi-staff-card.is-female .mi-staff-photo img{
   outline-color:#ec4899;
@@ -1299,7 +1299,7 @@ body.gate-active .topbar{ display:none !important; }
   outline:3px solid #2563eb;
   outline-offset:0;
   object-position:center;
-  transform:scale(1.25);
+  transform:scale(1.6) !important;
 }
 .mi-photo-preview--staff.is-female img{
   outline-color:#ec4899;
