@@ -43,6 +43,10 @@
 
   const elBadgeTop         = document.getElementById('adminNotifBadge');
   const elBadgeModal       = document.getElementById('adminNotifCount');
+  const elCancelModal      = document.getElementById('cancelInscricaoModal');
+  const elCancelMsg        = document.getElementById('cancelInscricaoMsg');
+  const elCancelYes        = document.getElementById('cancelInscricaoYes');
+  const elCancelNo         = document.getElementById('cancelInscricaoNo');
 
   // Se Não tem nada de admin na página, Não faz nada
   if (!elAdminBtn) return;
@@ -54,6 +58,7 @@
   };
   const authModal    = getModal(elAuthModal);
   const monitorModal = getModal(elMonitorModal);
+  const cancelModal  = getModal(elCancelModal);
 
   // ======= Toast helper (cria container on-demand) =======
   function ensureToastContainer() {
@@ -418,9 +423,16 @@
         const card = e.currentTarget.closest('[data-rowindex]');
         const idx = Number(card?.dataset?.rowindex || 0);
         if (!idx) return;
-        const ok = window.confirm('Tem certeza que deseja cancelar esta inscrição?');
-        if (!ok) return;
-        await cancelarInscricao(idx);
+        const nome = card?.querySelector('.fw-semibold')?.textContent || 'Usuário';
+        if (elCancelMsg) elCancelMsg.textContent = `${nome}, Tem certeza que deseja cancelar esta inscrição?`;
+        if (elCancelNo) elCancelNo.onclick = () => cancelModal?.hide();
+        if (elCancelYes) {
+          elCancelYes.onclick = async () => {
+            await cancelarInscricao(idx);
+            cancelModal?.hide();
+          };
+        }
+        cancelModal?.show();
       }, { passive: true });
     });
 
