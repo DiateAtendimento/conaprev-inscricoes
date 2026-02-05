@@ -98,7 +98,7 @@
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const PHOTO_DIR_STAFF = '/imagens/fotos-staff';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
-  const DEFAULT_STAFF_PHOTO_URL = '/imagens/cards/staff.svg';
+  const DEFAULT_STAFF_PHOTO_URL = `${PHOTO_DIR_STAFF}/padrao.svg`;
   const photoCacheGlobal = new Map();
   let photoIndexPromiseGlobal = null;
   let photoIndexLocal = new Map();

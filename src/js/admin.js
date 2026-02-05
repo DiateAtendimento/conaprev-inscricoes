@@ -181,7 +181,7 @@
     Staff: {
       dir: '/imagens/fotos-staff',
       manifest: '/imagens/fotos-staff/manifest.json',
-      defaultUrl: '/imagens/cards/staff.svg',
+      defaultUrl: '/imagens/fotos-staff/padrao.svg',
       aliases: new Map()
     }
   };
