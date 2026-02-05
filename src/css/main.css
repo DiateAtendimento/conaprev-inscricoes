@@ -291,7 +291,7 @@ body{ overflow-x:clip; }
   -webkit-backdrop-filter: blur(8px) saturate(120%);
   box-shadow: 0 12px 26px rgba(0,0,0,.22);
   transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  height: clamp(280px, 38vh, 360px);
+  height: clamp(260px, 34vh, 320px);
   cursor: pointer;
 }
 .profile-card::after{
@@ -573,7 +573,7 @@ body{ overflow-x:clip; }
     padding: 8px 10px;
     margin-bottom: 0;
   }
-  .profile-card{ height: clamp(260px, 32vh, 320px); }
+  .profile-card{ height: clamp(150px, 20vh, 185px); }
   .card-top{ min-height: clamp(70px, 10vh, 90px); }
 
   .event-map{
