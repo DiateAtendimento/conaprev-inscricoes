@@ -535,11 +535,11 @@ body.vote-admin-page.vote-module-bg::before{
 }
 .vote-public-footer{
   width:100%;
-  padding:0 0 24px;
+  padding:0 0 12px;
 }
 .vote-public-footer-inner{
   width:min(1100px, 100%);
-  margin:18px auto 0;
+  margin:12px auto 0;
   padding:0 16px;
   border-radius:18px;
   background:rgba(255,255,255,.72);
@@ -548,7 +548,7 @@ body.vote-admin-page.vote-module-bg::before{
   box-shadow:0 14px 30px rgba(15,23,42,.08);
   display:flex;
   align-items:center;
-  height:10rem;
+  height:8.5rem;
 }
 .vote-login-shell{
   min-height:100vh;
