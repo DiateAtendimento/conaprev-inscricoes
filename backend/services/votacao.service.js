@@ -455,10 +455,10 @@ export async function validateVoter(cpf) {
     ok: true,
     user: {
       cpf: clean,
-      nome: user.nome || "",
+      nome: user.nomenoprismacracha || user.nome || "",
       numerodeinscricao: user.numerodeinscricao || "",
       representatividade: user.representatividade || "",
-      titularidade: user.titularidade || "",
+      titularidade: user.cargofuncao || "",
     },
   };
 }
