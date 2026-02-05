@@ -1225,10 +1225,12 @@ body.gate-active .topbar{ display:none !important; }
   height:40px;
   border-radius:50%;
   object-fit:cover;
-  object-position:center;
-  transform:scale(1.35);
   border:1px solid rgba(15,23,42,.15);
   background:#f1f5f9;
+}
+.admin-photo--staff.admin-photo--filled{
+  object-position:center;
+  transform:scale(1.35);
 }
 
 .mi-photo-preview{

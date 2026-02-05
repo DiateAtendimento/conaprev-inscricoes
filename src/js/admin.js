@@ -369,9 +369,10 @@
     const showPhoto = (state.perfil === 'Conselheiro' || state.perfil === 'Staff');
     const photoConfig = showPhoto ? getPhotoConfig(state.perfil) : null;
     const defaultPhoto = photoConfig?.defaultUrl || '';
+    const staffClass = (state.perfil === 'Staff') ? 'admin-photo--staff' : '';
     const photoHtml = showPhoto ? `
       <div class="admin-photo-wrap me-3">
-        <img class="admin-photo" data-name="${item.nome || ''}" src="${defaultPhoto}" alt="Foto de ${item.nome || 'Inscrito'}">
+        <img class="admin-photo ${staffClass}" data-name="${item.nome || ''}" src="${defaultPhoto}" alt="Foto de ${item.nome || 'Inscrito'}">
       </div>
     ` : '';
 
@@ -501,11 +502,19 @@
     imgs.forEach((img) => {
       const nome = img.getAttribute('data-name') || '';
       resolvePhotoUrl(perfil, nome).then((url) => {
-        img.src = url || config?.defaultUrl || '';
+        const finalUrl = url || config?.defaultUrl || '';
+        img.src = finalUrl;
+        if (perfil === 'Staff') {
+          const isDefault = config?.defaultUrl && finalUrl === config.defaultUrl;
+          img.classList.toggle('admin-photo--filled', !isDefault);
+        }
       });
       img.onerror = () => {
         if (config?.defaultUrl && img.src !== config.defaultUrl) {
           img.src = config.defaultUrl;
+        }
+        if (perfil === 'Staff') {
+          img.classList.remove('admin-photo--filled');
         }
       };
     });
