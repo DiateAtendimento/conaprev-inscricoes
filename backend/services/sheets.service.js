@@ -210,13 +210,30 @@ export async function buscarPorCpf(cpf, perfil) {
 
 async function gerarNumeroInscricao(perfil) {
   const sheetName = sheetForPerfil(perfil);
+  try {
+    const { headers, rows } = await readAll(sheetName);
+    const norm = headers.map(normalizeKey);
+    const idxCode = norm.indexOf("numerodeinscricao");
+    const idxCpf = norm.indexOf("cpf");
+    const idxNome = norm.indexOf("nome");
+    if (idxCode >= 0 && idxCpf >= 0 && idxNome >= 0) {
+      const nums = rows
+        .filter(r => String(r[idxCpf] || "").trim() && String(r[idxNome] || "").trim())
+        .map(r => parseInt(String(r[idxCode] || "").replace(/^\D+/, ""), 10))
+        .filter(n => !isNaN(n))
+        .sort((a, b) => a - b);
+      for (let i = 1; i <= 500; i++) if (!nums.includes(i)) return ("00" + i).slice(-3);
+      throw new Error("Limite de inscrições atingido");
+    }
+  } catch {}
+
   const sheets = await getSheets();
   const resp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A2:A` });
   const nums = (resp.data.values || [])
     .flat()
     .map(v => parseInt(String(v).replace(/^\D+/, ""), 10))
     .filter(n => !isNaN(n))
-    .sort((a,b)=>a-b);
+    .sort((a, b) => a - b);
   for (let i = 1; i <= 500; i++) if (!nums.includes(i)) return ("00" + i).slice(-3);
   throw new Error("Limite de inscrições atingido");
 }
@@ -317,12 +334,14 @@ export async function getConselheiroSeats() {
   const normHdrs = headers.map(h => normalizeKey(h));
   const idxCode = normHdrs.indexOf("numerodeinscricao");
   const idxName = normHdrs.indexOf("nome");
+  const idxCpf = normHdrs.indexOf("cpf");
   if (idxCode < 0 || idxName < 0) throw new Error('Cabeçalhos "Número de Inscrição" ou "Nome" não encontrados.');
   const seats = [];
   rows.forEach(r => {
     const code = r[idxCode];
     const name = r[idxName];
-    if (code) {
+    const cpf = idxCpf >= 0 ? r[idxCpf] : "";
+    if (code && String(name || "").trim() && String(cpf || "").trim()) {
       const num = parseInt(String(code).replace(/\D/g, ""), 10);
       if (!isNaN(num)) seats.push({ seat: num, name });
     }
