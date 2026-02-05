@@ -456,6 +456,7 @@ export async function validateVoter(cpf) {
     user: {
       cpf: clean,
       nome: user.nomenoprismacracha || user.nome || "",
+      nomeCompleto: user.nome || "",
       numerodeinscricao: user.numerodeinscricao || "",
       representatividade: user.representatividade || "",
       titularidade: user.cargofuncao || "",

@@ -1609,7 +1609,8 @@
         if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) return raw;
         return `${PHOTO_DIR}/${encodeURIComponent(raw)}`;
       }
-      if (user.nome) return resolvePhotoUrlByName(user.nome);
+      const nameForPhoto = user.nomeCompleto || user.nome;
+      if (nameForPhoto) return resolvePhotoUrlByName(nameForPhoto);
       return DEFAULT_USER_PHOTO;
     };
 

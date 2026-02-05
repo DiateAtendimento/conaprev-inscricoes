@@ -779,6 +779,7 @@ body.vote-admin-page.vote-module-bg::before{
   opacity:0;
   pointer-events:none;
   transition:opacity .35s ease;
+  background:rgba(5, 15, 35, .45);
 }
 .vote-user-intro.is-visible{
   opacity:1;

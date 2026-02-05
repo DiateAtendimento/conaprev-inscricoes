@@ -343,6 +343,12 @@
       </div>
     ` : '';
 
+    const cancelBtnHtml = !isFinalizados ? `
+      <button type="button" class="btn btn-sm btn-outline-danger btn-cancel" title="Cancelar inscrição">
+        <i class="bi bi-x-circle" aria-hidden="true"></i>
+      </button>
+    ` : '';
+
     return `
       <div class="card p-2" data-rowindex="${item._rowIndex}" style="${highlightStyle}">
         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -362,6 +368,7 @@
 
           <div class="d-flex align-items-center gap-2 ms-auto">
             ${handBtnHtml(checked)}
+            ${cancelBtnHtml}
             <div class="text-end small">
               <div><span class="text-muted">Conferido por:</span> ${item.conferidopor || '-'}</div>
               <div><span class="text-muted">Em:</span> ${fmtDateBR(item.conferidoem)}</div>
@@ -402,6 +409,18 @@
         if (!idx) return;
         const isFinal = (state.activeTab === 'finalizados');
         await toggleConferido(idx, !isFinal);
+      }, { passive: true });
+    });
+
+    // Eventos do bot�o de cancelar
+    targetEl.querySelectorAll('.btn-cancel').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const card = e.currentTarget.closest('[data-rowindex]');
+        const idx = Number(card?.dataset?.rowindex || 0);
+        if (!idx) return;
+        const ok = window.confirm('Tem certeza que deseja cancelar esta inscrição?');
+        if (!ok) return;
+        await cancelarInscricao(idx);
       }, { passive: true });
     });
 
@@ -556,6 +575,31 @@
     } catch (e) {
       console.error('[admin] toggleConferido', e);
       alert(e.message || 'Erro ao marcar conferido.');
+    }
+  }
+
+  async function cancelarInscricao(_rowIndex){
+    try {
+      const res = await fetch(`${API}/api/inscricoes/cancelar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headersAdmin() },
+        body: JSON.stringify({ _rowIndex, perfil: state.perfil })
+      });
+      if (res.status === 401) {
+        if (monitorModal) monitorModal.hide();
+        if (authModal) authModal.show();
+        return;
+      }
+      if (!res.ok) {
+        const j = await res.json().catch(()=>null);
+        throw new Error(j?.error || 'Erro ao cancelar inscrição');
+      }
+      showToast('Inscrição cancelada.');
+      await refreshBoth();
+      snapshotActiveProtocols();
+    } catch (e) {
+      console.error('[admin] cancelar', e);
+      alert(e.message || 'Erro ao cancelar inscrição.');
     }
   }
 
