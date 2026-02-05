@@ -859,6 +859,25 @@ body.vote-admin-page.vote-module-bg::before{
   }
 }
 
+@media (max-width: 900px){
+  .vote-admin-shell{
+    padding:20px 16px;
+  }
+  .vote-admin-card{
+    padding:20px;
+  }
+  .vote-admin-footer-inner{
+    height:auto;
+    padding:12px 10px;
+  }
+  .vote-footer-logos img{
+    height:5rem;
+  }
+  .vote-footer-logos .vote-logo-govbr{
+    height:7rem;
+  }
+}
+
 @media (max-width: 576px){
   .vote-login-shell{
     padding:16px;
@@ -869,9 +888,15 @@ body.vote-admin-page.vote-module-bg::before{
   .vote-public-section{
     margin-top:16px;
   }
+  .vote-public-hero{
+    padding:16px 18px;
+  }
   .vote-form-header{
     flex-direction:column;
     align-items:flex-start;
+  }
+  .vote-form-modal .modal-body{
+    padding:14px;
   }
   .vote-user-menu{
     top:10px;
@@ -879,6 +904,21 @@ body.vote-admin-page.vote-module-bg::before{
   }
   .vote-user-info{
     padding:8px 10px;
+  }
+  .vote-admin-card{
+    padding:16px;
+  }
+  .vote-admin-footer-inner{
+    padding:10px;
+  }
+  .vote-footer-logos{
+    gap:10px;
+  }
+  .vote-footer-logos img{
+    height:4.2rem;
+  }
+  .vote-footer-logos .vote-logo-govbr{
+    height:6rem;
   }
 }
 
