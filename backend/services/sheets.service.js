@@ -308,21 +308,27 @@ export async function cancelarInscricao(formData, perfil) {
   const idx = Number(formData._rowIndex);
   if (!idx || idx < 2) throw new Error("Linha inválida.");
   const sheetName = sheetForPerfil(perfil);
+  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
+  const colCode = headerIndex(headers, "numerodeinscricao");
+  if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
 
-  // precisamos do sheetId num�rico para apagar a linha via batchUpdate
-  const meta = await getSpreadsheetMeta();
-  const sh = meta.sheets.find(s => s.title === sheetName);
-  if (!sh) throw new Error(`Aba não existe: ${sheetName}`);
   const sheets = await getSheets();
-  await sheets.spreadsheets.batchUpdate({
+  const lastColLetter = String.fromCharCode(64 + headers.length);
+  const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
+
+  const curResp = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    requestBody: {
-      requests: [{
-        deleteDimension: {
-          range: { sheetId: sh.sheetId, dimension: "ROWS", startIndex: idx-1, endIndex: idx }
-        }
-      }]
-    }
+    range
+  });
+  const row = (curResp.data.values && curResp.data.values[0]) ? curResp.data.values[0] : [];
+  while (row.length < headers.length) row.push("");
+  row[colCode] = "";
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range,
+    valueInputOption: "RAW",
+    requestBody: { values: [row] }
   });
 
   invalidateSheetCache(sheetName);
