@@ -726,10 +726,8 @@
         if (img && nome) {
           resolveStaffPhotoUrlByName(nome).then((url) => {
             if (url) img.src = url;
+            attachStaffFallback(img, nome, url);
           });
-          img.onerror = () => {
-            if (img.src !== DEFAULT_STAFF_PHOTO_URL) img.src = DEFAULT_STAFF_PHOTO_URL;
-          };
         }
       });
     } catch {
@@ -901,6 +899,39 @@
     return url;
   }
 
+  const STAFF_PHOTO_EXTS = ['png', 'jpg', 'jpeg'];
+
+  function staffPhotoUrlFromName(name, ext) {
+    const safeName = String(name || '').trim();
+    if (!safeName) return DEFAULT_STAFF_PHOTO_URL;
+    return `${PHOTO_DIR_STAFF}/${encodeURIComponent(`${safeName}.${ext}`)}`;
+  }
+
+  function setStaffFallbackIndex(img, url) {
+    const match = String(url || '').match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+    const ext = match ? match[1].toLowerCase() : '';
+    const idx = STAFF_PHOTO_EXTS.indexOf(ext);
+    img.dataset.staffExtIndex = String(idx >= 0 ? idx : 0);
+  }
+
+  function attachStaffFallback(img, name, initialUrl) {
+    if (!img || !name) return;
+    if (initialUrl === DEFAULT_STAFF_PHOTO_URL) return;
+    img.dataset.staffName = name;
+    setStaffFallbackIndex(img, initialUrl);
+    img.onerror = () => {
+      const n = img.dataset.staffName || name;
+      let idx = Number(img.dataset.staffExtIndex || '0');
+      idx += 1;
+      if (idx < STAFF_PHOTO_EXTS.length) {
+        img.dataset.staffExtIndex = String(idx);
+        img.src = staffPhotoUrlFromName(n, STAFF_PHOTO_EXTS[idx]);
+        return;
+      }
+      if (img.src !== DEFAULT_STAFF_PHOTO_URL) img.src = DEFAULT_STAFF_PHOTO_URL;
+    };
+  }
+
   function renderReviewValue(key, value) {
     return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
   }
@@ -962,6 +993,7 @@
         if (state.perfil === 'Staff') {
           resolveStaffPhotoUrlByName(nome).then((url) => {
             if (url) img.src = url;
+            attachStaffFallback(img, nome, url);
           });
         } else {
           resolvePhotoUrlByName(nome).then((url) => {
