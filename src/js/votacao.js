@@ -1436,6 +1436,7 @@
       if (!proGestaoFormSlot.contains(form)) {
         proGestaoFormSlot.appendChild(form);
       }
+      form.classList.remove('d-none');
       proGestaoPlaceholder?.classList.add('d-none');
     };
 
@@ -1453,7 +1454,8 @@
     };
 
     proGestaoFormModalEl?.addEventListener('hidden.bs.modal', () => {
-      if (isProGestao) proGestaoPlaceholder?.classList.remove('d-none');
+      if (!isProGestao) return;
+      proGestaoPlaceholder?.classList.remove('d-none');
     });
 
     proGestaoFormModalEl?.addEventListener('click', (event) => {
@@ -1474,6 +1476,10 @@
     };
 
     if (isProGestao) {
+      if (proGestaoFormSlot && form && !proGestaoFormSlot.contains(form)) {
+        form.classList.add('d-none');
+        proGestaoFormSlot.appendChild(form);
+      }
       proGestaoPlaceholder?.classList.remove('d-none');
       if (!editId) {
         proGestaoModal?.show();
