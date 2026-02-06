@@ -183,6 +183,16 @@
   align-items:center;
   gap:12px;
 }
+.vote-option-input.is-state-option .vote-flag-fields{
+  grid-template-columns: 90px;
+}
+.vote-option-input.is-assoc-option .vote-flag-fields{
+  grid-template-columns: minmax(0, 1fr);
+}
+.vote-option-input.is-state-option .vote-flag-actions,
+.vote-option-input.is-assoc-option .vote-flag-actions{
+  min-width:56px;
+}
 .vote-flag-preview{
   width:64px;
   height:64px;
@@ -252,6 +262,17 @@
   justify-self:end;
   min-width:72px;
   z-index:2;
+}
+.vote-pro-gestao-intro{
+  background:rgba(15, 23, 42, 0.04);
+  border:1px solid rgba(148,163,184,0.3);
+  border-radius:12px;
+  padding:16px;
+}
+.vote-pro-gestao-text{
+  font-size:0.95rem;
+  line-height:1.45;
+  color:#0f172a;
 }
 @media (max-width: 1200px){
   .vote-flag-fields{

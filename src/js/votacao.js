@@ -18,6 +18,9 @@
 
   const REGION_IMAGE_DIR = '/imagens/membros-rotat-mun';
   const REGION_IMAGE_DEFAULT = `${REGION_IMAGE_DIR}/PADRAO.svg`;
+  const STATE_FLAG_DIR = '/imagens/fotos-bandeiras-estados';
+  const ASSOC_IMAGE_DIR = '/imagens/fotos-associacoes';
+  const ASSOC_MANIFEST_URL = `${ASSOC_IMAGE_DIR}/manifest.json`;
   const CITY_DATA_URL = '/data/uf-municipios.json';
 
   const REGION_LABELS = {
@@ -65,6 +68,36 @@
     .replace(/\s+/g, '-');
 
   const getRegionKeyByUf = (uf) => UF_REGION[String(uf || '').trim().toUpperCase()] || '';
+
+  const STATE_FLAG_FILES = {
+    AC: 'Acre-1.jpg',
+    AL: 'Alagoas-1.jpg',
+    AP: 'Amapa-1.jpg',
+    AM: 'Amazonas-1.jpg',
+    BA: 'Bahia-1.jpg',
+    CE: 'Ceara-1.jpg',
+    DF: 'Brasilia-1.jpg',
+    ES: 'Espiritosanto-1.jpg',
+    GO: 'Goias-1.jpg',
+    MA: 'Maranhao-1.jpg',
+    MT: 'Matogrosso-1.jpg',
+    MS: 'Matogrossodosul-1.jpg',
+    MG: 'Minasgerais-1.jpg',
+    PA: 'Para-1.jpg',
+    PB: 'Paraiba-1.jpg',
+    PR: 'Parana-1.jpg',
+    PE: 'Pernambuco-1.jpg',
+    PI: 'Piaui-1.jpg',
+    RJ: 'Riodejaneiro-1.jpg',
+    RN: 'Riograndedonorte-1.jpg',
+    RS: 'Riograndedosul-1.jpg',
+    RO: 'Rondonia-1.jpg',
+    RR: 'Roraima-1.jpg',
+    SC: 'Santacatarina-1.jpg',
+    SP: 'Saopaulo-1.jpg',
+    SE: 'Sergipe-1.jpg',
+    TO: 'Tocantins-1.jpg',
+  };
 
   const formatRegionLabel = (key) => {
     if (!key) return '';
@@ -680,6 +713,8 @@
     };
     const successModal = getModal(successModalEl);
     const typeModal = getModal(typeModalEl);
+    const proGestaoModalEl = document.getElementById('voteProGestaoModal');
+    const proGestaoModal = getModal(proGestaoModalEl);
 
     const getSearchParam = (name) => new URLSearchParams(window.location.search).get(name);
     const editId = getSearchParam('edit');
@@ -687,7 +722,9 @@
 
     let currentVote = null;
     let isEdit = false;
-    let isRotativos = themeId === 'membros-rotativos';
+    const isProGestao = themeId === 'pro-gestao';
+    const isRotativosTheme = themeId === 'membros-rotativos';
+    let proGestaoMode = null;
     if (themeId) {
       document.body?.classList.add('vote-module-bg');
     }
@@ -695,6 +732,7 @@
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
     let cityDataPromise = null;
+    let assocListPromise = null;
 
     const themeMeta = themeId ? THEMES.find((t) => t.id === themeId) : null;
     if (titleInput && themeMeta) {
@@ -749,6 +787,21 @@
 
     const ensureCityDatalist = async () => {
       await loadCityData();
+    };
+
+    const loadAssocList = async () => {
+      if (assocListPromise) return assocListPromise;
+      assocListPromise = (async () => {
+        const res = await fetch(ASSOC_MANIFEST_URL, { cache: 'no-cache' });
+        if (!res.ok) return [];
+        const list = await res.json().catch(() => []);
+        if (!Array.isArray(list)) return [];
+        return list
+          .map((file) => String(file || '').replace(/\.[^.]+$/, '').trim())
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+      })();
+      return assocListPromise;
     };
 
     const getCityStates = async () => {
@@ -817,6 +870,58 @@
       );
     };
 
+    const inferProGestaoMode = (questions = []) => {
+      const options = (questions || []).flatMap((q) => q?.options || q?.opcoes || q?.alternativas || []);
+      if (options.some((opt) => opt?.associacao || opt?.association)) return 'associacoes';
+      if (options.some((opt) => opt?.city || opt?.municipio)) return 'municipios';
+      if (options.some((opt) => opt?.uf)) return 'estados';
+      return 'municipios';
+    };
+
+    const ensureProGestaoIntro = () => {
+      if (!isProGestao) return;
+      const target = document.getElementById('voteBuilder');
+      if (!target) return;
+      let intro = document.getElementById('voteProGestaoIntro');
+      if (!intro) {
+        intro = document.createElement('div');
+        intro.id = 'voteProGestaoIntro';
+        intro.className = 'vote-pro-gestao-intro mb-3';
+        target.parentElement?.insertBefore(intro, target);
+      }
+      const mode = getOptionMode();
+      if (mode === 'municipios') {
+        intro.innerHTML = `
+          <div class="vote-pro-gestao-text">
+            <strong>Vagas rotativas dos Municípios</strong><br>
+            § 7º A representação dos Municípios, referida na alínea “k” do inciso II deste artigo, observará o seguinte:<br>
+            I - será rotativa, com duração de um ano civil;<br>
+            II - deverá preferencialmente contemplar Municípios de diferentes regiões geográficas;<br>
+            III - caberá à Diretoria Executiva submeter ao Colegiado, na última reunião de cada exercício, a relação dos Municípios por ela indicados e os critérios para escolha, devendo considerar, dentre outros, o incentivo aos RPPS que tenham adotado boas práticas de gestão previdenciária.<br>
+            Diferentes regiões geográficas;<br>
+            Pró-Gestão<br>
+            Critérios:<br>
+            §§ 6º e 7º do art. 5º
+          </div>
+        `;
+        intro.classList.remove('d-none');
+      } else if (mode === 'associacoes') {
+        intro.innerHTML = `
+          <div class="vote-pro-gestao-text">
+            <strong>Vagas rotativas das Associações Estaduais</strong><br>
+            § 6º A representação das associações estaduais dos RPPS, referida na alínea “j” do inciso II deste artigo, observará o seguinte:<br>
+            I - será rotativa, com duração de um ano civil;<br>
+            II - será definida pelo tempo de constituição, iniciando-se com as mais antigas, contemplando posteriormente as seguintes;<br>
+            (§§ 6º e 7º do art. 5º do Estatuto)
+          </div>
+        `;
+        intro.classList.remove('d-none');
+      } else {
+        intro.innerHTML = '';
+        intro.classList.add('d-none');
+      }
+    };
+
     const normalizeOption = (opt) => {
       if (typeof opt === 'string') {
         return { id: createId('o'), text: opt };
@@ -825,8 +930,18 @@
       return { ...opt, id: opt?.id || createId('o'), text };
     };
 
+    const getOptionMode = () => {
+      if (isProGestao) return proGestaoMode || 'municipios';
+      if (isRotativosTheme) return 'municipios';
+      return 'simple';
+    };
+
+    const isMunicipiosMode = () => getOptionMode() === 'municipios';
+    const isEstadosMode = () => getOptionMode() === 'estados';
+    const isAssociacoesMode = () => getOptionMode() === 'associacoes';
+
     const getCitiesByUf = async (uf) => {
-      if (!isRotativos) return [];
+      if (!isMunicipiosMode()) return [];
       const key = String(uf || '').trim().toUpperCase();
       if (!key) return [];
       const states = await getCityStates();
@@ -1012,41 +1127,154 @@
       return { regionKey, proGestao: proValue };
     };
 
+    const resolveStateFlagUrl = (uf) => {
+      const key = String(uf || '').trim().toUpperCase();
+      const file = STATE_FLAG_FILES[key];
+      return file ? `${STATE_FLAG_DIR}/${file}` : '';
+    };
+
+    const updateStateFlagFromInputs = (row) => {
+      const uf = row.querySelector('.vote-option-uf')?.value || '';
+      const url = resolveStateFlagUrl(uf);
+      setFlagPreview(row, url || null);
+      row.dataset.uf = String(uf || '').trim().toUpperCase();
+      row.dataset.flagFound = url ? '1' : '0';
+      return { uf };
+    };
+
+    const resolveAssociationImageUrl = (name) => {
+      const value = String(name || '').trim();
+      if (!value) return '';
+      return `${ASSOC_IMAGE_DIR}/${encodeURIComponent(`${value}.png`)}`;
+    };
+
+    const updateAssociationPreview = (row) => {
+      const select = row.querySelector('.vote-option-assoc');
+      const value = select?.value || '';
+      const url = resolveAssociationImageUrl(value);
+      setFlagPreview(row, url || null);
+      row.dataset.associacao = value;
+      return { associacao: value };
+    };
+
     const createOptionEl = (option) => {
       const wrap = document.createElement('div');
-      wrap.className = isRotativos ? 'vote-option-input is-flag-option' : 'vote-option-input';
+      const mode = getOptionMode();
+      if (mode === 'municipios') {
+        wrap.className = 'vote-option-input is-flag-option is-municipio-option';
+      } else if (mode === 'estados') {
+        wrap.className = 'vote-option-input is-flag-option is-state-option';
+      } else if (mode === 'associacoes') {
+        wrap.className = 'vote-option-input is-flag-option is-assoc-option';
+      } else {
+        wrap.className = 'vote-option-input';
+      }
       wrap.dataset.oid = option.id;
-      if (!isRotativos) {
+      if (mode === 'simple') {
         wrap.innerHTML = `
           <input type="text" class="form-control vote-option-text" placeholder="Opção" value="${option.text || ''}" />
           <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
         `;
         return wrap;
       }
-      const parsed = parseCityUfFromText(option.text);
-      const city = option.city || parsed.city || '';
-      const uf = option.uf || parsed.uf || '';
-      const regionKey = normalizeRegionKey(option.region) || getRegionKeyByUf(uf);
-      const regionLabel = formatRegionLabel(regionKey);
-      const proGestao = (option.proGestao || option.pro_gestao || option.proGestaoLevel)
-        ?? ((city || uf) ? simulateProGestao(city, uf) : '');
+      if (mode === 'municipios') {
+        const parsed = parseCityUfFromText(option.text);
+        const city = option.city || parsed.city || '';
+        const uf = option.uf || parsed.uf || '';
+        const regionKey = normalizeRegionKey(option.region) || getRegionKeyByUf(uf);
+        const regionLabel = formatRegionLabel(regionKey);
+        const proGestao = (option.proGestao || option.pro_gestao || option.proGestaoLevel)
+          ?? ((city || uf) ? simulateProGestao(city, uf) : '');
+        wrap.innerHTML = `
+          <div class="vote-flag-preview is-empty">
+            <img class="vote-flag-img" alt="Região padrão" src="${DEFAULT_REGION_URL}">
+            <span class="vote-flag-placeholder d-none">Sem região</span>
+          </div>
+          <div class="vote-flag-fields">
+            <div class="vote-field">
+              <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
+            </div>
+            <div class="vote-field">
+              <input type="text" class="form-control vote-option-city" placeholder="Município">
+            </div>
+            <div class="vote-field">
+              <input type="text" class="form-control vote-option-region" placeholder="Região" readonly>
+            </div>
+            <div class="vote-field">
+              <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
+            </div>
+          </div>
+          <div class="vote-flag-actions" role="group" aria-label="Ações">
+            <button type="button" class="vote-flag-action is-clear vote-flag-clear" aria-label="Limpar"><i class="bi bi-eraser"></i></button>
+            <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
+          </div>
+        `;
+        const cityInput = wrap.querySelector('.vote-option-city');
+        const ufInput = wrap.querySelector('.vote-option-uf');
+        const regionInput = wrap.querySelector('.vote-option-region');
+        const proInput = wrap.querySelector('.vote-option-progestao');
+        if (cityInput) cityInput.value = city;
+        if (ufInput) ufInput.value = uf;
+        if (regionInput) regionInput.value = regionLabel;
+        if (proInput) proInput.value = formatProGestaoValue(proGestao);
+
+        createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
+        const cityAuto = createAutocomplete(
+          cityInput,
+          () => getCitiesByUf(ufInput?.value),
+          { maxItems: 12, emptyMessage: 'Selecione uma UF' }
+        );
+        if (ufInput) {
+          const syncCity = () => {
+            if (cityInput) cityInput.value = '';
+            cityAuto?.refresh();
+          };
+          ufInput.addEventListener('input', syncCity);
+          ufInput.addEventListener('change', syncCity);
+        }
+        if (city && uf) {
+          updateFlagFromInputs(wrap);
+        }
+        return wrap;
+      }
+
+      if (mode === 'estados') {
+        const uf = String(option.uf || option.text || '').trim().toUpperCase();
+        wrap.innerHTML = `
+          <div class="vote-flag-preview is-empty">
+            <img class="vote-flag-img" alt="Bandeira do estado" src="">
+            <span class="vote-flag-placeholder">Sem bandeira</span>
+          </div>
+          <div class="vote-flag-fields">
+            <div class="vote-field">
+              <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
+            </div>
+          </div>
+          <div class="vote-flag-actions" role="group" aria-label="Ações">
+            <button type="button" class="vote-flag-action is-clear vote-flag-clear" aria-label="Limpar"><i class="bi bi-eraser"></i></button>
+            <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
+          </div>
+        `;
+        const ufInput = wrap.querySelector('.vote-option-uf');
+        if (ufInput) ufInput.value = uf;
+        createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
+        if (uf) {
+          updateStateFlagFromInputs(wrap);
+        }
+        return wrap;
+      }
+
+      const assocValue = option.associacao || option.association || option.text || '';
       wrap.innerHTML = `
         <div class="vote-flag-preview is-empty">
-          <img class="vote-flag-img" alt="Região padrão" src="${DEFAULT_REGION_URL}">
-          <span class="vote-flag-placeholder d-none">Sem região</span>
+          <img class="vote-flag-img" alt="Associação" src="">
+          <span class="vote-flag-placeholder">Sem associação</span>
         </div>
         <div class="vote-flag-fields">
           <div class="vote-field">
-            <input type="text" class="form-control vote-option-uf" placeholder="UF" maxlength="2">
-          </div>
-          <div class="vote-field">
-            <input type="text" class="form-control vote-option-city" placeholder="Município">
-          </div>
-          <div class="vote-field">
-            <input type="text" class="form-control vote-option-region" placeholder="Região" readonly>
-          </div>
-          <div class="vote-field">
-            <input type="text" class="form-control vote-option-progestao" placeholder="Pró-Gestão" readonly>
+            <select class="form-select vote-option-assoc">
+              <option value="">Selecione a associação</option>
+            </select>
           </div>
         </div>
         <div class="vote-flag-actions" role="group" aria-label="Ações">
@@ -1054,31 +1282,19 @@
           <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
         </div>
       `;
-      const cityInput = wrap.querySelector('.vote-option-city');
-      const ufInput = wrap.querySelector('.vote-option-uf');
-      const regionInput = wrap.querySelector('.vote-option-region');
-      const proInput = wrap.querySelector('.vote-option-progestao');
-      if (cityInput) cityInput.value = city;
-      if (ufInput) ufInput.value = uf;
-      if (regionInput) regionInput.value = regionLabel;
-      if (proInput) proInput.value = formatProGestaoValue(proGestao);
-
-      const ufAuto = createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
-      const cityAuto = createAutocomplete(
-        cityInput,
-        () => getCitiesByUf(ufInput?.value),
-        { maxItems: 12, emptyMessage: 'Selecione uma UF' }
-      );
-      if (ufInput) {
-        const syncCity = () => {
-          if (cityInput) cityInput.value = '';
-          cityAuto?.refresh();
-        };
-        ufInput.addEventListener('input', syncCity);
-        ufInput.addEventListener('change', syncCity);
-      }
-      if (city && uf) {
-        updateFlagFromInputs(wrap);
+      const assocSelect = wrap.querySelector('.vote-option-assoc');
+      if (assocSelect) {
+        loadAssocList().then((list) => {
+          assocSelect.innerHTML = '<option value="">Selecione a associação</option>';
+          (list || []).forEach((name) => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            assocSelect.appendChild(opt);
+          });
+          assocSelect.value = assocValue;
+          if (assocValue) updateAssociationPreview(wrap);
+        });
       }
       return wrap;
     };
@@ -1170,13 +1386,11 @@
           isEdit = true;
           const questions = getQuestionsFromVote(currentVote);
           const voteThemeId = resolveThemeIdFromVote(currentVote);
-          if (voteThemeId) {
-            isRotativos = voteThemeId === 'membros-rotativos';
-          } else if (inferRotativosFromOptions(questions)) {
-            isRotativos = true;
+          if (isProGestao) {
+            proGestaoMode = inferProGestaoMode(questions);
           }
           ensureUfDatalist();
-          await ensureCityDatalist();
+          if (isMunicipiosMode()) await ensureCityDatalist();
           titleInput.value = currentVote.title || '';
           if (saveBtn) saveBtn.textContent = 'Salvar';
           (questions || []).forEach((q) => addQuestion(q.type || q.tipo || 'options'));
@@ -1206,10 +1420,32 @@
       } else {
         addQuestion('options');
       }
+      ensureProGestaoIntro();
       updateNumbers();
     };
 
     hydrate();
+
+    const applyProGestaoMode = async (mode) => {
+      proGestaoMode = mode;
+      ensureProGestaoIntro();
+      builder.innerHTML = '';
+      if (isMunicipiosMode()) await ensureCityDatalist();
+      addQuestion('options');
+      updateNumbers();
+    };
+
+    if (isProGestao && !editId) {
+      proGestaoModal?.show();
+    }
+
+    proGestaoModalEl?.addEventListener('click', async (event) => {
+      const btn = event.target.closest('.vote-pro-gestao-btn');
+      if (!btn) return;
+      const mode = btn.dataset.mode;
+      await applyProGestaoMode(mode);
+      proGestaoModal?.hide();
+    });
 
     addQuestionBtn?.addEventListener('click', () => {
       typeModal?.show();
@@ -1309,8 +1545,20 @@
             ufInput.value = parsed.uf.toUpperCase();
           }
         }
-        updateFlagFromInputs(row);
+        if (isMunicipiosMode()) {
+          updateFlagFromInputs(row);
+        } else if (isEstadosMode()) {
+          updateStateFlagFromInputs(row);
+        }
       }
+    });
+
+    builder.addEventListener('change', (event) => {
+      const select = event.target.closest('.vote-option-assoc');
+      if (!select) return;
+      const row = select.closest('.vote-option-input');
+      if (!row) return;
+      updateAssociationPreview(row);
     });
 
     form.addEventListener('submit', async (event) => {
@@ -1332,8 +1580,10 @@
 
         const optionEls = Array.from(card.querySelectorAll('.vote-option-input'));
         let invalidRotativos = false;
+        let invalidStates = false;
+        let invalidAssoc = false;
         const options = optionEls.map((optEl) => {
-          if (isRotativos) {
+          if (isMunicipiosMode()) {
             const city = optEl.querySelector('.vote-option-city')?.value || '';
             const uf = optEl.querySelector('.vote-option-uf')?.value || '';
             const regionKey = optEl.dataset.regionKey || getRegionKeyByUf(uf);
@@ -1350,15 +1600,51 @@
               proGestao,
             };
           }
+          if (isEstadosMode()) {
+            const uf = optEl.querySelector('.vote-option-uf')?.value || '';
+            const text = String(uf || '').trim().toUpperCase();
+            if (!text) invalidStates = true;
+            return {
+              id: optEl.dataset.oid || createId('o'),
+              text,
+              uf: text,
+            };
+          }
+          if (isAssociacoesMode()) {
+            const assoc = optEl.querySelector('.vote-option-assoc')?.value || '';
+            const text = String(assoc || '').trim();
+            if (!text) invalidAssoc = true;
+            return {
+              id: optEl.dataset.oid || createId('o'),
+              text,
+              associacao: text,
+            };
+          }
           return {
             id: optEl.dataset.oid || createId('o'),
             text: (optEl.querySelector('.vote-option-text')?.value || '').trim(),
           };
         }).filter((opt) => opt.text);
-        if (isRotativos && invalidRotativos) {
+        if (isMunicipiosMode() && invalidRotativos) {
           await showUiModal({
             title: 'Aviso',
             message: 'Preencha município e UF válidos em todas as opções.',
+            variant: 'warning',
+          });
+          return;
+        }
+        if (isEstadosMode() && invalidStates) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Preencha a UF em todas as opções.',
+            variant: 'warning',
+          });
+          return;
+        }
+        if (isAssociacoesMode() && invalidAssoc) {
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Selecione a associação em todas as opções.',
             variant: 'warning',
           });
           return;
