@@ -201,7 +201,9 @@
     } else {
       avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
     }
-    avancar.disabled = (state.step === 1 && !state.searched);
+    const allowAdvanceStep1 = state.searched && !state.found;
+    avancar.classList.toggle('d-none', state.step === 1 && !allowAdvanceStep1);
+    avancar.disabled = (state.step === 1 && !allowAdvanceStep1);
 
     updateFinalStepLabel();
   }
