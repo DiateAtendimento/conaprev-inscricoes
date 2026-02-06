@@ -1320,5 +1320,8 @@ body.gate-active .topbar{ display:none !important; }
   font-size:0.85rem;
   color:#64748b;
 }
+.mi-cpf-wrap .form-control{
+  flex:1 1 auto;
+}
 
 

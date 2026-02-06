@@ -201,7 +201,7 @@
     } else {
       avancar.textContent = state.step < STEP_MAX ? 'Avançar' : 'Concluir';
     }
-    const allowAdvanceStep1 = state.searched && !state.found;
+    const allowAdvanceStep1 = state.searched && (!state.found || !!state.data?.numerodeinscricao);
     avancar.classList.toggle('d-none', state.step === 1 && !allowAdvanceStep1);
     avancar.disabled = (state.step === 1 && !allowAdvanceStep1);
 
@@ -215,10 +215,6 @@
     const pane = document.querySelector('.mi-pane[data-step="1"]');
     if (!pane || pane.dataset.enhanced === '1') return;
 
-    // Ações (Pesquisar + mensagem)
-    const actions = document.createElement('div');
-    actions.className = 'd-flex align-items-end gap-2 mt-2';
-
     const btnSearch = document.createElement('button');
     btnSearch.type = 'button';
     btnSearch.id = 'miBtnBuscarCpf';
@@ -227,11 +223,20 @@
 
     const msg = document.createElement('div');
     msg.id = 'miCpfMsg';
-    msg.className = 'small ms-2 text-muted';
+    msg.className = 'small text-muted mt-2';
 
-    actions.appendChild(btnSearch);
-    actions.appendChild(msg);
-    pane.querySelector('.row.g-3')?.appendChild(actions);
+    const cpfInput = pane.querySelector('#miCpf');
+    const cpfCol = cpfInput?.closest('.col-12');
+    if (cpfInput && cpfCol) {
+      if (!cpfCol.querySelector('.mi-cpf-wrap')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'mi-cpf-wrap d-flex align-items-end gap-2';
+        cpfInput.parentNode.insertBefore(wrap, cpfInput);
+        wrap.appendChild(cpfInput);
+        wrap.appendChild(btnSearch);
+        cpfCol.appendChild(msg);
+      }
+    }
 
     // Mapa de assentos
     const seatsWrap = document.createElement('div');
