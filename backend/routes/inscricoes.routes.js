@@ -10,6 +10,7 @@ import {
   cancelarInscricao,
   getConselheiroSeats,
   listStaffGallery,
+  listPalestrantesGallery,
   listarInscricoes,
   marcarConferido,
 } from "../services/sheets.service.js";
@@ -288,6 +289,19 @@ r.get("/staffs", async (_req, res) => {
     return res.json(Array.isArray(list) ? list : []);
   } catch (e) {
     console.error("[GET /inscricoes/staffs]", e);
+    return res.json([]);
+  }
+});
+
+/**
+ * GET /api/inscricoes/palestrantes
+ */
+r.get("/palestrantes", async (_req, res) => {
+  try {
+    const list = await listPalestrantesGallery();
+    return res.json(Array.isArray(list) ? list : []);
+  } catch (e) {
+    console.error("[GET /inscricoes/palestrantes]", e);
     return res.json([]);
   }
 });

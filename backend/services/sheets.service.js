@@ -380,6 +380,27 @@ export async function listStaffGallery() {
   return out;
 }
 
+export async function listPalestrantesGallery() {
+  const sheetName = sheetForPerfil("Palestrante");
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
+  const normHdrs = headers.map(h => normalizeKey(h));
+  const idxName = normHdrs.indexOf("nome");
+  const idxUfSigla = normHdrs.indexOf("ufsigla");
+  if (idxName < 0) throw new Error('Cabeçalho "Nome" não encontrado.');
+
+  const out = [];
+  rows.forEach(r => {
+    const name = r[idxName];
+    if (!String(name || "").trim()) return;
+    out.push({
+      nome: name,
+      ufsigla: idxUfSigla >= 0 ? r[idxUfSigla] : ""
+    });
+  });
+  out.sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" }));
+  return out;
+}
+
 
 export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false } = {}) {
   const sheetName = sheetForPerfil(perfil);

@@ -16,7 +16,8 @@
     confirmar: `${API}/api/inscricoes/confirmar`,
     cancelar:  `${API}/api/inscricoes/cancelar`,
     assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`,
-    staffs: `${API}/api/inscricoes/staffs`
+    staffs: `${API}/api/inscricoes/staffs`,
+    palestrantes: `${API}/api/inscricoes/palestrantes`
   };
 
   async function apiCriar(payload){
@@ -97,8 +98,10 @@
 
   const PHOTO_DIR_LOCAL = '/imagens/fotos-conselheiros';
   const PHOTO_DIR_STAFF = '/imagens/fotos-staff';
+  const PHOTO_DIR_SPEAKER = '/imagens/fotos-palestrantes';
   const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
   const DEFAULT_STAFF_PHOTO_URL = `${PHOTO_DIR_STAFF}/padrao.svg`;
+  const DEFAULT_SPEAKER_PHOTO_URL = '/imagens/cards/palestrante.svg';
   const photoCacheGlobal = new Map();
   let photoIndexPromiseGlobal = null;
   let photoIndexLocal = new Map();
@@ -272,6 +275,16 @@
     `;
     pane.appendChild(staffWrap);
 
+    const speakerWrap = document.createElement('div');
+    speakerWrap.id = 'miSpeakerWrap';
+    speakerWrap.className = 'mt-4 d-none';
+    speakerWrap.innerHTML = `
+      <div class="fw-semibold mb-2">Palestrantes inscritos</div>
+      <div id="miSpeakerMsg" class="small text-muted"></div>
+      <div id="miSpeakerGrid" class="mi-speaker-grid"></div>
+    `;
+    pane.appendChild(speakerWrap);
+
     pane.dataset.enhanced = '1';
     btnSearch.addEventListener('click', onPesquisarCpf);
   }
@@ -312,6 +325,13 @@
     el.className = `small ${tone}`;
   }
 
+  function setSpeakerMsg(text, tone = 'text-muted') {
+    const el = document.getElementById('miSpeakerMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = `small ${tone}`;
+  }
+
   function buildOccMap(data) {
     const occ = {};
     (data || []).forEach(s => {
@@ -326,18 +346,26 @@
     const wrap = $('#miSeatsWrap');
     const grid = $('#miSeatGrid');
     const staffWrap = $('#miStaffWrap');
+    const speakerWrap = $('#miSpeakerWrap');
     if (!wrap || !grid) return;
     if (state.perfil !== 'Conselheiro') {
       wrap.classList.add('d-none');
       if (state.perfil === 'Staff') {
         staffWrap?.classList.remove('d-none');
+        speakerWrap?.classList.add('d-none');
         await renderStaffGallery();
+      } else if (state.perfil === 'Palestrante') {
+        speakerWrap?.classList.remove('d-none');
+        staffWrap?.classList.add('d-none');
+        await renderSpeakersGallery();
       } else {
         staffWrap?.classList.add('d-none');
+        speakerWrap?.classList.add('d-none');
       }
       return;
     }
     staffWrap?.classList.add('d-none');
+    speakerWrap?.classList.add('d-none');
     wrap.classList.remove('d-none');
     grid.innerHTML = '';
 
@@ -735,6 +763,53 @@
     }
   }
 
+  async function renderSpeakersGallery() {
+    const wrap = $('#miSpeakerWrap');
+    const grid = $('#miSpeakerGrid');
+    if (!wrap || !grid) return;
+    if (state.perfil !== 'Palestrante') {
+      wrap.classList.add('d-none');
+      return;
+    }
+    wrap.classList.remove('d-none');
+    grid.innerHTML = '';
+
+    try {
+      setSpeakerMsg('Carregando palestrantes...', 'text-muted');
+      const res = await fetch(ROUTES.palestrantes, { method: 'GET' });
+      const data = res.ok ? await res.json() : [];
+      const list = Array.isArray(data) ? data : [];
+      if (!list.length) {
+        setSpeakerMsg('Nenhum palestrante encontrado.', 'text-muted');
+        return;
+      }
+      setSpeakerMsg('', 'text-muted');
+      list.forEach((item) => {
+        const nome = String(item?.nome || '').trim();
+        const ufSigla = String(item?.ufsigla || '').trim();
+        const card = document.createElement('div');
+        card.className = 'mi-speaker-card';
+        card.innerHTML = `
+          <div class="mi-speaker-photo">
+            <img alt="Foto de ${escapeHtml(nome || 'Palestrante')}" src="${DEFAULT_SPEAKER_PHOTO_URL}">
+          </div>
+          <div class="mi-speaker-name">${escapeHtml(nome || 'Palestrante')}</div>
+          ${ufSigla ? `<div class="mi-speaker-uf">${escapeHtml(ufSigla)}</div>` : ''}
+        `;
+        grid.appendChild(card);
+        const img = card.querySelector('img');
+        if (img && nome) {
+          resolveSpeakerPhotoUrlByName(nome).then((url) => {
+            if (url) img.src = url;
+            attachSpeakerFallback(img, nome, url);
+          });
+        }
+      });
+    } catch {
+      setSpeakerMsg('Falha ao carregar palestrantes.', 'text-danger');
+    }
+  }
+
   function guessGenderByName(nome) {
     const n = normalizeNameKeyGlobal(nome).split(' ')[0] || '';
     if (!n) return 'male';
@@ -932,6 +1007,67 @@
     };
   }
 
+  async function resolveSpeakerPhotoUrlByName(nome) {
+    const safeName = String(nome || '').trim();
+    const key = normalizeNameKeyGlobal(safeName);
+    if (!key) return null;
+    if (photoCacheGlobal.has(`speaker:${key}`)) return photoCacheGlobal.get(`speaker:${key}`);
+    let filename = '';
+    try {
+      const res = await fetch(`${PHOTO_DIR_SPEAKER}/manifest.json`, { cache: 'no-cache' });
+      if (res.ok) {
+        const list = await res.json().catch(() => []);
+        if (Array.isArray(list)) {
+          list.forEach((file) => {
+            if (typeof file !== 'string') return;
+            const k = normalizeNameKeyGlobal(file);
+            if (k && k === key) filename = file;
+          });
+        }
+      }
+    } catch {}
+    if (!filename && safeName) {
+      filename = `${safeName}.jpg`;
+    }
+    const safeFile = filename ? encodeURIComponent(filename) : '';
+    const url = safeFile ? `${PHOTO_DIR_SPEAKER}/${safeFile}` : DEFAULT_SPEAKER_PHOTO_URL;
+    photoCacheGlobal.set(`speaker:${key}`, url);
+    return url;
+  }
+
+  const SPEAKER_PHOTO_EXTS = ['jpg', 'jpeg', 'png'];
+
+  function speakerPhotoUrlFromName(name, ext) {
+    const safeName = String(name || '').trim();
+    if (!safeName) return DEFAULT_SPEAKER_PHOTO_URL;
+    return `${PHOTO_DIR_SPEAKER}/${encodeURIComponent(`${safeName}.${ext}`)}`;
+  }
+
+  function setSpeakerFallbackIndex(img, url) {
+    const match = String(url || '').match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+    const ext = match ? match[1].toLowerCase() : '';
+    const idx = SPEAKER_PHOTO_EXTS.indexOf(ext);
+    img.dataset.speakerExtIndex = String(idx >= 0 ? idx : 0);
+  }
+
+  function attachSpeakerFallback(img, name, initialUrl) {
+    if (!img || !name) return;
+    if (initialUrl === DEFAULT_SPEAKER_PHOTO_URL) return;
+    img.dataset.speakerName = name;
+    setSpeakerFallbackIndex(img, initialUrl);
+    img.onerror = () => {
+      const n = img.dataset.speakerName || name;
+      let idx = Number(img.dataset.speakerExtIndex || '0');
+      idx += 1;
+      if (idx < SPEAKER_PHOTO_EXTS.length) {
+        img.dataset.speakerExtIndex = String(idx);
+        img.src = speakerPhotoUrlFromName(n, SPEAKER_PHOTO_EXTS[idx]);
+        return;
+      }
+      if (img.src !== DEFAULT_SPEAKER_PHOTO_URL) img.src = DEFAULT_SPEAKER_PHOTO_URL;
+    };
+  }
+
   function renderReviewValue(key, value) {
     return Array.isArray(value) ? value.map(escapeHtml).join(', ') : escapeHtml(value);
   }
@@ -947,15 +1083,16 @@
       .join('');
 
     let fotoRow = '';
-    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff') {
+    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff' || state.perfil === 'Palestrante') {
       const isStaff = state.perfil === 'Staff';
+      const isSpeaker = state.perfil === 'Palestrante';
       const staffGender = isStaff ? guessGenderByName(d.nome || state.data?.nome || '') : '';
       const staffClass = isStaff
         ? `mi-photo-preview--staff ${staffGender === 'female' ? 'is-female' : 'is-male'}`
-        : '';
+        : (isSpeaker ? 'mi-photo-preview--speaker' : '');
       const fotoUrl = d.foto
         ? getFotoUrl(d.foto)
-        : (isStaff ? DEFAULT_STAFF_PHOTO_URL : DEFAULT_PHOTO_URL);
+        : (isStaff ? DEFAULT_STAFF_PHOTO_URL : (isSpeaker ? DEFAULT_SPEAKER_PHOTO_URL : DEFAULT_PHOTO_URL));
       fotoRow = `
         <div class="d-flex">
           <div class="me-2 text-secondary" style="min-width:220px">Foto</div>
@@ -984,7 +1121,7 @@
     const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
     $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + editarLink;
 
-    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff') {
+    if (state.perfil === 'Conselheiro' || state.perfil === 'Staff' || state.perfil === 'Palestrante') {
       loadPhotoIndexGlobal().then(() => {
         const img = document.getElementById('miReviewFoto');
         if (!img) return;
@@ -994,6 +1131,11 @@
           resolveStaffPhotoUrlByName(nome).then((url) => {
             if (url) img.src = url;
             attachStaffFallback(img, nome, url);
+          });
+        } else if (state.perfil === 'Palestrante') {
+          resolveSpeakerPhotoUrlByName(nome).then((url) => {
+            if (url) img.src = url;
+            attachSpeakerFallback(img, nome, url);
           });
         } else {
           resolvePhotoUrlByName(nome).then((url) => {

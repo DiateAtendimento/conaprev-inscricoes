@@ -1320,6 +1320,41 @@ body.gate-active .topbar{ display:none !important; }
   font-size:0.85rem;
   color:#64748b;
 }
+.mi-speaker-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+  gap:18px;
+}
+.mi-speaker-card{
+  text-align:center;
+}
+.mi-speaker-photo{
+  width:96px;
+  height:96px;
+  margin:0 auto 10px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid rgba(15,23,42,.2);
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.mi-speaker-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}
+.mi-speaker-name{
+  font-weight:600;
+  color:#0f172a;
+}
+.mi-speaker-uf{
+  font-size:0.85rem;
+  color:#64748b;
+}
 .mi-cpf-wrap .form-control{
   flex:1 1 auto;
 }

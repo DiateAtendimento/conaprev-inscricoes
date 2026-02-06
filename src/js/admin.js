@@ -183,6 +183,12 @@
       manifest: '/imagens/fotos-staff/manifest.json',
       defaultUrl: '/imagens/fotos-staff/padrao.svg',
       aliases: new Map()
+    },
+    Palestrante: {
+      dir: '/imagens/fotos-palestrantes',
+      manifest: '/imagens/fotos-palestrantes/manifest.json',
+      defaultUrl: '/imagens/cards/palestrante.svg',
+      aliases: new Map()
     }
   };
   const photoCache = new Map();
@@ -295,6 +301,9 @@
     if (!filename && perfil === 'Staff' && safeName) {
       filename = `${safeName}.png`;
     }
+    if (!filename && perfil === 'Palestrante' && safeName) {
+      filename = `${safeName}.jpg`;
+    }
     const safeFile = filename ? encodeURIComponent(filename) : '';
     const url = safeFile ? `${config.dir}/${safeFile}` : config.defaultUrl;
     photoCache.set(cacheKey, url);
@@ -332,6 +341,41 @@
       }
       if (PHOTO_CONFIGS.Staff.defaultUrl && img.src !== PHOTO_CONFIGS.Staff.defaultUrl) {
         img.src = PHOTO_CONFIGS.Staff.defaultUrl;
+      }
+    };
+  }
+
+  const SPEAKER_PHOTO_EXTS = ['jpg', 'jpeg', 'png'];
+
+  function speakerPhotoUrlFromName(name, ext) {
+    const safeName = String(name || '').trim();
+    if (!safeName) return PHOTO_CONFIGS.Palestrante.defaultUrl;
+    return `${PHOTO_CONFIGS.Palestrante.dir}/${encodeURIComponent(`${safeName}.${ext}`)}`;
+  }
+
+  function setSpeakerFallbackIndex(img, url) {
+    const match = String(url || '').match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+    const ext = match ? match[1].toLowerCase() : '';
+    const idx = SPEAKER_PHOTO_EXTS.indexOf(ext);
+    img.dataset.speakerExtIndex = String(idx >= 0 ? idx : 0);
+  }
+
+  function attachSpeakerFallback(img, name, initialUrl) {
+    if (!img || !name) return;
+    if (initialUrl === PHOTO_CONFIGS.Palestrante.defaultUrl) return;
+    img.dataset.speakerName = name;
+    setSpeakerFallbackIndex(img, initialUrl);
+    img.onerror = () => {
+      const n = img.dataset.speakerName || name;
+      let idx = Number(img.dataset.speakerExtIndex || '0');
+      idx += 1;
+      if (idx < SPEAKER_PHOTO_EXTS.length) {
+        img.dataset.speakerExtIndex = String(idx);
+        img.src = speakerPhotoUrlFromName(n, SPEAKER_PHOTO_EXTS[idx]);
+        return;
+      }
+      if (PHOTO_CONFIGS.Palestrante.defaultUrl && img.src !== PHOTO_CONFIGS.Palestrante.defaultUrl) {
+        img.src = PHOTO_CONFIGS.Palestrante.defaultUrl;
       }
     };
   }
@@ -401,7 +445,7 @@
       ? 'border-left:6px solid #28a745; background: rgba(40,167,69,0.08);'
       : '';
 
-    const showPhoto = (state.perfil === 'Conselheiro' || state.perfil === 'Staff');
+    const showPhoto = (state.perfil === 'Conselheiro' || state.perfil === 'Staff' || state.perfil === 'Palestrante');
     const photoConfig = showPhoto ? getPhotoConfig(state.perfil) : null;
     const defaultPhoto = photoConfig?.defaultUrl || '';
     const staffClass = (state.perfil === 'Staff') ? 'admin-photo--staff' : '';
@@ -465,7 +509,7 @@
       ? toRender.map(item => rowCardHtml(item, status === 'finalizados')).join('')
       : `<div class="text-muted">Nenhum registro encontrado.</div>`;
 
-    if ((state.perfil === 'Conselheiro' || state.perfil === 'Staff') && toRender.length) {
+    if ((state.perfil === 'Conselheiro' || state.perfil === 'Staff' || state.perfil === 'Palestrante') && toRender.length) {
       hydrateProfilePhotos(targetEl, state.perfil);
     }
 
@@ -543,6 +587,10 @@
           const isDefault = config?.defaultUrl && finalUrl === config.defaultUrl;
           img.classList.toggle('admin-photo--filled', !isDefault);
           attachStaffFallback(img, nome, finalUrl);
+          return;
+        }
+        if (perfil === 'Palestrante') {
+          attachSpeakerFallback(img, nome, finalUrl);
           return;
         }
         img.onerror = () => {
