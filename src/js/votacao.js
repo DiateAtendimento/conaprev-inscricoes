@@ -72,6 +72,12 @@
     return `Região ${label}`;
   };
 
+  const formatProGestaoValue = (value) => {
+    const num = parseInt(String(value || ''), 10);
+    if (!Number.isFinite(num) || num <= 0) return '';
+    return { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
+  };
+
   const resolveRegionImageUrl = (key) =>
     (key ? `${REGION_IMAGE_DIR}/REGIAO-${key}.png` : REGION_IMAGE_DEFAULT);
 
@@ -1532,12 +1538,6 @@
       const u = String(uf || '').toUpperCase();
       if (!c || !u) return c || u || '';
       return `${c} / ${u}`;
-    };
-
-    const formatProGestaoValue = (value) => {
-      const num = parseInt(String(value || ''), 10);
-      if (!Number.isFinite(num) || num <= 0) return '';
-      return { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
     };
 
     const formatRegionTitle = (region) => {
