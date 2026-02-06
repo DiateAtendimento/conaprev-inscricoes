@@ -1385,6 +1385,9 @@
 
       if (isOptions) {
         const optionsWrap = card.querySelector('.vote-options');
+        if (isProGestao && !proGestaoMode) {
+          proGestaoMode = inferProGestaoMode(question.options || []);
+        }
         (question.options || []).forEach((opt) => optionsWrap.appendChild(createOptionEl(opt)));
         const limitType = card.querySelector('.vote-limit-type');
         const limitValue = card.querySelector('.vote-limit-value');
@@ -2366,7 +2369,7 @@
         let grid = '';
         const hasCity = opts.some((opt) => opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || '')));
         const hasAssoc = opts.some((opt) => opt?.associacao || opt?.association);
-        const hasUf = opts.some((opt) => opt?.uf);
+        const hasUf = opts.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())));
         if (currentThemeId === 'membros-rotativos' || hasCity) {
           grid = await buildRotativosOptions(q);
         } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
