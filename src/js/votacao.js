@@ -736,6 +736,38 @@
 
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
+    const STATE_FLAG_DIR_PUBLIC = STATE_FLAG_DIR;
+    const ASSOC_IMAGE_DIR_PUBLIC = ASSOC_IMAGE_DIR;
+
+    const UF_NAMES = {
+      AC: 'Acre',
+      AL: 'Alagoas',
+      AP: 'Amapa',
+      AM: 'Amazonas',
+      BA: 'Bahia',
+      CE: 'Ceara',
+      DF: 'Distrito Federal',
+      ES: 'Espirito Santo',
+      GO: 'Goias',
+      MA: 'Maranhao',
+      MT: 'Mato Grosso',
+      MS: 'Mato Grosso do Sul',
+      MG: 'Minas Gerais',
+      PA: 'Para',
+      PB: 'Paraiba',
+      PR: 'Parana',
+      PE: 'Pernambuco',
+      PI: 'Piaui',
+      RJ: 'Rio de Janeiro',
+      RN: 'Rio Grande do Norte',
+      RS: 'Rio Grande do Sul',
+      RO: 'Rondonia',
+      RR: 'Roraima',
+      SC: 'Santa Catarina',
+      SP: 'Sao Paulo',
+      SE: 'Sergipe',
+      TO: 'Tocantins',
+    };
     let cityDataPromise = null;
     let assocListPromise = null;
 
@@ -1427,6 +1459,9 @@
       }
       ensureProGestaoIntro();
       updateNumbers();
+      if (isProGestao && editId) {
+        showProGestaoFormModal(proGestaoMode || 'municipios');
+      }
     };
 
     hydrate();
@@ -1757,6 +1792,10 @@
         return;
       }
 
+      if (isProGestao) {
+        proGestaoFormModal?.hide();
+        proGestaoModal?.hide();
+      }
       if (msg) msg.classList.remove('d-none');
       if (msgLink) {
         msgLink.href = `${location.origin}/votacao.html`;
@@ -2116,6 +2155,100 @@
       `;
     };
 
+    const resolveStateFlagUrlPublic = (uf) => {
+      const key = String(uf || '').trim().toUpperCase();
+      const file = STATE_FLAG_FILES[key];
+      return file ? `${STATE_FLAG_DIR_PUBLIC}/${file}` : DEFAULT_REGION_URL;
+    };
+
+    const buildStateCards = (q) => {
+      const options = q.options || [];
+      const isMulti = !!q.allowMultiple;
+      const inputType = isMulti ? 'checkbox' : 'radio';
+      const cols = Math.min(4, Math.max(1, options.length));
+      const cards = options.map((opt) => {
+        const base = (typeof opt === 'string') ? { text: opt } : opt;
+        const uf = String(base?.uf || base?.text || '').trim().toUpperCase();
+        const name = UF_NAMES[uf] || uf || 'Estado';
+        const labelId = `${q.id}_${base?.id || opt?.id}`;
+        return `
+          <label class="vote-flag-card" for="${labelId}">
+            <span class="vote-flag-select">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+            </span>
+            <span class="vote-flag-media">
+              <img src="${resolveStateFlagUrlPublic(uf)}" alt="Bandeira de ${name}">
+            </span>
+            <span class="vote-flag-text">
+              <span class="vote-flag-name">${name}</span>
+              ${uf ? `<span class="vote-flag-region">${uf}</span>` : ''}
+            </span>
+          </label>
+        `;
+      });
+      return `
+        <div class="vote-flag-grid" style="--vote-cols:${cols}">
+          ${cards.join('')}
+        </div>
+      `;
+    };
+
+    const buildAssocCards = (q) => {
+      const options = q.options || [];
+      const isMulti = !!q.allowMultiple;
+      const inputType = isMulti ? 'checkbox' : 'radio';
+      const cols = Math.min(4, Math.max(1, options.length));
+      const cards = options.map((opt) => {
+        const base = (typeof opt === 'string') ? { text: opt } : opt;
+        const name = String(base?.associacao || base?.text || '').trim();
+        const labelId = `${q.id}_${base?.id || opt?.id}`;
+        const imgUrl = name ? `${ASSOC_IMAGE_DIR_PUBLIC}/${encodeURIComponent(`${name}.png`)}` : DEFAULT_REGION_URL;
+        return `
+          <label class="vote-flag-card" for="${labelId}">
+            <span class="vote-flag-select">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+            </span>
+            <span class="vote-flag-media">
+              <img src="${imgUrl}" alt="Logo ${name || 'Associação'}">
+            </span>
+            <span class="vote-flag-text">
+              <span class="vote-flag-name">${name || 'Associação'}</span>
+            </span>
+          </label>
+        `;
+      });
+      return `
+        <div class="vote-flag-grid" style="--vote-cols:${cols}">
+          ${cards.join('')}
+        </div>
+      `;
+    };
+
+    const buildSimpleCards = (q) => {
+      const options = q.options || [];
+      const isMulti = !!q.allowMultiple;
+      const inputType = isMulti ? 'checkbox' : 'radio';
+      const cols = Math.min(3, Math.max(1, options.length));
+      const cards = options.map((opt) => {
+        const base = (typeof opt === 'string') ? { text: opt } : opt;
+        const text = String(base?.text || '').trim();
+        const labelId = `${q.id}_${base?.id || opt?.id}`;
+        return `
+          <label class="vote-option-card" for="${labelId}">
+            <span class="vote-flag-select">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+            </span>
+            <span class="vote-option-text">${text || 'Opção'}</span>
+          </label>
+        `;
+      });
+      return `
+        <div class="vote-option-grid" style="--vote-cols:${cols}">
+          ${cards.join('')}
+        </div>
+      `;
+    };
+
     const startPolling = () => {
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(async () => {
@@ -2215,33 +2348,38 @@
             </div>
           `;
         }
-        const isRotativos = currentThemeId === 'membros-rotativos';
         const isMulti = !!q.allowMultiple;
-        const options = isRotativos ? '' : (q.options || []).map((opt) => `
-          <div class="form-check">
-            <input class="form-check-input" type="${isMulti ? 'checkbox' : 'radio'}" name="${q.id}" id="${q.id}_${opt.id}" value="${opt.id}">
-            <label class="form-check-label" for="${q.id}_${opt.id}">${opt.text || 'Opção'}</label>
-          </div>
-        `).join('');
         return `
-          <div class="card vote-public-card p-3 ${isRotativos ? 'vote-public-rotativos' : ''}" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
+          <div class="card vote-public-card p-3 vote-public-options" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
             <div class="fw-semibold mb-2">${index + 1}. ${q.text || 'Pergunta'}</div>
-            ${isRotativos ? `<div class="vote-flag-grid-wrap">${options}</div>` : `<div class="vstack gap-2">${options}</div>`}
+            <div class="vote-flag-grid-wrap"></div>
           </div>
         `;
       }).join('');
-      if (currentThemeId === 'membros-rotativos') {
-        const cards = Array.from(questionsWrap.querySelectorAll('.vote-public-rotativos'));
-        const jobs = cards.map(async (cardEl) => {
-          const qid = cardEl.dataset.qid;
-          const q = (currentVote.questions || []).find((item) => item.id === qid);
-          if (!q) return;
-          const grid = await buildRotativosOptions(q);
-          const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
-          if (wrap) wrap.innerHTML = grid;
-        });
-        Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
-      }
+
+      const optionCards = Array.from(questionsWrap.querySelectorAll('.vote-public-options'));
+      const jobs = optionCards.map(async (cardEl) => {
+        const qid = cardEl.dataset.qid;
+        const q = (currentVote.questions || []).find((item) => item.id === qid);
+        if (!q) return;
+        const opts = q.options || [];
+        let grid = '';
+        const hasCity = opts.some((opt) => opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || '')));
+        const hasAssoc = opts.some((opt) => opt?.associacao || opt?.association);
+        const hasUf = opts.some((opt) => opt?.uf);
+        if (currentThemeId === 'membros-rotativos' || hasCity) {
+          grid = await buildRotativosOptions(q);
+        } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
+          grid = buildAssocCards(q);
+        } else if (currentThemeId === 'pro-gestao' && hasUf) {
+          grid = buildStateCards(q);
+        } else {
+          grid = buildSimpleCards(q);
+        }
+        const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
+        if (wrap) wrap.innerHTML = grid;
+      });
+      Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
       const displayTitle = formatVoteTitle(currentVote.title);
       if (formTitle) formTitle.textContent = displayTitle;
       if (formModalTitle) formModalTitle.textContent = displayTitle;

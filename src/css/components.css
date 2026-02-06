@@ -285,6 +285,22 @@
   border-radius:16px;
   padding:20px;
 }
+.vote-pro-gestao-switch{
+  background:#6d28d9;
+  border-color:#6d28d9;
+  color:#fff;
+}
+.vote-pro-gestao-switch:hover{
+  background:#5b21b6;
+  border-color:#5b21b6;
+  color:#fff;
+}
+#voteCreateSuccessModal{
+  z-index:2105;
+}
+#voteCreateSuccessModal + .modal-backdrop{
+  z-index:2100;
+}
 @media (max-width: 1200px){
   .vote-flag-fields{
     grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr);
@@ -383,6 +399,38 @@
   display:grid;
   grid-template-columns:repeat(var(--vote-cols, 1), minmax(0, 1fr));
   gap:16px;
+}
+.vote-option-grid{
+  display:grid;
+  grid-template-columns:repeat(var(--vote-cols, 2), minmax(0, 1fr));
+  gap:14px;
+}
+.vote-option-card{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  box-shadow:0 10px 20px rgba(15,23,42,.08);
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.vote-option-card:hover{
+  transform:translateY(-2px);
+  border-color:#cbd5f0;
+  box-shadow:0 14px 24px rgba(15,23,42,.12);
+}
+.vote-option-card .form-check-input{
+  width:20px;
+  height:20px;
+  margin:0;
+}
+.vote-option-text{
+  font-weight:600;
+  color:#0f172a;
 }
 .vote-flag-card{
   position:relative;
