@@ -385,13 +385,16 @@ export async function listPalestrantesGallery() {
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
   const normHdrs = headers.map(h => normalizeKey(h));
   const idxName = normHdrs.indexOf("nome");
+  const idxCode = normHdrs.indexOf("numerodeinscricao");
   const idxUfSigla = normHdrs.indexOf("ufsigla");
   if (idxName < 0) throw new Error('Cabeçalho "Nome" não encontrado.');
+  if (idxCode < 0) throw new Error('Cabeçalho "Número de Inscrição" não encontrado.');
 
   const out = [];
   rows.forEach(r => {
     const name = r[idxName];
-    if (!String(name || "").trim()) return;
+    const code = r[idxCode];
+    if (!String(name || "").trim() || !String(code || "").trim()) return;
     out.push({
       nome: name,
       ufsigla: idxUfSigla >= 0 ? r[idxUfSigla] : ""
