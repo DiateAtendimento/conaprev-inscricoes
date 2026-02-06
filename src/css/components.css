@@ -274,6 +274,17 @@
   line-height:1.45;
   color:#0f172a;
 }
+.vote-pro-gestao-placeholder .alert{
+  border-radius:12px;
+}
+#voteProGestaoFormModal .modal-body{
+  background:#f8fafc;
+}
+#voteProGestaoFormModal #voteCreateForm{
+  background:#fff;
+  border-radius:16px;
+  padding:20px;
+}
 @media (max-width: 1200px){
   .vote-flag-fields{
     grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1fr);

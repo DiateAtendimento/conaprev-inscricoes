@@ -48,6 +48,9 @@
         <a href="/index.html?votacao=1" class="btn btn-warning">Voltar ao painel</a>
       </div>
     </form>
+    <div id="voteProGestaoPlaceholder" class="vote-pro-gestao-placeholder d-none">
+      <div class="alert alert-info mb-0">Selecione um módulo do Pró-Gestão para montar o formulário.</div>
+    </div>
 
     <div id="voteCreateMsg" class="alert alert-success d-none mt-4" role="alert">
       Votação criada com sucesso.
@@ -116,6 +119,21 @@
             <button type="button" class="btn btn-outline-primary vote-pro-gestao-btn" data-mode="municipios">Municípios</button>
             <button type="button" class="btn btn-outline-primary vote-pro-gestao-btn" data-mode="associacoes">Associações</button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="voteProGestaoFormModal" tabindex="-1" aria-hidden="true" aria-labelledby="voteProGestaoFormTitle">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="voteProGestaoFormTitle">Pró-Gestão</h5>
+          <button type="button" class="btn btn-outline-secondary btn-sm me-2 vote-pro-gestao-switch">Trocar módulo</button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="voteProGestaoFormSlot"></div>
         </div>
       </div>
     </div>

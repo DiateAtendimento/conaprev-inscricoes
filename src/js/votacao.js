@@ -715,6 +715,11 @@
     const typeModal = getModal(typeModalEl);
     const proGestaoModalEl = document.getElementById('voteProGestaoModal');
     const proGestaoModal = getModal(proGestaoModalEl);
+    const proGestaoFormModalEl = document.getElementById('voteProGestaoFormModal');
+    const proGestaoFormModal = getModal(proGestaoFormModalEl);
+    const proGestaoFormSlot = document.getElementById('voteProGestaoFormSlot');
+    const proGestaoFormTitle = document.getElementById('voteProGestaoFormTitle');
+    const proGestaoPlaceholder = document.getElementById('voteProGestaoPlaceholder');
 
     const getSearchParam = (name) => new URLSearchParams(window.location.search).get(name);
     const editId = getSearchParam('edit');
@@ -1080,12 +1085,12 @@
       });
     };
 
-    const setFlagPreview = (row, url) => {
+    const setFlagPreview = (row, url, fallbackUrl = DEFAULT_REGION_URL) => {
       const preview = row.querySelector('.vote-flag-preview');
       const img = preview?.querySelector('img');
       const placeholder = preview?.querySelector('.vote-flag-placeholder');
       if (!preview || !img) return;
-      const finalUrl = url || DEFAULT_REGION_URL;
+      const finalUrl = url || fallbackUrl;
       if (finalUrl) {
         img.src = finalUrl;
         img.alt = 'Região selecionada';
@@ -1136,7 +1141,7 @@
     const updateStateFlagFromInputs = (row) => {
       const uf = row.querySelector('.vote-option-uf')?.value || '';
       const url = resolveStateFlagUrl(uf);
-      setFlagPreview(row, url || null);
+      setFlagPreview(row, url || null, DEFAULT_REGION_URL);
       row.dataset.uf = String(uf || '').trim().toUpperCase();
       row.dataset.flagFound = url ? '1' : '0';
       return { uf };
@@ -1152,7 +1157,7 @@
       const select = row.querySelector('.vote-option-assoc');
       const value = select?.value || '';
       const url = resolveAssociationImageUrl(value);
-      setFlagPreview(row, url || null);
+      setFlagPreview(row, url || null, DEFAULT_REGION_URL);
       row.dataset.associacao = value;
       return { associacao: value };
     };
@@ -1242,7 +1247,7 @@
         const uf = String(option.uf || option.text || '').trim().toUpperCase();
         wrap.innerHTML = `
           <div class="vote-flag-preview is-empty">
-            <img class="vote-flag-img" alt="Bandeira do estado" src="">
+            <img class="vote-flag-img" alt="Bandeira do estado" src="${DEFAULT_REGION_URL}">
             <span class="vote-flag-placeholder">Sem bandeira</span>
           </div>
           <div class="vote-flag-fields">
@@ -1267,7 +1272,7 @@
       const assocValue = option.associacao || option.association || option.text || '';
       wrap.innerHTML = `
         <div class="vote-flag-preview is-empty">
-          <img class="vote-flag-img" alt="Associação" src="">
+          <img class="vote-flag-img" alt="Associação" src="${DEFAULT_REGION_URL}">
           <span class="vote-flag-placeholder">Sem associação</span>
         </div>
         <div class="vote-flag-fields">
@@ -1426,6 +1431,38 @@
 
     hydrate();
 
+    const moveFormToProGestaoModal = () => {
+      if (!proGestaoFormSlot || !form) return;
+      if (!proGestaoFormSlot.contains(form)) {
+        proGestaoFormSlot.appendChild(form);
+      }
+      proGestaoPlaceholder?.classList.add('d-none');
+    };
+
+    const showProGestaoFormModal = (mode) => {
+      if (proGestaoFormTitle) {
+        const labels = {
+          estados: 'Estados',
+          municipios: 'Municípios',
+          associacoes: 'Associações',
+        };
+        proGestaoFormTitle.textContent = `Pró-Gestão - ${labels[mode] || ''}`.trim();
+      }
+      moveFormToProGestaoModal();
+      proGestaoFormModal?.show();
+    };
+
+    proGestaoFormModalEl?.addEventListener('hidden.bs.modal', () => {
+      if (isProGestao) proGestaoPlaceholder?.classList.remove('d-none');
+    });
+
+    proGestaoFormModalEl?.addEventListener('click', (event) => {
+      const btn = event.target.closest('.vote-pro-gestao-switch');
+      if (!btn) return;
+      proGestaoFormModal?.hide();
+      proGestaoModal?.show();
+    });
+
     const applyProGestaoMode = async (mode) => {
       proGestaoMode = mode;
       ensureProGestaoIntro();
@@ -1433,10 +1470,14 @@
       if (isMunicipiosMode()) await ensureCityDatalist();
       addQuestion('options');
       updateNumbers();
+      showProGestaoFormModal(mode);
     };
 
-    if (isProGestao && !editId) {
-      proGestaoModal?.show();
+    if (isProGestao) {
+      proGestaoPlaceholder?.classList.remove('d-none');
+      if (!editId) {
+        proGestaoModal?.show();
+      }
     }
 
     proGestaoModalEl?.addEventListener('click', async (event) => {
