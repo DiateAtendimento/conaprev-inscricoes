@@ -53,6 +53,26 @@ r.get("/temas", async (_req, res) => {
   }
 });
 
+r.get("/temas/:tema/votacoes", async (req, res) => {
+  try {
+    const tema = String(req.params.tema || "");
+    const cpf = String(req.query?.cpf || "").replace(/\D/g, "");
+    const list = await listVotesByTema(tema);
+    const votes = list.filter((vote) => vote.active);
+    for (const vote of votes) {
+      if (!cpf) {
+        vote.previousAnswers = [];
+        continue;
+      }
+      const prev = await getUserResponseForVote(vote, cpf);
+      vote.previousAnswers = prev?.answers || [];
+    }
+    return res.json({ votes });
+  } catch (e) {
+    return sendError(res, e, "Erro ao listar votações");
+  }
+});
+
 r.get("/temas/:tema/latest", async (req, res) => {
   try {
     const tema = String(req.params.tema || "");

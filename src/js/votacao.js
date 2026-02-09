@@ -1869,6 +1869,8 @@
 
     let currentUser = null;
     let currentVote = null;
+    let voteList = [];
+    let voteAnswersById = new Map();
     let questionAnswers = new Map();
     let questionMode = 'list';
     let activeQuestionId = null;
@@ -2290,6 +2292,41 @@
       return currentVote.questions || currentVote.perguntas || currentVote.questoes || [];
     };
 
+    const inferPublicProGestaoMode = (questions = []) => {
+      const options = (questions || []).flatMap((q) => q?.options || q?.opcoes || q?.alternativas || []);
+      if (options.some((opt) => opt?.associacao || opt?.association)) return 'associacoes';
+      if (options.some((opt) => opt?.city || opt?.municipio)) return 'municipios';
+      if (options.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())))) {
+        return 'estados';
+      }
+      return 'municipios';
+    };
+
+    const getPublicVoteLabel = (vote) => {
+      if (!vote) return '';
+      if (currentThemeId === 'pro-gestao') {
+        const mode = inferPublicProGestaoMode(vote.questions || vote.perguntas || vote.questoes || []);
+        const labels = {
+          estados: 'Estados',
+          municipios: 'Municípios',
+          associacoes: 'Associações',
+        };
+        return `Pró-Gestão - ${labels[mode] || 'Municípios'}`;
+      }
+      return formatVoteTitle(vote.title || '');
+    };
+
+    const isVoteAnswered = (vote) => {
+      if (!vote) return false;
+      const answers = voteAnswersById.get(vote.id) || [];
+      const questions = vote.questions || vote.perguntas || vote.questoes || [];
+      if (!questions.length) return false;
+      return questions.every((q) => {
+        const ans = (answers || []).find((item) => item.questionId === q.id);
+        return isAnswerComplete(ans);
+      });
+    };
+
     const applyPreviousAnswers = (answers) => {
       if (!Array.isArray(answers)) return;
       answers.forEach((ans) => {
@@ -2303,6 +2340,30 @@
       if (ans.type === 'text') return String(ans.value || '').trim().length > 0;
       const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
       return ids.length > 0;
+    };
+
+    const renderVoteList = () => {
+      questionMode = 'vote-list';
+      activeQuestionId = null;
+      currentVote = null;
+      questionAnswers = new Map();
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.classList.add('d-none');
+      questionsWrap.innerHTML = voteList.map((vote) => {
+        const label = getPublicVoteLabel(vote);
+        const answered = isVoteAnswered(vote);
+        return `
+          <div class="card vote-public-card vote-question-list-card p-3 vote-vote-list-card" data-vote-id="${vote.id}">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <div class="fw-semibold">${label || 'Votação'}</div>
+              <div class="d-flex align-items-center gap-2">
+                ${answered ? '<span class="badge vote-tag vote-tag--done">Respondido</span>' : '<span class="badge vote-tag vote-tag--todo">Responder</span>'}
+                ${answered ? '<button type="button" class="btn btn-outline-warning btn-sm vote-edit-answer">Editar</button>' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     };
 
     const renderQuestionList = () => {
@@ -2455,21 +2516,39 @@
       const themeId = card.dataset.theme;
       currentThemeId = themeId;
       const stop = startLoading('Carregando questionário...');
-      const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
+      const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/votacoes?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
       stop();
       if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       const data = await res.json();
-      if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
-      currentVote = data.vote;
-      startedAt = Date.now();
-      questionAnswers = new Map();
-      const pendingAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
-      applyPreviousAnswers(pendingAnswers);
+      const votes = Array.isArray(data?.votes) ? data.votes : [];
+      if (!votes.length) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+
+      voteList = votes;
+      voteAnswersById = new Map();
+      votes.forEach((vote) => {
+        if (Array.isArray(vote.previousAnswers)) {
+          voteAnswersById.set(vote.id, vote.previousAnswers);
+        }
+      });
+
+      if (votes.length === 1) {
+        currentVote = votes[0];
+        startedAt = Date.now();
+        questionAnswers = new Map();
+        const pendingAnswers = voteAnswersById.get(currentVote.id) || [];
+        applyPreviousAnswers(pendingAnswers);
+      } else {
+        currentVote = null;
+      }
       formWrap?.classList.remove('d-none');
       setModuleBackground(true);
       successMsg?.classList.add('d-none');
-      renderQuestionList();
-      const displayTitle = formatVoteTitle(currentVote.title);
+      if (votes.length === 1) {
+        renderQuestionList();
+      } else {
+        renderVoteList();
+      }
+      const displayTitle = formatVoteTitle((votes[0] || {}).title);
       if (formTitle) formTitle.textContent = displayTitle;
       if (formModalTitle) formModalTitle.textContent = displayTitle;
       if (formModalBody && formWrap && formWrap.parentElement !== formModalBody) {
@@ -2491,6 +2570,8 @@
       sessionStorage.removeItem(USER_KEY);
       currentUser = null;
       currentVote = null;
+      voteList = [];
+      voteAnswersById = new Map();
       setModuleBackground(false);
       setUserMenu(null);
       loginCard?.classList.remove('d-none');
@@ -2520,6 +2601,24 @@
     });
 
     questionsWrap?.addEventListener('click', async (event) => {
+      const voteCard = event.target.closest('.vote-vote-list-card');
+      if (voteCard) {
+        const voteId = voteCard.dataset.voteId;
+        const vote = voteList.find((item) => item.id === voteId);
+        if (!vote) return;
+        currentVote = vote;
+        startedAt = Date.now();
+        questionAnswers = new Map();
+        const pendingAnswers = voteAnswersById.get(vote.id) || [];
+        applyPreviousAnswers(pendingAnswers);
+        const questions = getPublicQuestions();
+        if (questions.length === 1) {
+          await renderSingleQuestion(questions[0]);
+        } else {
+          renderQuestionList();
+        }
+        return;
+      }
       const listCard = event.target.closest('.vote-question-list-card');
       if (listCard) {
         const qid = listCard.dataset.qid;
@@ -2582,6 +2681,10 @@
         message: successMsg.textContent,
         variant: 'success',
       });
+      voteAnswersById.set(currentVote.id, answers);
+      if (voteList.length > 1) {
+        renderVoteList();
+      }
     });
 
     try {
