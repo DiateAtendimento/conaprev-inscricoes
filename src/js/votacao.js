@@ -768,6 +768,38 @@
       SE: 'Sergipe',
       TO: 'Tocantins',
     };
+    const STATE_FLAG_DIR_PUBLIC = STATE_FLAG_DIR;
+    const ASSOC_IMAGE_DIR_PUBLIC = ASSOC_IMAGE_DIR;
+
+    const UF_NAMES = {
+      AC: 'Acre',
+      AL: 'Alagoas',
+      AP: 'Amapa',
+      AM: 'Amazonas',
+      BA: 'Bahia',
+      CE: 'Ceara',
+      DF: 'Distrito Federal',
+      ES: 'Espirito Santo',
+      GO: 'Goias',
+      MA: 'Maranhao',
+      MT: 'Mato Grosso',
+      MS: 'Mato Grosso do Sul',
+      MG: 'Minas Gerais',
+      PA: 'Para',
+      PB: 'Paraiba',
+      PR: 'Parana',
+      PE: 'Pernambuco',
+      PI: 'Piaui',
+      RJ: 'Rio de Janeiro',
+      RN: 'Rio Grande do Norte',
+      RS: 'Rio Grande do Sul',
+      RO: 'Rondonia',
+      RR: 'Roraima',
+      SC: 'Santa Catarina',
+      SP: 'Sao Paulo',
+      SE: 'Sergipe',
+      TO: 'Tocantins',
+    };
     let cityDataPromise = null;
     let assocListPromise = null;
 
@@ -2678,7 +2710,16 @@
       }
       if (event.target.closest('.vote-save-answer')) {
         const ok = await captureCurrentAnswer();
-        if (ok) renderQuestionList();
+        if (ok) {
+          if (currentVote) {
+            voteAnswersById.set(currentVote.id, Array.from(questionAnswers.values()));
+          }
+          if (voteList.length > 1) {
+            renderVoteList();
+          } else {
+            renderQuestionList();
+          }
+        }
       }
     });
 
