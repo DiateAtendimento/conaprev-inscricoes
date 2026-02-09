@@ -2327,6 +2327,38 @@
       });
     };
 
+    const fetchVotesForTheme = async (themeId, cpf) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+      const listUrl = `/api/votacao/temas/${encodeURIComponent(themeId)}/votacoes?cpf=${encodeURIComponent(cpf || '')}`;
+      const latestUrl = `/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(cpf || '')}`;
+
+      try {
+        const res = await apiFetch(listUrl, { signal: controller.signal });
+        if (res.ok) {
+          const data = await res.json();
+          return { votes: Array.isArray(data?.votes) ? data.votes : [], used: 'list' };
+        }
+        if (res.status === 404) {
+          const latest = await apiFetch(latestUrl, { signal: controller.signal });
+          if (!latest.ok) return { error: 'Votação indisponível.' };
+          const data = await latest.json();
+          if (!data.active || !data.vote) return { votes: [] };
+          const vote = data.vote;
+          vote.previousAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
+          return { votes: [vote], used: 'latest' };
+        }
+        return { error: 'Votação indisponível.' };
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return { error: 'Tempo limite ao carregar o questionário.' };
+        }
+        return { error: 'Falha ao carregar o questionário.' };
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
     const applyPreviousAnswers = (answers) => {
       if (!Array.isArray(answers)) return;
       answers.forEach((ans) => {
@@ -2516,12 +2548,16 @@
       const themeId = card.dataset.theme;
       currentThemeId = themeId;
       const stop = startLoading('Carregando questionário...');
-      const res = await apiFetch(`/api/votacao/temas/${encodeURIComponent(themeId)}/votacoes?cpf=${encodeURIComponent(currentUser?.cpf || '')}`);
-      stop();
-      if (!res.ok) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
-      const data = await res.json();
-      const votes = Array.isArray(data?.votes) ? data.votes : [];
-      if (!votes.length) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+      const result = await fetchVotesForTheme(themeId, currentUser?.cpf || '').finally(stop);
+      if (!result || result.error) {
+        await showUiModal({ title: 'Aviso', message: result?.error || 'Votação indisponível.', variant: 'warning' });
+        return;
+      }
+      const votes = Array.isArray(result.votes) ? result.votes : [];
+      if (!votes.length) {
+        await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+        return;
+      }
 
       voteList = votes;
       voteAnswersById = new Map();
