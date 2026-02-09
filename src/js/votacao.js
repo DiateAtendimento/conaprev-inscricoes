@@ -727,7 +727,7 @@
 
     let currentVote = null;
     let isEdit = false;
-    const isProGestao = themeId === 'pro-gestao';
+    let isProGestao = themeId === 'pro-gestao';
     const isRotativosTheme = themeId === 'membros-rotativos';
     let proGestaoMode = null;
     if (themeId) {
@@ -911,7 +911,9 @@
       const options = (questions || []).flatMap((q) => q?.options || q?.opcoes || q?.alternativas || []);
       if (options.some((opt) => opt?.associacao || opt?.association)) return 'associacoes';
       if (options.some((opt) => opt?.city || opt?.municipio)) return 'municipios';
-      if (options.some((opt) => opt?.uf)) return 'estados';
+      if (options.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())))) {
+        return 'estados';
+      }
       return 'municipios';
     };
 
@@ -1426,6 +1428,12 @@
           isEdit = true;
           const questions = getQuestionsFromVote(currentVote);
           const voteThemeId = resolveThemeIdFromVote(currentVote);
+          if (voteThemeId) {
+            isProGestao = voteThemeId === 'pro-gestao';
+          }
+          if (!voteThemeId && normalizeToken(currentVote?.title || '').includes('pro gestao')) {
+            isProGestao = true;
+          }
           if (isProGestao) {
             proGestaoMode = inferProGestaoMode(questions);
           }
@@ -2119,8 +2127,11 @@
       return res.json();
     };
 
+    const getQuestionOptions = (q) =>
+      q?.options || q?.opcoes || q?.alternativas || [];
+
     const buildRotativosOptions = (q) => {
-      const options = q.options || [];
+      const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
@@ -2165,7 +2176,7 @@
     };
 
     const buildStateCards = (q) => {
-      const options = q.options || [];
+      const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
@@ -2197,7 +2208,7 @@
     };
 
     const buildAssocCards = (q) => {
-      const options = q.options || [];
+      const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
@@ -2228,7 +2239,7 @@
     };
 
     const buildSimpleCards = (q) => {
-      const options = q.options || [];
+      const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(3, Math.max(1, options.length));
@@ -2365,11 +2376,20 @@
         const qid = cardEl.dataset.qid;
         const q = (currentVote.questions || []).find((item) => item.id === qid);
         if (!q) return;
-        const opts = q.options || [];
+        const opts = getQuestionOptions(q);
         let grid = '';
-        const hasCity = opts.some((opt) => opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || '')));
-        const hasAssoc = opts.some((opt) => opt?.associacao || opt?.association);
-        const hasUf = opts.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())));
+        const hasCity = opts.some((opt) => {
+          if (typeof opt === 'string') return /\s[\-\/]\s*[A-Za-z]{2}\b/.test(opt);
+          return opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || ''));
+        });
+        const hasAssoc = opts.some((opt) => {
+          if (typeof opt === 'string') return false;
+          return opt?.associacao || opt?.association;
+        });
+        const hasUf = opts.some((opt) => {
+          if (typeof opt === 'string') return /^[A-Za-z]{2}$/.test(opt.trim());
+          return opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim()));
+        });
         if (currentThemeId === 'membros-rotativos' || hasCity) {
           grid = await buildRotativosOptions(q);
         } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
