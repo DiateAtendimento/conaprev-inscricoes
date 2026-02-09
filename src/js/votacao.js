@@ -2464,11 +2464,7 @@
       setModuleBackground(true);
       successMsg?.classList.add('d-none');
       const questions = currentVote.questions || [];
-      if (questions.length <= 1) {
-        renderSingleQuestion(questions[0]);
-      } else {
-        renderQuestionList();
-      }
+      renderQuestionList();
       const displayTitle = formatVoteTitle(currentVote.title);
       if (formTitle) formTitle.textContent = displayTitle;
       if (formModalTitle) formModalTitle.textContent = displayTitle;
