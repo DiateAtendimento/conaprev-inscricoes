@@ -2276,7 +2276,7 @@
           lastThemes = themes;
           renderModules(themes);
         }
-      }, 2000);
+      }, 10000);
     };
 
     const showDenied = async (msg) => {

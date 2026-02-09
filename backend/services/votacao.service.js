@@ -35,7 +35,7 @@ const THEMES = [
 ];
 
 /* ===== cache leve em mem�ria ===== */
-const CACHE_TTL_MS = 1_500;
+const CACHE_TTL_MS = 10_000;
 const _cache = new Map(); // key -> { expires, data }
 function getCache(key) {
   const hit = _cache.get(key);
