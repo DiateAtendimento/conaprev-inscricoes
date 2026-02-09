@@ -432,6 +432,23 @@
   font-weight:600;
   color:#0f172a;
 }
+.vote-question-list-card{
+  border:1px solid rgba(148,163,184,.35);
+  cursor:pointer;
+}
+.vote-tag{
+  font-weight:600;
+  border-radius:999px;
+  padding:6px 10px;
+}
+.vote-tag--todo{
+  background:#ef4444;
+  color:#fff;
+}
+.vote-tag--done{
+  background:#16a34a;
+  color:#fff;
+}
 .vote-flag-card{
   position:relative;
   display:flex;

@@ -1869,6 +1869,9 @@
 
     let currentUser = null;
     let currentVote = null;
+    let questionAnswers = new Map();
+    let questionMode = 'list';
+    let activeQuestionId = null;
     let startedAt = 0;
     let pollTimer = null;
     let currentThemeId = null;
@@ -2285,17 +2288,122 @@
     const applyPreviousAnswers = (answers) => {
       if (!Array.isArray(answers)) return;
       answers.forEach((ans) => {
-        if (ans.type === 'text') {
-          const area = questionsWrap.querySelector(`textarea[name="${ans.questionId}"]`);
-          if (area) area.value = ans.value || '';
-          return;
-        }
-        const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
-        ids.forEach((oid) => {
-          const input = document.getElementById(`${ans.questionId}_${oid}`);
-          if (input) input.checked = true;
-        });
+        if (!ans?.questionId) return;
+        questionAnswers.set(ans.questionId, ans);
       });
+    };
+
+    const isAnswerComplete = (ans) => {
+      if (!ans) return false;
+      if (ans.type === 'text') return String(ans.value || '').trim().length > 0;
+      const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+      return ids.length > 0;
+    };
+
+    const renderQuestionList = () => {
+      if (!currentVote) return;
+      questionMode = 'list';
+      activeQuestionId = null;
+      const questions = currentVote.questions || [];
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.classList.remove('d-none');
+      questionsWrap.innerHTML = questions.map((q, index) => {
+        const answered = isAnswerComplete(questionAnswers.get(q.id));
+        return `
+          <div class="card vote-public-card vote-question-list-card p-3" data-qid="${q.id}">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <div class="fw-semibold">${index + 1}. ${q.text || 'Pergunta'}</div>
+              <div class="d-flex align-items-center gap-2">
+                ${answered ? '<span class="badge vote-tag vote-tag--done">Respondido</span>' : '<span class="badge vote-tag vote-tag--todo">Responder</span>'}
+                ${answered ? '<button type="button" class="btn btn-outline-warning btn-sm vote-edit-answer">Editar</button>' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      const allAnswered = questions.every((q) => isAnswerComplete(questionAnswers.get(q.id)));
+      if (submitBtn) submitBtn.disabled = !allAnswered;
+    };
+
+    const renderSingleQuestion = async (q) => {
+      if (!q) return;
+      questionMode = 'question';
+      activeQuestionId = q.id;
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.classList.add('d-none');
+      const isMulti = !!q.allowMultiple;
+      questionsWrap.innerHTML = `
+        <div class="card vote-public-card p-3 vote-public-options" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
+          <div class="fw-semibold mb-2">${q.text || 'Pergunta'}</div>
+          <div class="vote-flag-grid-wrap"></div>
+        </div>
+        <div class="d-flex align-items-center gap-2 justify-content-end mt-2">
+          <button type="button" class="btn btn-outline-secondary vote-back-list">Voltar</button>
+          <button type="button" class="btn btn-primary vote-save-answer">Salvar resposta</button>
+        </div>
+      `;
+      const opts = getQuestionOptions(q);
+      let grid = '';
+      const hasCity = opts.some((opt) => {
+        if (typeof opt === 'string') return /\s[\-\/]\s*[A-Za-z]{2}\b/.test(opt);
+        return opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || ''));
+      });
+      const hasAssoc = opts.some((opt) => {
+        if (typeof opt === 'string') return false;
+        return opt?.associacao || opt?.association;
+      });
+      const hasUf = opts.some((opt) => {
+        if (typeof opt === 'string') return /^[A-Za-z]{2}$/.test(opt.trim());
+        return opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim()));
+      });
+      if (currentThemeId === 'membros-rotativos' || hasCity) {
+        grid = await buildRotativosOptions(q);
+      } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
+        grid = buildAssocCards(q);
+      } else if (currentThemeId === 'pro-gestao' && hasUf) {
+        grid = buildStateCards(q);
+      } else {
+        grid = buildSimpleCards(q);
+      }
+      const wrap = questionsWrap.querySelector('.vote-flag-grid-wrap');
+      if (wrap) wrap.innerHTML = grid;
+
+      const ans = questionAnswers.get(q.id);
+      if (ans) {
+        if (ans.type === 'text') {
+          const area = questionsWrap.querySelector(`textarea[name="${q.id}"]`);
+          if (area) area.value = ans.value || '';
+        } else {
+          const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+          ids.forEach((oid) => {
+            const input = document.getElementById(`${q.id}_${oid}`);
+            if (input) input.checked = true;
+          });
+        }
+      }
+    };
+
+    const captureCurrentAnswer = async () => {
+      if (!currentVote || !activeQuestionId) return false;
+      const q = (currentVote.questions || []).find((item) => item.id === activeQuestionId);
+      if (!q) return false;
+      if (q.type === 'text') {
+        const area = questionsWrap.querySelector(`textarea[name="${q.id}"]`);
+        const value = (area?.value || '').trim();
+        if (!value) {
+          await showUiModal({ title: 'Aviso', message: 'Responda a pergunta.', variant: 'warning' });
+          return false;
+        }
+        questionAnswers.set(q.id, { questionId: q.id, type: 'text', value });
+        return true;
+      }
+      const selected = Array.from(questionsWrap.querySelectorAll('input:checked')).map((el) => el.value);
+      if (!selected.length) {
+        await showUiModal({ title: 'Aviso', message: 'Selecione ao menos uma opção.', variant: 'warning' });
+        return false;
+      }
+      questionAnswers.set(q.id, { questionId: q.id, type: 'options', optionIds: selected });
+      return true;
     };
 
     loginForm.addEventListener('submit', async (event) => {
@@ -2349,60 +2457,18 @@
       if (!data.active || !data.vote) return showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
       currentVote = data.vote;
       startedAt = Date.now();
+      questionAnswers = new Map();
       const pendingAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
+      applyPreviousAnswers(pendingAnswers);
       formWrap?.classList.remove('d-none');
       setModuleBackground(true);
       successMsg?.classList.add('d-none');
-      questionsWrap.innerHTML = (currentVote.questions || []).map((q, index) => {
-        if (q.type === 'text') {
-          return `
-            <div class="card vote-public-card p-3">
-              <div class="fw-semibold mb-2">${index + 1}. ${q.text || 'Pergunta'}</div>
-              <textarea class="form-control" name="${q.id}" rows="3" required></textarea>
-            </div>
-          `;
-        }
-        const isMulti = !!q.allowMultiple;
-        return `
-          <div class="card vote-public-card p-3 vote-public-options" data-qid="${q.id}" data-multi="${isMulti ? '1' : '0'}" data-limit-type="${q.limitType || 'none'}" data-limit-value="${q.limitValue || ''}">
-            <div class="fw-semibold mb-2">${index + 1}. ${q.text || 'Pergunta'}</div>
-            <div class="vote-flag-grid-wrap"></div>
-          </div>
-        `;
-      }).join('');
-
-      const optionCards = Array.from(questionsWrap.querySelectorAll('.vote-public-options'));
-      const jobs = optionCards.map(async (cardEl) => {
-        const qid = cardEl.dataset.qid;
-        const q = (currentVote.questions || []).find((item) => item.id === qid);
-        if (!q) return;
-        const opts = getQuestionOptions(q);
-        let grid = '';
-        const hasCity = opts.some((opt) => {
-          if (typeof opt === 'string') return /\s[\-\/]\s*[A-Za-z]{2}\b/.test(opt);
-          return opt?.city || /\s[\-\/]\s*[A-Za-z]{2}\b/.test(String(opt?.text || ''));
-        });
-        const hasAssoc = opts.some((opt) => {
-          if (typeof opt === 'string') return false;
-          return opt?.associacao || opt?.association;
-        });
-        const hasUf = opts.some((opt) => {
-          if (typeof opt === 'string') return /^[A-Za-z]{2}$/.test(opt.trim());
-          return opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim()));
-        });
-        if (currentThemeId === 'membros-rotativos' || hasCity) {
-          grid = await buildRotativosOptions(q);
-        } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
-          grid = buildAssocCards(q);
-        } else if (currentThemeId === 'pro-gestao' && hasUf) {
-          grid = buildStateCards(q);
-        } else {
-          grid = buildSimpleCards(q);
-        }
-        const wrap = cardEl.querySelector('.vote-flag-grid-wrap');
-        if (wrap) wrap.innerHTML = grid;
-      });
-      Promise.all(jobs).then(() => applyPreviousAnswers(pendingAnswers));
+      const questions = currentVote.questions || [];
+      if (questions.length <= 1) {
+        renderSingleQuestion(questions[0]);
+      } else {
+        renderQuestionList();
+      }
       const displayTitle = formatVoteTitle(currentVote.title);
       if (formTitle) formTitle.textContent = displayTitle;
       if (formModalTitle) formModalTitle.textContent = displayTitle;
@@ -2410,9 +2476,6 @@
         formModalBody.appendChild(formWrap);
       }
       formModal?.show();
-      if (currentThemeId !== 'membros-rotativos') {
-        applyPreviousAnswers(pendingAnswers);
-      }
     });
 
     backBtn?.addEventListener('click', () => {
@@ -2456,46 +2519,37 @@
       }
     });
 
+    questionsWrap?.addEventListener('click', async (event) => {
+      const listCard = event.target.closest('.vote-question-list-card');
+      if (listCard) {
+        const qid = listCard.dataset.qid;
+        const q = (currentVote.questions || []).find((item) => item.id === qid);
+        if (q) await renderSingleQuestion(q);
+        return;
+      }
+      if (event.target.closest('.vote-back-list')) {
+        renderQuestionList();
+        return;
+      }
+      if (event.target.closest('.vote-save-answer')) {
+        const ok = await captureCurrentAnswer();
+        if (ok) renderQuestionList();
+      }
+    });
+
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!currentVote || !currentUser) return;
 
+      const questions = currentVote.questions || [];
       const answers = [];
-      const questionCards = Array.from(questionsWrap.querySelectorAll('.vote-public-card'));
-      for (const card of questionCards) {
-        const qid = card.dataset.qid || card.querySelector('textarea')?.name;
-        const isMulti = card.dataset.multi === '1';
-        const limitType = card.dataset.limitType || 'none';
-        const limitValue = parseInt(card.dataset.limitValue || '0', 10) || 0;
-
-        if (card.querySelector('textarea')) {
-          const val = (card.querySelector('textarea')?.value || '').trim();
-          if (!val) {
-            await showUiModal({ title: 'Aviso', message: 'Responda todas as perguntas.', variant: 'warning' });
-            return;
-          }
-          answers.push({ questionId: qid, type: 'text', value: val });
-          continue;
-        }
-
-        const selected = Array.from(card.querySelectorAll('input:checked')).map((el) => el.value);
-        if (!selected.length) {
+      for (const q of questions) {
+        const ans = questionAnswers.get(q.id);
+        if (!isAnswerComplete(ans)) {
           await showUiModal({ title: 'Aviso', message: 'Responda todas as perguntas.', variant: 'warning' });
           return;
         }
-
-        if (isMulti && limitType !== 'none' && limitValue > 0) {
-          if (limitType === 'equal' && selected.length !== limitValue) {
-            await showUiModal({ title: 'Aviso', message: `Selecione exatamente ${limitValue} opção(ões).`, variant: 'warning' });
-            return;
-          }
-          if (limitType === 'max' && selected.length > limitValue) {
-            await showUiModal({ title: 'Aviso', message: `Selecione no máximo ${limitValue} opção(ões).`, variant: 'warning' });
-            return;
-          }
-        }
-
-        answers.push({ questionId: qid, type: 'options', optionIds: selected });
+        answers.push(ans);
       }
 
       const stop = startLoading('Enviando voto...');
