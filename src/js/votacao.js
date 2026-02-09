@@ -2408,7 +2408,7 @@
       questionsWrap.innerHTML = questions.map((q, index) => {
         const answered = isAnswerComplete(questionAnswers.get(q.id));
         return `
-          <div class="card vote-public-card vote-question-list-card p-3" data-qid="${q.id}">
+          <div class="card vote-public-card vote-question-list-card p-3" data-qid="${q.id || ''}" data-qindex="${index}">
             <div class="d-flex align-items-center justify-content-between gap-2">
               <div class="fw-semibold">${index + 1}. ${q.text || 'Pergunta'}</div>
               <div class="d-flex align-items-center gap-2">
@@ -2658,12 +2658,22 @@
       const listCard = event.target.closest('.vote-question-list-card');
       if (listCard) {
         const qid = listCard.dataset.qid;
-        const q = getPublicQuestions().find((item) => item.id === qid);
+        let q = getPublicQuestions().find((item) => item.id === qid);
+        if (!q) {
+          const idx = parseInt(listCard.dataset.qindex || '', 10);
+          if (Number.isFinite(idx)) {
+            q = getPublicQuestions()[idx];
+          }
+        }
         if (q) await renderSingleQuestion(q);
         return;
       }
       if (event.target.closest('.vote-back-list')) {
-        renderQuestionList();
+        if (voteList.length > 1) {
+          renderVoteList();
+        } else {
+          renderQuestionList();
+        }
         return;
       }
       if (event.target.closest('.vote-save-answer')) {
