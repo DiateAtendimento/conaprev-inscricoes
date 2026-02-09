@@ -2285,6 +2285,11 @@
       });
     };
 
+    const getPublicQuestions = () => {
+      if (!currentVote) return [];
+      return currentVote.questions || currentVote.perguntas || currentVote.questoes || [];
+    };
+
     const applyPreviousAnswers = (answers) => {
       if (!Array.isArray(answers)) return;
       answers.forEach((ans) => {
@@ -2304,7 +2309,7 @@
       if (!currentVote) return;
       questionMode = 'list';
       activeQuestionId = null;
-      const questions = currentVote.questions || [];
+      const questions = getPublicQuestions();
       const submitBtn = form?.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.classList.remove('d-none');
       questionsWrap.innerHTML = questions.map((q, index) => {
@@ -2385,7 +2390,7 @@
 
     const captureCurrentAnswer = async () => {
       if (!currentVote || !activeQuestionId) return false;
-      const q = (currentVote.questions || []).find((item) => item.id === activeQuestionId);
+      const q = getPublicQuestions().find((item) => item.id === activeQuestionId);
       if (!q) return false;
       if (q.type === 'text') {
         const area = questionsWrap.querySelector(`textarea[name="${q.id}"]`);
@@ -2463,7 +2468,6 @@
       formWrap?.classList.remove('d-none');
       setModuleBackground(true);
       successMsg?.classList.add('d-none');
-      const questions = currentVote.questions || [];
       renderQuestionList();
       const displayTitle = formatVoteTitle(currentVote.title);
       if (formTitle) formTitle.textContent = displayTitle;
@@ -2519,7 +2523,7 @@
       const listCard = event.target.closest('.vote-question-list-card');
       if (listCard) {
         const qid = listCard.dataset.qid;
-        const q = (currentVote.questions || []).find((item) => item.id === qid);
+        const q = getPublicQuestions().find((item) => item.id === qid);
         if (q) await renderSingleQuestion(q);
         return;
       }
@@ -2537,7 +2541,7 @@
       event.preventDefault();
       if (!currentVote || !currentUser) return;
 
-      const questions = currentVote.questions || [];
+      const questions = getPublicQuestions();
       const answers = [];
       for (const q of questions) {
         const ans = questionAnswers.get(q.id);
