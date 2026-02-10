@@ -1199,6 +1199,17 @@
     const createOptionEl = (option) => {
       const wrap = document.createElement('div');
       const mode = getOptionMode();
+      const isBlank = option.blank || option.isBlank || String(option.text || '').trim().toLowerCase() === 'votar em branco';
+      if (isBlank) {
+        wrap.className = 'vote-option-input';
+        wrap.dataset.oid = option.id;
+        wrap.dataset.blank = '1';
+        wrap.innerHTML = `
+          <input type="text" class="form-control vote-option-text" value="Votar em Branco" readonly />
+          <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
+        `;
+        return wrap;
+      }
       if (mode === 'municipios') {
         wrap.className = 'vote-option-input is-flag-option is-municipio-option';
       } else if (mode === 'estados') {
@@ -1345,9 +1356,12 @@
       card.dataset.type = question.type;
 
       const isOptions = question.type === 'options';
-      const optionsHtml = isOptions ? `
-        <div class="vote-options vstack gap-2 mt-3"></div>
-        <button type="button" class="btn btn-success btn-sm mt-3 vote-add-option">Adicionar opção</button>
+        const optionsHtml = isOptions ? `
+          <div class="vote-options vstack gap-2 mt-3"></div>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button type="button" class="btn btn-success btn-sm vote-add-option">Adicionar opção</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm vote-add-blank">Adicionar Voto em Branco</button>
+          </div>
         <div class="form-check form-switch mt-3">
           <input class="form-check-input vote-multi-toggle" type="checkbox" ${question.allowMultiple ? 'checked' : ''}>
           <label class="form-check-label">Permitir várias respostas</label>
@@ -1561,6 +1575,17 @@
         const option = { id: createId('o'), text: '' };
         optionsWrap.appendChild(createOptionEl(option));
       }
+      const addBlankBtn = event.target.closest('.vote-add-blank');
+      if (addBlankBtn) {
+        const questionCard = event.target.closest('.vote-question-card');
+        const optionsWrap = questionCard?.querySelector('.vote-options');
+        if (!optionsWrap) return;
+        const exists = Array.from(optionsWrap.querySelectorAll('.vote-option-input'))
+          .some((row) => row.dataset.blank === '1');
+        if (exists) return;
+        const option = { id: createId('o'), text: 'Votar em Branco', blank: true };
+        optionsWrap.appendChild(createOptionEl(option));
+      }
 
       const clearBtn = event.target.closest('.vote-flag-clear');
       if (clearBtn) {
@@ -1676,6 +1701,13 @@
         let invalidStates = false;
         let invalidAssoc = false;
         const options = optionEls.map((optEl) => {
+          if (optEl.dataset.blank === '1') {
+            return {
+              id: optEl.dataset.oid || createId('o'),
+              text: 'Votar em Branco',
+              blank: true,
+            };
+          }
           if (isMunicipiosMode()) {
             const city = optEl.querySelector('.vote-option-city')?.value || '';
             const uf = optEl.querySelector('.vote-option-uf')?.value || '';
@@ -2167,12 +2199,33 @@
     const getQuestionOptions = (q) =>
       q?.options || q?.opcoes || q?.alternativas || [];
 
+    const isBlankOption = (opt) => {
+      const text = (typeof opt === 'string') ? opt : opt?.text;
+      return String(text || '').trim().toLowerCase() === 'votar em branco';
+    };
+
+    const buildBlankCard = (q, opt, inputType) => {
+      const base = (typeof opt === 'string') ? { text: opt } : opt;
+      const labelId = `${q.id}_${base?.id || opt?.id}`;
+      return `
+        <label class="vote-option-card" for="${labelId}">
+          <span class="vote-flag-select">
+            <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+          </span>
+          <span class="vote-option-text">Votar em Branco</span>
+        </label>
+      `;
+    };
+
     const buildRotativosOptions = (q) => {
       const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
+        if (isBlankOption(opt)) {
+          return buildBlankCard(q, opt, inputType);
+        }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const parsed = parseCityUfFromText(base?.text || '');
         const city = base?.city || parsed.city || '';
@@ -2218,6 +2271,9 @@
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
+        if (isBlankOption(opt)) {
+          return buildBlankCard(q, opt, inputType);
+        }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const uf = String(base?.uf || base?.text || '').trim().toUpperCase();
         const name = UF_NAMES[uf] || uf || 'Estado';
@@ -2250,6 +2306,9 @@
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
+        if (isBlankOption(opt)) {
+          return buildBlankCard(q, opt, inputType);
+        }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const name = String(base?.associacao || base?.text || '').trim();
         const labelId = `${q.id}_${base?.id || opt?.id}`;
