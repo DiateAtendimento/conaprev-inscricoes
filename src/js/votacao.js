@@ -2412,7 +2412,10 @@
       currentVote = null;
       questionAnswers = new Map();
       const submitBtn = form?.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.classList.add('d-none');
+      if (submitBtn) {
+        submitBtn.classList.remove('d-none');
+        submitBtn.textContent = 'Enviar respostas';
+      }
       questionsWrap.innerHTML = voteList.map((vote) => {
         const label = getPublicVoteLabel(vote);
         const answered = isVoteAnswered(vote);
@@ -2422,12 +2425,14 @@
               <div class="fw-semibold">${label || 'Votação'}</div>
               <div class="d-flex align-items-center gap-2">
                 ${answered ? '<span class="badge vote-tag vote-tag--done">Respondido</span>' : '<span class="badge vote-tag vote-tag--todo">Responder</span>'}
-                ${answered ? '<button type="button" class="btn btn-outline-warning btn-sm vote-edit-answer">Editar</button>' : ''}
+                ${answered ? '<button type="button" class="btn btn-sm vote-action-btn is-edit vote-edit-answer" aria-label="Editar"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>' : ''}
               </div>
             </div>
           </div>
         `;
       }).join('');
+      const allAnswered = voteList.length > 0 && voteList.every((vote) => isVoteAnswered(vote));
+      if (submitBtn) submitBtn.disabled = !allAnswered;
     };
 
     const renderQuestionList = () => {
@@ -2445,7 +2450,7 @@
               <div class="fw-semibold">${index + 1}. ${q.text || 'Pergunta'}</div>
               <div class="d-flex align-items-center gap-2">
                 ${answered ? '<span class="badge vote-tag vote-tag--done">Respondido</span>' : '<span class="badge vote-tag vote-tag--todo">Responder</span>'}
-                ${answered ? '<button type="button" class="btn btn-outline-warning btn-sm vote-edit-answer">Editar</button>' : ''}
+                ${answered ? '<button type="button" class="btn btn-sm vote-action-btn is-edit vote-edit-answer" aria-label="Editar"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>' : ''}
               </div>
             </div>
           </div>
@@ -2725,7 +2730,51 @@
 
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!currentVote || !currentUser) return;
+      if (!currentUser) return;
+
+      if (!currentVote && voteList.length > 1) {
+        const pending = voteList.filter((vote) => !isVoteAnswered(vote));
+        if (pending.length) {
+          await showUiModal({ title: 'Aviso', message: 'Responda todas as perguntas.', variant: 'warning' });
+          return;
+        }
+        const stop = startLoading('Enviando respostas...');
+        for (const vote of voteList) {
+          const answers = voteAnswersById.get(vote.id) || [];
+          const res = await apiFetch('/api/votacao/votar', {
+            method: 'POST',
+            body: JSON.stringify({
+              voteId: vote.id,
+              cpf: currentUser.cpf,
+              answers,
+              durationMs: Date.now() - startedAt,
+            }),
+          });
+          if (!res.ok) {
+            stop();
+            const err = await res.json().catch(() => ({}));
+            if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
+              await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
+              return;
+            }
+            await showDenied('Desculpe! Ação não permitida');
+            return;
+          }
+          await res.json().catch(() => ({}));
+        }
+        stop();
+        successMsg.textContent = `${currentUser.nome}, seu voto foi enviado com sucesso!`;
+        successMsg?.classList.remove('d-none');
+        await showUiModal({
+          title: 'Sucesso',
+          message: successMsg.textContent,
+          variant: 'success',
+        });
+        renderVoteList();
+        return;
+      }
+
+      if (!currentVote) return;
 
       const questions = getPublicQuestions();
       const answers = [];

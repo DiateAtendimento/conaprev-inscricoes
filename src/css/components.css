@@ -449,6 +449,10 @@
   background:#16a34a;
   color:#fff;
 }
+.modal#voteTypeModal,
+.modal#voteProGestaoModal{
+  z-index:1070;
+}
 .vote-flag-card{
   position:relative;
   display:flex;
