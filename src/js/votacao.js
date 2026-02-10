@@ -1917,9 +1917,6 @@
     const photoCache = new Map();
     let photoIndexPromise = null;
 
-    const REGION_DIR = REGION_IMAGE_DIR;
-    const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
-
     const stripDiacritics = (value) =>
       String(value || '')
         .normalize('NFD')
