@@ -1885,6 +1885,41 @@
     const photoCache = new Map();
     let photoIndexPromise = null;
 
+    const REGION_DIR = REGION_IMAGE_DIR;
+    const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
+    const STATE_FLAG_DIR_PUBLIC = STATE_FLAG_DIR;
+    const ASSOC_IMAGE_DIR_PUBLIC = ASSOC_IMAGE_DIR;
+
+    const UF_NAMES = {
+      AC: 'Acre',
+      AL: 'Alagoas',
+      AP: 'Amapa',
+      AM: 'Amazonas',
+      BA: 'Bahia',
+      CE: 'Ceara',
+      DF: 'Distrito Federal',
+      ES: 'Espirito Santo',
+      GO: 'Goias',
+      MA: 'Maranhao',
+      MT: 'Mato Grosso',
+      MS: 'Mato Grosso do Sul',
+      MG: 'Minas Gerais',
+      PA: 'Para',
+      PB: 'Paraiba',
+      PR: 'Parana',
+      PE: 'Pernambuco',
+      PI: 'Piaui',
+      RJ: 'Rio de Janeiro',
+      RN: 'Rio Grande do Norte',
+      RS: 'Rio Grande do Sul',
+      RO: 'Rondonia',
+      RR: 'Roraima',
+      SC: 'Santa Catarina',
+      SP: 'Sao Paulo',
+      SE: 'Sergipe',
+      TO: 'Tocantins',
+    };
+
     const stripDiacritics = (value) =>
       String(value || '')
         .normalize('NFD')
