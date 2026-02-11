@@ -1040,8 +1040,22 @@ body.vote-admin-page.vote-module-bg::before{
   .vote-login-shell{
     padding:16px;
   }
+  .vote-login-left{
+    text-align:center;
+  }
+  .vote-login-brand{
+    font-size:16px;
+    letter-spacing:1.2px;
+  }
   .vote-login-title{
     font-size:24px;
+    letter-spacing:.4px;
+  }
+  .vote-login-subtitle{
+    font-size:14px;
+    margin-left:auto;
+    margin-right:auto;
+    max-width:240px;
   }
   .vote-public-section{
     margin-top:16px;
@@ -1077,6 +1091,17 @@ body.vote-admin-page.vote-module-bg::before{
   }
   .vote-footer-logos .vote-logo-govbr{
     height:6rem;
+  }
+}
+
+@media (max-width: 768px){
+  .vote-public-footer{
+    padding:0 0 16px;
+  }
+  .vote-public-footer-inner{
+    width:calc(100% - 28px);
+    margin:12px auto 0;
+    padding:0 12px;
   }
 }
 
