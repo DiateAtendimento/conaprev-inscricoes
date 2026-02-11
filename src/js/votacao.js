@@ -2175,13 +2175,32 @@
       return String(text || '').trim().toLowerCase() === 'votar em branco';
     };
 
-    const buildBlankCard = (q, opt, inputType) => {
+    const buildBlankCard = (q, opt, inputType, variant) => {
       const base = (typeof opt === 'string') ? { text: opt } : opt;
       const labelId = `${q.id}_${base?.id || opt?.id}`;
+      const imgSrc = '/imagens/cards/voto-em-branco.svg';
+      if (variant === 'flag') {
+        return `
+          <label class="vote-flag-card vote-blank-card" for="${labelId}">
+            <span class="vote-flag-select">
+              <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+            </span>
+            <span class="vote-flag-media">
+              <img src="${imgSrc}" alt="Votar em Branco">
+            </span>
+            <span class="vote-flag-text">
+              <span class="vote-flag-name">Votar em Branco</span>
+            </span>
+          </label>
+        `;
+      }
       return `
-        <label class="vote-option-card" for="${labelId}">
+        <label class="vote-option-card vote-blank-card" for="${labelId}">
           <span class="vote-flag-select">
             <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
+          </span>
+          <span class="vote-option-media">
+            <img src="${imgSrc}" alt="Votar em Branco">
           </span>
           <span class="vote-option-text">Votar em Branco</span>
         </label>
@@ -2195,7 +2214,7 @@
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
         if (isBlankOption(opt)) {
-          return buildBlankCard(q, opt, inputType);
+          return buildBlankCard(q, opt, inputType, 'flag');
         }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const parsed = parseCityUfFromText(base?.text || '');
@@ -2243,7 +2262,7 @@
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
         if (isBlankOption(opt)) {
-          return buildBlankCard(q, opt, inputType);
+          return buildBlankCard(q, opt, inputType, 'flag');
         }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const uf = String(base?.uf || base?.text || '').trim().toUpperCase();
@@ -2278,7 +2297,7 @@
       const cols = Math.min(4, Math.max(1, options.length));
       const cards = options.map((opt) => {
         if (isBlankOption(opt)) {
-          return buildBlankCard(q, opt, inputType);
+          return buildBlankCard(q, opt, inputType, 'flag');
         }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const name = String(base?.associacao || base?.text || '').trim();
@@ -2311,6 +2330,9 @@
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(3, Math.max(1, options.length));
       const cards = options.map((opt) => {
+        if (isBlankOption(opt)) {
+          return buildBlankCard(q, opt, inputType, 'simple');
+        }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const text = String(base?.text || '').trim();
         const labelId = `${q.id}_${base?.id || opt?.id}`;

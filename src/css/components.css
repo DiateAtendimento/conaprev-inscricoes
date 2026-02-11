@@ -428,6 +428,21 @@
   height:20px;
   margin:0;
 }
+.vote-option-media{
+  width:52px;
+  height:52px;
+  border-radius:14px;
+  background:#f8fafc;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.vote-option-media img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
 .vote-option-text{
   font-weight:600;
   color:#0f172a;
