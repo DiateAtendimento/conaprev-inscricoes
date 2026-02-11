@@ -442,6 +442,7 @@
 }
 .vote-option-input.is-blank-option .vote-flag-actions{
   align-self:center;
+  justify-content:flex-end;
 }
 .vote-blank-remove{
   color:#dc2626;
