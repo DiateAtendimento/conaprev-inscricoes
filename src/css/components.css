@@ -434,9 +434,14 @@
 .vote-blank-label{
   font-weight:600;
   color:#0f172a;
+  white-space:nowrap;
 }
 .vote-flag-fields.is-blank{
   grid-template-columns:minmax(0, 1fr);
+  align-items:center;
+}
+.vote-option-input.is-blank-option .vote-flag-actions{
+  align-self:center;
 }
 .vote-blank-remove{
   color:#dc2626;
