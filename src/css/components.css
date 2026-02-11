@@ -1099,9 +1099,43 @@ body.vote-admin-page.vote-module-bg::before{
     padding:0 0 16px;
   }
   .vote-public-footer-inner{
-    width:calc(100% - 28px);
+    width:calc(100% - 32px);
     margin:12px auto 0;
     padding:0 12px;
+  }
+}
+
+@media (max-width: 420px){
+  .vote-login-card{
+    border-radius:20px;
+  }
+  .vote-login-left{
+    padding:18px 16px 16px;
+    min-height:0;
+  }
+  .vote-login-brand{
+    font-size:14px;
+    letter-spacing:1.6px;
+  }
+  .vote-login-title{
+    font-size:22px;
+  }
+  .vote-login-subtitle{
+    font-size:13px;
+    margin-bottom:14px;
+    max-width:220px;
+  }
+  .vote-login-form{
+    gap:10px;
+  }
+  .vote-login-right{
+    padding:16px;
+    min-height:0;
+  }
+  .vote-login-right img{
+    height:12rem;
+    max-height:12rem;
+    max-width:78%;
   }
 }
 
