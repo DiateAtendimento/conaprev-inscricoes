@@ -366,9 +366,14 @@
 
   const hideLoading = () => {
     const modalEl = document.getElementById('voteLoadingModal');
-    if (!modalEl || !window.bootstrap) return;
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modal?.hide();
+    if (!modalEl) return;
+    if (window.bootstrap) {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal?.hide();
+    }
+    modalEl.classList.remove('show');
+    modalEl.style.display = 'none';
+    modalEl.setAttribute('aria-hidden', 'true');
   };
 
   const startLoading = (message) => {
@@ -2724,6 +2729,37 @@
           ? `Selecione exatamente ${limitValue} opção(ões).`
           : `Selecione no máximo ${limitValue} opção(ões).`;
         await showUiModal({ title: 'Aviso', message: msg, variant: 'warning' });
+      }
+    });
+
+    const updateDraftFromQuestion = () => {
+      if (!currentVote || !activeQuestionId) return;
+      const q = getPublicQuestions().find((item) => item.id === activeQuestionId);
+      if (!q) return;
+      if (q.type === 'text') {
+        const area = questionsWrap.querySelector(`textarea[name="${q.id}"]`);
+        const value = (area?.value || '').trim();
+        if (value) {
+          questionAnswers.set(q.id, { questionId: q.id, type: 'text', value });
+        } else {
+          questionAnswers.delete(q.id);
+        }
+      } else {
+        const selected = Array.from(questionsWrap.querySelectorAll('input:checked')).map((el) => el.value);
+        if (selected.length) {
+          questionAnswers.set(q.id, { questionId: q.id, type: 'options', optionIds: selected });
+        } else {
+          questionAnswers.delete(q.id);
+        }
+      }
+      const answers = Array.from(questionAnswers.values());
+      voteAnswersById.set(currentVote.id, answers);
+      saveDraftAnswers(currentUser?.cpf || '', currentVote.id, answers);
+    };
+
+    questionsWrap?.addEventListener('input', () => {
+      if (questionMode === 'question') {
+        updateDraftFromQuestion();
       }
     });
 
