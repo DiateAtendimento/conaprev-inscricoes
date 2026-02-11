@@ -61,6 +61,36 @@
     SC: 'SUL',
   };
 
+  const UF_NAMES = {
+    AC: 'Acre',
+    AL: 'Alagoas',
+    AP: 'Amapa',
+    AM: 'Amazonas',
+    BA: 'Bahia',
+    CE: 'Ceara',
+    DF: 'Distrito Federal',
+    ES: 'Espirito Santo',
+    GO: 'Goias',
+    MA: 'Maranhao',
+    MT: 'Mato Grosso',
+    MS: 'Mato Grosso do Sul',
+    MG: 'Minas Gerais',
+    PA: 'Para',
+    PB: 'Paraiba',
+    PR: 'Parana',
+    PE: 'Pernambuco',
+    PI: 'Piaui',
+    RJ: 'Rio de Janeiro',
+    RN: 'Rio Grande do Norte',
+    RS: 'Rio Grande do Sul',
+    RO: 'Rondonia',
+    RR: 'Roraima',
+    SC: 'Santa Catarina',
+    SP: 'Sao Paulo',
+    SE: 'Sergipe',
+    TO: 'Tocantins',
+  };
+
   const normalizeRegionKey = (value) => String(value || '')
     .replace(/^regiao/i, '')
     .trim()
@@ -736,38 +766,6 @@
 
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
-    const STATE_FLAG_DIR_PUBLIC = STATE_FLAG_DIR;
-    const ASSOC_IMAGE_DIR_PUBLIC = ASSOC_IMAGE_DIR;
-
-    const UF_NAMES = {
-      AC: 'Acre',
-      AL: 'Alagoas',
-      AP: 'Amapa',
-      AM: 'Amazonas',
-      BA: 'Bahia',
-      CE: 'Ceara',
-      DF: 'Distrito Federal',
-      ES: 'Espirito Santo',
-      GO: 'Goias',
-      MA: 'Maranhao',
-      MT: 'Mato Grosso',
-      MS: 'Mato Grosso do Sul',
-      MG: 'Minas Gerais',
-      PA: 'Para',
-      PB: 'Paraiba',
-      PR: 'Parana',
-      PE: 'Pernambuco',
-      PI: 'Piaui',
-      RJ: 'Rio de Janeiro',
-      RN: 'Rio Grande do Norte',
-      RS: 'Rio Grande do Sul',
-      RO: 'Rondonia',
-      RR: 'Roraima',
-      SC: 'Santa Catarina',
-      SP: 'Sao Paulo',
-      SE: 'Sergipe',
-      TO: 'Tocantins',
-    };
     let cityDataPromise = null;
     let assocListPromise = null;
 
@@ -1919,38 +1917,6 @@
 
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
-    const STATE_FLAG_DIR_PUBLIC = STATE_FLAG_DIR;
-    const ASSOC_IMAGE_DIR_PUBLIC = ASSOC_IMAGE_DIR;
-
-    const UF_NAMES = {
-      AC: 'Acre',
-      AL: 'Alagoas',
-      AP: 'Amapa',
-      AM: 'Amazonas',
-      BA: 'Bahia',
-      CE: 'Ceara',
-      DF: 'Distrito Federal',
-      ES: 'Espirito Santo',
-      GO: 'Goias',
-      MA: 'Maranhao',
-      MT: 'Mato Grosso',
-      MS: 'Mato Grosso do Sul',
-      MG: 'Minas Gerais',
-      PA: 'Para',
-      PB: 'Paraiba',
-      PR: 'Parana',
-      PE: 'Pernambuco',
-      PI: 'Piaui',
-      RJ: 'Rio de Janeiro',
-      RN: 'Rio Grande do Norte',
-      RS: 'Rio Grande do Sul',
-      RO: 'Rondonia',
-      RR: 'Roraima',
-      SC: 'Santa Catarina',
-      SP: 'Sao Paulo',
-      SE: 'Sergipe',
-      TO: 'Tocantins',
-    };
 
     const stripDiacritics = (value) =>
       String(value || '')
@@ -2262,7 +2228,7 @@
     const resolveStateFlagUrlPublic = (uf) => {
       const key = String(uf || '').trim().toUpperCase();
       const file = STATE_FLAG_FILES[key];
-      return file ? `${STATE_FLAG_DIR_PUBLIC}/${file}` : DEFAULT_REGION_URL;
+      return file ? `${STATE_FLAG_DIR}/${file}` : DEFAULT_REGION_URL;
     };
 
     const buildStateCards = (q) => {
@@ -2312,7 +2278,7 @@
         const base = (typeof opt === 'string') ? { text: opt } : opt;
         const name = String(base?.associacao || base?.text || '').trim();
         const labelId = `${q.id}_${base?.id || opt?.id}`;
-        const imgUrl = name ? `${ASSOC_IMAGE_DIR_PUBLIC}/${encodeURIComponent(`${name}.png`)}` : DEFAULT_REGION_URL;
+        const imgUrl = name ? `${ASSOC_IMAGE_DIR}/${encodeURIComponent(`${name}.png`)}` : DEFAULT_REGION_URL;
         return `
           <label class="vote-flag-card" for="${labelId}">
             <span class="vote-flag-select">
@@ -2418,6 +2384,32 @@
       });
     };
 
+    const getDraftKey = (cpf, voteId) => `votacao.draft.${cpf || 'anon'}.${voteId}`;
+
+    const loadDraftAnswers = (cpf, voteId) => {
+      try {
+        const raw = localStorage.getItem(getDraftKey(cpf, voteId));
+        const parsed = raw ? JSON.parse(raw) : null;
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const saveDraftAnswers = (cpf, voteId, answers) => {
+      if (!cpf || !voteId) return;
+      try {
+        localStorage.setItem(getDraftKey(cpf, voteId), JSON.stringify(answers || []));
+      } catch {}
+    };
+
+    const clearDraftAnswers = (cpf, voteId) => {
+      if (!cpf || !voteId) return;
+      try {
+        localStorage.removeItem(getDraftKey(cpf, voteId));
+      } catch {}
+    };
+
     const fetchVotesForTheme = async (themeId, cpf) => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 12000);
@@ -2466,6 +2458,7 @@
     };
 
     const renderVoteList = () => {
+      hideLoading();
       questionMode = 'vote-list';
       activeQuestionId = null;
       currentVote = null;
@@ -2496,6 +2489,7 @@
 
     const renderQuestionList = () => {
       if (!currentVote) return;
+      hideLoading();
       questionMode = 'list';
       activeQuestionId = null;
       const questions = getPublicQuestions();
@@ -2521,6 +2515,7 @@
 
     const renderSingleQuestion = async (q) => {
       if (!q) return;
+      hideLoading();
       questionMode = 'question';
       activeQuestionId = q.id;
       const submitBtn = form?.querySelector('button[type="submit"]');
@@ -2658,9 +2653,9 @@
       voteList = votes;
       voteAnswersById = new Map();
       votes.forEach((vote) => {
-        if (Array.isArray(vote.previousAnswers)) {
-          voteAnswersById.set(vote.id, vote.previousAnswers);
-        }
+        const prev = Array.isArray(vote.previousAnswers) ? vote.previousAnswers : [];
+        const draft = loadDraftAnswers(currentUser?.cpf || '', vote.id);
+        voteAnswersById.set(vote.id, draft.length ? draft : prev);
       });
 
       if (votes.length === 1) {
@@ -2776,7 +2771,9 @@
         const ok = await captureCurrentAnswer();
         if (ok) {
           if (currentVote) {
-            voteAnswersById.set(currentVote.id, Array.from(questionAnswers.values()));
+            const answers = Array.from(questionAnswers.values());
+            voteAnswersById.set(currentVote.id, answers);
+            saveDraftAnswers(currentUser?.cpf || '', currentVote.id, answers);
           }
           if (voteList.length > 1) {
             renderVoteList();
@@ -2820,6 +2817,7 @@
             return;
           }
           await res.json().catch(() => ({}));
+          clearDraftAnswers(currentUser.cpf, vote.id);
         }
         stop();
         successMsg.textContent = `${currentUser.nome}, seu voto foi enviado com sucesso!`;
@@ -2877,6 +2875,7 @@
         variant: 'success',
       });
       voteAnswersById.set(currentVote.id, answers);
+      clearDraftAnswers(currentUser.cpf, currentVote.id);
       if (voteList.length > 1) {
         renderVoteList();
       }
