@@ -1204,12 +1204,17 @@
       const mode = getOptionMode();
       const isBlank = option.blank || option.isBlank || String(option.text || '').trim().toLowerCase() === 'votar em branco';
       if (isBlank) {
-        wrap.className = 'vote-option-input';
+        wrap.className = 'vote-option-input is-blank-option';
         wrap.dataset.oid = option.id;
         wrap.dataset.blank = '1';
         wrap.innerHTML = `
-          <input type="text" class="form-control vote-option-text" value="Votar em Branco" readonly />
-          <button type="button" class="btn btn-danger btn-sm vote-remove-option">Remover</button>
+          <div class="vote-blank-tile">
+            <img src="/imagens/cards/voto-em-branco.svg" alt="Votar em Branco">
+            <span>Votar em Branco</span>
+          </div>
+          <button type="button" class="btn btn-sm vote-remove-option vote-blank-remove" aria-label="Remover">
+            <i class="bi bi-trash" aria-hidden="true"></i>
+          </button>
         `;
         return wrap;
       }
@@ -1830,13 +1835,11 @@
         currentVote = await res.json();
       }
 
-      if (isEdit) {
-        if (msg) {
-          msg.textContent = 'Informações atualizadas com sucesso.';
-          msg.classList.remove('d-none');
+        if (isEdit) {
+          if (msg) msg.classList.add('d-none');
+          showToast('Informações atualizadas com sucesso.');
+          return;
         }
-        return;
-      }
 
       if (isProGestao) {
         proGestaoFormModal?.hide();

@@ -518,8 +518,7 @@ export async function getUserResponseForVote(vote, cpf) {
 export async function submitVote({ voteId, cpf, answers, durationMs }) {
   const vote = await getVoteById(voteId);
   if (!vote) throw new Error("Votação não encontrada");
-  const latest = await getLatestVoteForTema(vote.tema);
-  if (!latest || latest.id !== vote.id || !vote.active) {
+  if (!vote.active) {
     throw new Error("VOTACAO_INDISPONIVEL");
   }
 

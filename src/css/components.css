@@ -428,6 +428,37 @@
   height:20px;
   margin:0;
 }
+.vote-option-input.is-blank-option{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:10px 12px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#fff;
+}
+.vote-blank-tile{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.vote-blank-tile img{
+  width:52px;
+  height:52px;
+  border-radius:12px;
+  object-fit:contain;
+  background:#f8fafc;
+  padding:6px;
+}
+.vote-blank-tile span{
+  font-weight:600;
+  color:#0f172a;
+}
+.vote-blank-remove{
+  color:#dc2626;
+  border:1px solid #fecaca;
+}
 .vote-option-media{
   width:52px;
   height:52px;
