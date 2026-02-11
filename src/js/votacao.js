@@ -1204,14 +1204,33 @@
       const mode = getOptionMode();
       const isBlank = option.blank || option.isBlank || String(option.text || '').trim().toLowerCase() === 'votar em branco';
       if (isBlank) {
-        wrap.className = 'vote-option-input is-blank-option';
         wrap.dataset.oid = option.id;
         wrap.dataset.blank = '1';
+        if (mode === 'municipios' || mode === 'estados' || mode === 'associacoes') {
+          const flagClass = mode === 'municipios'
+            ? 'is-municipio-option'
+            : (mode === 'estados' ? 'is-state-option' : 'is-assoc-option');
+          wrap.className = `vote-option-input is-flag-option ${flagClass} is-blank-option`;
+          wrap.innerHTML = `
+            <div class="vote-flag-preview">
+              <img class="vote-flag-img" alt="Votar em Branco" src="/imagens/cards/voto-em-branco.svg">
+              <span class="vote-flag-placeholder d-none">Votar em Branco</span>
+            </div>
+            <div class="vote-flag-fields is-blank">
+              <div class="vote-blank-label">Votar em Branco</div>
+            </div>
+            <div class="vote-flag-actions" role="group" aria-label="Ações">
+              <button type="button" class="vote-flag-action is-remove vote-remove-option" aria-label="Remover"><i class="bi bi-trash"></i></button>
+            </div>
+          `;
+          return wrap;
+        }
+        wrap.className = 'vote-option-input is-blank-option';
         wrap.innerHTML = `
-          <div class="vote-blank-tile">
+          <div class="vote-option-media">
             <img src="/imagens/cards/voto-em-branco.svg" alt="Votar em Branco">
-            <span>Votar em Branco</span>
           </div>
+          <div class="vote-option-text">Votar em Branco</div>
           <button type="button" class="btn btn-sm vote-remove-option vote-blank-remove" aria-label="Remover">
             <i class="bi bi-trash" aria-hidden="true"></i>
           </button>
@@ -2415,6 +2434,8 @@
     };
 
     const getDraftKey = (cpf, voteId) => `votacao.draft.${cpf || 'anon'}.${voteId}`;
+    const getSentKey = (cpf, voteId) => `votacao.sent.${cpf || 'anon'}.${voteId}`;
+    const getDirtyKey = (cpf, voteId) => `votacao.dirty.${cpf || 'anon'}.${voteId}`;
 
     const loadDraftAnswers = (cpf, voteId) => {
       try {
@@ -2437,6 +2458,45 @@
       if (!cpf || !voteId) return;
       try {
         localStorage.removeItem(getDraftKey(cpf, voteId));
+      } catch {}
+    };
+
+    const isVoteSent = (cpf, voteId) => {
+      try {
+        return localStorage.getItem(getSentKey(cpf, voteId)) === '1';
+      } catch {
+        return false;
+      }
+    };
+
+    const setVoteSent = (cpf, voteId, value) => {
+      if (!cpf || !voteId) return;
+      try {
+        if (value) {
+          localStorage.setItem(getSentKey(cpf, voteId), '1');
+          localStorage.removeItem(getDirtyKey(cpf, voteId));
+        } else {
+          localStorage.removeItem(getSentKey(cpf, voteId));
+        }
+      } catch {}
+    };
+
+    const isVoteDirty = (cpf, voteId) => {
+      try {
+        return localStorage.getItem(getDirtyKey(cpf, voteId)) === '1';
+      } catch {
+        return false;
+      }
+    };
+
+    const setVoteDirty = (cpf, voteId, value) => {
+      if (!cpf || !voteId) return;
+      try {
+        if (value) {
+          localStorage.setItem(getDirtyKey(cpf, voteId), '1');
+        } else {
+          localStorage.removeItem(getDirtyKey(cpf, voteId));
+        }
       } catch {}
     };
 
@@ -2487,6 +2547,29 @@
       return ids.length > 0;
     };
 
+    const updateSubmitButtonState = () => {
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      if (!submitBtn) return;
+      const allAnswered = voteList.length > 0 && voteList.every((vote) => isVoteAnswered(vote));
+      const anyDirty = voteList.some((vote) => isVoteDirty(currentUser?.cpf || '', vote.id));
+      const allSent = voteList.length > 0 && voteList.every((vote) => isVoteSent(currentUser?.cpf || '', vote.id));
+
+      submitBtn.disabled = !allAnswered || (allSent && !anyDirty);
+      submitBtn.classList.remove('btn-success', 'btn-warning', 'vote-submit-send', 'vote-submit-dirty');
+      if (allSent && !anyDirty) {
+        submitBtn.classList.add('btn-success');
+        submitBtn.textContent = 'Respostas enviadas';
+        return;
+      }
+      if (anyDirty) {
+        submitBtn.classList.add('vote-submit-dirty');
+        submitBtn.textContent = 'Enviar alterações';
+        return;
+      }
+      submitBtn.classList.add('vote-submit-send');
+      submitBtn.textContent = 'Enviar respostas';
+    };
+
     const renderVoteList = () => {
       hideLoading();
       questionMode = 'vote-list';
@@ -2513,8 +2596,7 @@
           </div>
         `;
       }).join('');
-      const allAnswered = voteList.length > 0 && voteList.every((vote) => isVoteAnswered(vote));
-      if (submitBtn) submitBtn.disabled = !allAnswered;
+      updateSubmitButtonState();
     };
 
     const renderQuestionList = () => {
@@ -2686,6 +2768,9 @@
         const prev = Array.isArray(vote.previousAnswers) ? vote.previousAnswers : [];
         const draft = loadDraftAnswers(currentUser?.cpf || '', vote.id);
         voteAnswersById.set(vote.id, draft.length ? draft : prev);
+        if (prev.length) {
+          setVoteSent(currentUser?.cpf || '', vote.id, true);
+        }
       });
 
       if (votes.length === 1) {
@@ -2780,6 +2865,10 @@
       const answers = Array.from(questionAnswers.values());
       voteAnswersById.set(currentVote.id, answers);
       saveDraftAnswers(currentUser?.cpf || '', currentVote.id, answers);
+      if (isVoteSent(currentUser?.cpf || '', currentVote.id)) {
+        setVoteDirty(currentUser?.cpf || '', currentVote.id, true);
+        updateSubmitButtonState();
+      }
     };
 
     questionsWrap?.addEventListener('input', () => {
@@ -2830,16 +2919,20 @@
       }
       if (event.target.closest('.vote-save-answer')) {
         const ok = await captureCurrentAnswer();
-        if (ok) {
-          if (currentVote) {
-            const answers = Array.from(questionAnswers.values());
-            voteAnswersById.set(currentVote.id, answers);
-            saveDraftAnswers(currentUser?.cpf || '', currentVote.id, answers);
-          }
-          if (voteList.length > 1) {
-            renderVoteList();
-          } else {
-            renderQuestionList();
+          if (ok) {
+            if (currentVote) {
+              const answers = Array.from(questionAnswers.values());
+              voteAnswersById.set(currentVote.id, answers);
+              saveDraftAnswers(currentUser?.cpf || '', currentVote.id, answers);
+              if (isVoteSent(currentUser?.cpf || '', currentVote.id)) {
+                setVoteDirty(currentUser?.cpf || '', currentVote.id, true);
+              }
+              updateSubmitButtonState();
+            }
+            if (voteList.length > 1) {
+              renderVoteList();
+            } else {
+              renderQuestionList();
           }
         }
       }
@@ -2879,6 +2972,8 @@
           }
           await res.json().catch(() => ({}));
           clearDraftAnswers(currentUser.cpf, vote.id);
+          setVoteSent(currentUser.cpf, vote.id, true);
+          setVoteDirty(currentUser.cpf, vote.id, false);
         }
         stop();
         successMsg.textContent = `${currentUser.nome}, seu voto foi enviado com sucesso!`;
@@ -2888,6 +2983,7 @@
           message: successMsg.textContent,
           variant: 'success',
         });
+        updateSubmitButtonState();
         renderVoteList();
         return;
       }
@@ -2937,6 +3033,9 @@
       });
       voteAnswersById.set(currentVote.id, answers);
       clearDraftAnswers(currentUser.cpf, currentVote.id);
+      setVoteSent(currentUser.cpf, currentVote.id, true);
+      setVoteDirty(currentUser.cpf, currentVote.id, false);
+      updateSubmitButtonState();
       if (voteList.length > 1) {
         renderVoteList();
       }
