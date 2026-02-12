@@ -1074,12 +1074,35 @@
 
   function renderReview() {
     const d = { ...state.data, ...readForm() };
+    const editBtn = `
+      <button type="button" id="miEditarInfo" class="btn btn-primary btn-sm">
+        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+        Editar informações
+      </button>
+    `;
     const rows = Object.entries(d)
       .filter(([k,v]) => !HIDDEN_KEYS.has(k) && String(v).trim() !== '')
-      .map(([k,v]) => `<div class="d-flex">
-        <div class="me-2 text-secondary" style="min-width:220px">${escapeHtml(prettyLabel(k))}</div>
-        <div class="fw-semibold flex-grow-1">${renderReviewValue(k, v)}</div>
-      </div>`)
+      .map(([k,v]) => {
+        const label = escapeHtml(prettyLabel(k));
+        const value = renderReviewValue(k, v);
+        if (k === 'numerodeinscricao') {
+          return `
+            <div class="d-flex align-items-center">
+              <div class="me-2 text-secondary" style="min-width:220px">${label}</div>
+              <div class="fw-semibold flex-grow-1 d-flex align-items-center justify-content-between gap-2">
+                <span>${value}</span>
+                ${editBtn}
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="d-flex">
+            <div class="me-2 text-secondary" style="min-width:220px">${label}</div>
+            <div class="fw-semibold flex-grow-1">${value}</div>
+          </div>
+        `;
+      })
       .join('');
 
     let fotoRow = '';
@@ -1108,18 +1131,18 @@
     const allowedCancel = new Set(['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff']);
     const showCancel = allowedCancel.has(state.perfil) && !!d._rowIndex;
     const cancelBtn = showCancel ? `
-      <button type="button" id="miCancelarInscricao" class="btn btn-outline-danger btn-sm">
+      <button type="button" id="miCancelarInscricao" class="btn btn-danger btn-sm">
+        <i class="bi bi-trash me-1" aria-hidden="true"></i>
         Cancelar inscrição
       </button>
     ` : '';
 
-    const editarLink = `<div class="mt-3 d-flex flex-wrap align-items-center gap-3">
-      <button type="button" id="miEditarInfo" class="btn btn-link p-0">Editar informações</button>
-      ${cancelBtn}
-    </div>`;
+    const cancelRow = cancelBtn
+      ? `<div class="mt-3 d-flex justify-content-center">${cancelBtn}</div>`
+      : '';
 
     const body = (rows || '<div class="text-muted">Sem dados para revisar.</div>');
-    $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + editarLink;
+    $('#miReview').innerHTML = (fotoRow ? fotoRow + body : body) + cancelRow;
 
     if (state.perfil === 'Conselheiro' || state.perfil === 'Staff' || state.perfil === 'Palestrante') {
       loadPhotoIndexGlobal().then(() => {
