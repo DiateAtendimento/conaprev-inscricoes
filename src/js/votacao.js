@@ -746,10 +746,14 @@
       if (!root || !window.bootstrap) return null;
       return bootstrap.Modal.getOrCreateInstance(root, { backdrop: 'static', keyboard: true });
     };
+    const getLockedModal = (root) => {
+      if (!root || !window.bootstrap) return null;
+      return bootstrap.Modal.getOrCreateInstance(root, { backdrop: 'static', keyboard: false });
+    };
     const successModal = getModal(successModalEl);
     const typeModal = getModal(typeModalEl);
     const proGestaoModalEl = document.getElementById('voteProGestaoModal');
-    const proGestaoModal = getModal(proGestaoModalEl);
+    const proGestaoModal = getLockedModal(proGestaoModalEl);
     const proGestaoFormModalEl = document.getElementById('voteProGestaoFormModal');
     const proGestaoFormModal = getModal(proGestaoFormModalEl);
     const proGestaoFormSlot = document.getElementById('voteProGestaoFormSlot');
