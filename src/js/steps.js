@@ -1075,9 +1075,8 @@
   function renderReview() {
     const d = { ...state.data, ...readForm() };
     const editBtn = `
-      <button type="button" id="miEditarInfo" class="btn btn-primary btn-sm">
-        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
-        Editar informações
+      <button type="button" id="miEditarInfo" class="btn btn-link p-0 text-primary" aria-label="Editar informações">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i>
       </button>
     `;
     const rows = Object.entries(d)
