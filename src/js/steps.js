@@ -1075,8 +1075,9 @@
   function renderReview() {
     const d = { ...state.data, ...readForm() };
     const editBtn = `
-      <button type="button" id="miEditarInfo" class="btn btn-link p-0 text-primary" aria-label="Editar informações">
-        <i class="bi bi-pencil-square" aria-hidden="true"></i>
+      <button type="button" id="miEditarInfo" class="btn btn-primary btn-sm">
+        <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>
+        Editar
       </button>
     `;
     const rows = Object.entries(d)
@@ -1087,8 +1088,8 @@
         if (k === 'numerodeinscricao') {
           return `
             <div class="d-flex align-items-center">
-              <div class="me-2 text-secondary" style="min-width:220px">${label}</div>
-              <div class="fw-semibold flex-grow-1 d-flex align-items-center justify-content-between gap-2">
+              <div class="me-2 fw-semibold" style="min-width:220px">${label}</div>
+              <div class="flex-grow-1 d-flex align-items-center justify-content-between gap-2">
                 <span>${value}</span>
                 ${editBtn}
               </div>
@@ -1097,8 +1098,8 @@
         }
         return `
           <div class="d-flex">
-            <div class="me-2 text-secondary" style="min-width:220px">${label}</div>
-            <div class="fw-semibold flex-grow-1">${value}</div>
+            <div class="me-2 fw-semibold" style="min-width:220px">${label}</div>
+            <div class="flex-grow-1">${value}</div>
           </div>
         `;
       })
