@@ -277,6 +277,13 @@
 .vote-pro-gestao-placeholder .alert{
   border-radius:12px;
 }
+.vote-pro-gestao-options{
+  display:grid;
+  gap:12px;
+}
+.vote-pro-gestao-options .voting-theme-card{
+  width:100%;
+}
 #voteProGestaoFormModal .modal-body{
   background:#f8fafc;
 }

@@ -110,15 +110,30 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="voteProGestaoTitle">Pró-Gestão</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          <h5 class="modal-title" id="voteProGestaoTitle">Selecione o módulo</h5>
         </div>
-        <div class="modal-body">
-          <div class="vstack gap-2">
-            <button type="button" class="btn btn-outline-primary vote-pro-gestao-btn" data-mode="estados">Estados</button>
-            <button type="button" class="btn btn-outline-primary vote-pro-gestao-btn" data-mode="municipios">Municípios</button>
-            <button type="button" class="btn btn-outline-primary vote-pro-gestao-btn" data-mode="associacoes">Associações</button>
-          </div>
+        <div class="modal-body vote-pro-gestao-options">
+          <button type="button" class="voting-theme-card vote-pro-gestao-btn" data-mode="estados">
+            <div class="voting-theme-icon"><i class="bi bi-map"></i></div>
+            <div>
+              <div class="voting-theme-text">Estados</div>
+              <div class="voting-theme-sub">Bandeiras e UF</div>
+            </div>
+          </button>
+          <button type="button" class="voting-theme-card vote-pro-gestao-btn" data-mode="municipios">
+            <div class="voting-theme-icon"><i class="bi bi-geo-alt"></i></div>
+            <div>
+              <div class="voting-theme-text">Municípios</div>
+              <div class="voting-theme-sub">UF, região e Pró-Gestão</div>
+            </div>
+          </button>
+          <button type="button" class="voting-theme-card vote-pro-gestao-btn" data-mode="associacoes">
+            <div class="voting-theme-icon"><i class="bi bi-people"></i></div>
+            <div>
+              <div class="voting-theme-text">Associações</div>
+              <div class="voting-theme-sub">Lista de associações</div>
+            </div>
+          </button>
         </div>
       </div>
     </div>

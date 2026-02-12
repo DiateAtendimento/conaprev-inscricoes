@@ -754,6 +754,7 @@
     const proGestaoFormModal = getModal(proGestaoFormModalEl);
     const proGestaoFormSlot = document.getElementById('voteProGestaoFormSlot');
     const proGestaoFormTitle = document.getElementById('voteProGestaoFormTitle');
+    const proGestaoTitle = document.getElementById('voteProGestaoTitle');
     const proGestaoPlaceholder = document.getElementById('voteProGestaoPlaceholder');
 
     const getSearchParam = (name) => new URLSearchParams(window.location.search).get(name);
@@ -764,6 +765,7 @@
     let isEdit = false;
     let isProGestao = themeId === 'pro-gestao';
     let isRotativosTheme = themeId === 'membros-rotativos';
+    let isSubmoduleTheme = !!themeId && themeId !== 'membros-rotativos';
     let proGestaoMode = null;
     if (themeId) {
       document.body?.classList.add('vote-module-bg');
@@ -778,6 +780,15 @@
     if (titleInput && themeMeta) {
       titleInput.value = `${new Date().getFullYear()} - ${themeMeta.title}`;
     }
+
+    const getThemeLabel = () => {
+      const metaLabel = themeMeta?.title;
+      if (metaLabel) return metaLabel;
+      const raw = (currentVote?.title || titleInput?.value || '').trim();
+      if (!raw) return 'Módulo';
+      const parts = raw.split(' - ');
+      return parts.length > 1 ? parts.slice(1).join(' - ') : raw;
+    };
 
     const createId = (prefix) => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -921,7 +932,14 @@
     };
 
     const ensureProGestaoIntro = () => {
-      if (!isProGestao) return;
+      if (!isProGestao) {
+        const intro = document.getElementById('voteProGestaoIntro');
+        if (intro) {
+          intro.innerHTML = '';
+          intro.classList.add('d-none');
+        }
+        return;
+      }
       const target = document.getElementById('voteBuilder');
       if (!target) return;
       let intro = document.getElementById('voteProGestaoIntro');
@@ -973,7 +991,7 @@
     };
 
     const getOptionMode = () => {
-      if (isProGestao) return proGestaoMode || 'municipios';
+      if (isSubmoduleTheme) return proGestaoMode || 'municipios';
       if (isRotativosTheme) return 'municipios';
       return 'simple';
     };
@@ -1472,12 +1490,18 @@
           if (voteThemeId) {
             isProGestao = voteThemeId === 'pro-gestao';
             isRotativosTheme = voteThemeId === 'membros-rotativos';
+            isSubmoduleTheme = voteThemeId !== 'membros-rotativos';
           }
           if (!voteThemeId && normalizeToken(currentVote?.title || '').includes('pro gestao')) {
             isProGestao = true;
+            isSubmoduleTheme = true;
           }
           if (!voteThemeId && normalizeToken(currentVote?.title || '').includes('membros rotativos')) {
             isRotativosTheme = true;
+            isSubmoduleTheme = false;
+          }
+          if (!voteThemeId && !isRotativosTheme) {
+            isSubmoduleTheme = true;
           }
           if (isProGestao) {
             proGestaoMode = inferProGestaoMode(questions);
@@ -1515,7 +1539,7 @@
       }
       ensureProGestaoIntro();
       updateNumbers();
-      if (isProGestao && editId) {
+      if (isSubmoduleTheme && editId) {
         showProGestaoFormModal(proGestaoMode || 'municipios');
       }
     };
@@ -1538,15 +1562,16 @@
           municipios: 'Municípios',
           associacoes: 'Associações',
         };
-        proGestaoFormTitle.textContent = `Pró-Gestão - ${labels[mode] || ''}`.trim();
+        const baseLabel = getThemeLabel();
+        proGestaoFormTitle.textContent = `${baseLabel} - ${labels[mode] || ''}`.trim();
       }
       moveFormToProGestaoModal();
       proGestaoFormModal?.show();
     };
 
     proGestaoFormModalEl?.addEventListener('hidden.bs.modal', () => {
-      if (!isProGestao) return;
-      proGestaoPlaceholder?.classList.remove('d-none');
+      if (!isSubmoduleTheme) return;
+      proGestaoPlaceholder?.classList.add('d-none');
     });
 
     proGestaoFormModalEl?.addEventListener('click', (event) => {
@@ -1566,12 +1591,15 @@
       showProGestaoFormModal(mode);
     };
 
-    if (isProGestao) {
+    if (isSubmoduleTheme) {
       if (proGestaoFormSlot && form && !proGestaoFormSlot.contains(form)) {
         form.classList.add('d-none');
         proGestaoFormSlot.appendChild(form);
       }
-      proGestaoPlaceholder?.classList.remove('d-none');
+      proGestaoPlaceholder?.classList.add('d-none');
+      if (proGestaoTitle) {
+        proGestaoTitle.textContent = getThemeLabel();
+      }
       if (!editId) {
         proGestaoModal?.show();
       }
