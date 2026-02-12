@@ -763,7 +763,7 @@
     let currentVote = null;
     let isEdit = false;
     let isProGestao = themeId === 'pro-gestao';
-    const isRotativosTheme = themeId === 'membros-rotativos';
+    let isRotativosTheme = themeId === 'membros-rotativos';
     let proGestaoMode = null;
     if (themeId) {
       document.body?.classList.add('vote-module-bg');
@@ -1471,9 +1471,13 @@
           const voteThemeId = resolveThemeIdFromVote(currentVote);
           if (voteThemeId) {
             isProGestao = voteThemeId === 'pro-gestao';
+            isRotativosTheme = voteThemeId === 'membros-rotativos';
           }
           if (!voteThemeId && normalizeToken(currentVote?.title || '').includes('pro gestao')) {
             isProGestao = true;
+          }
+          if (!voteThemeId && normalizeToken(currentVote?.title || '').includes('membros rotativos')) {
+            isRotativosTheme = true;
           }
           if (isProGestao) {
             proGestaoMode = inferProGestaoMode(questions);
