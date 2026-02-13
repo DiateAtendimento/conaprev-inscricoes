@@ -2279,8 +2279,21 @@
       q?.options || q?.opcoes || q?.alternativas || [];
 
     const isBlankOption = (opt) => {
+      if (typeof opt === 'object' && opt?.blank) return true;
       const text = (typeof opt === 'string') ? opt : opt?.text;
       return String(text || '').trim().toLowerCase() === 'votar em branco';
+    };
+
+    const getBlankOptionIds = (q) => {
+      const options = getQuestionOptions(q);
+      const ids = options
+        .map((opt) => {
+          const base = (typeof opt === 'string') ? { text: opt } : opt;
+          if (!isBlankOption(base)) return null;
+          return base?.id || null;
+        })
+        .filter(Boolean);
+      return new Set(ids);
     };
 
     const buildBlankCard = (q, opt, inputType, variant) => {
@@ -2792,6 +2805,30 @@
         await showUiModal({ title: 'Aviso', message: 'Selecione ao menos uma opção.', variant: 'warning' });
         return false;
       }
+      const blankIds = getBlankOptionIds(q);
+      const hasBlank = selected.some((id) => blankIds.has(id));
+      if (!hasBlank) {
+        const limitType = q.limitType || 'none';
+        const limitValue = parseInt(q.limitValue || '0', 10) || 0;
+        if (limitType !== 'none' && limitValue > 0) {
+          if (limitType === 'equal' && selected.length !== limitValue) {
+            await showUiModal({
+              title: 'Aviso',
+              message: `Selecione exatamente ${limitValue} opção(ões).`,
+              variant: 'warning',
+            });
+            return false;
+          }
+          if (limitType === 'max' && selected.length > limitValue) {
+            await showUiModal({
+              title: 'Aviso',
+              message: `Selecione no máximo ${limitValue} opção(ões).`,
+              variant: 'warning',
+            });
+            return false;
+          }
+        }
+      }
       questionAnswers.set(q.id, { questionId: q.id, type: 'options', optionIds: selected });
       return true;
     };
@@ -2918,6 +2955,24 @@
       if (target.type !== 'checkbox') return;
       const card = target.closest('.vote-public-card');
       if (!card) return;
+      const qid = card.dataset.qid;
+      const q = getPublicQuestions().find((item) => item.id === qid);
+      const blankIds = q ? getBlankOptionIds(q) : new Set();
+      const selected = Array.from(card.querySelectorAll('input[type="checkbox"]:checked'));
+      const selectedIds = selected.map((el) => el.value);
+      const hasBlank = selectedIds.some((id) => blankIds.has(id));
+      if (hasBlank) {
+        selected.forEach((el) => {
+          if (!blankIds.has(el.value)) el.checked = false;
+        });
+        return;
+      }
+      if (target && blankIds.has(target.value)) {
+        selected.forEach((el) => {
+          if (!blankIds.has(el.value)) el.checked = false;
+        });
+        return;
+      }
       const limitType = card.dataset.limitType || 'none';
       const limitValue = parseInt(card.dataset.limitValue || '0', 10) || 0;
       if (limitType === 'none' || limitValue <= 0) return;
