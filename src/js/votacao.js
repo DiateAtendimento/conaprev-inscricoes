@@ -21,6 +21,7 @@
   const STATE_FLAG_DIR = '/imagens/fotos-bandeiras-estados';
   const ASSOC_IMAGE_DIR = '/imagens/fotos-associacoes';
   const ASSOC_MANIFEST_URL = `${ASSOC_IMAGE_DIR}/manifest.json`;
+  const PROGESTAO_LEVEL_URL = '/api/votacao/progestao';
   const CITY_DATA_URL = '/data/uf-municipios.json';
 
   const REGION_LABELS = {
@@ -141,19 +142,56 @@
     return { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
   };
 
+  const normalizeKey = (value) =>
+    String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+
+  const normalizeProGestaoLevel = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const upper = raw.toUpperCase();
+    if (upper === 'N/A') return 'N/A';
+    const num = parseInt(raw, 10);
+    if (Number.isFinite(num) && num > 0) {
+      return formatProGestaoValue(num) || String(num);
+    }
+    if (['I', 'II', 'III', 'IV'].includes(upper)) return upper;
+    return raw;
+  };
+
   const resolveRegionImageUrl = (key) =>
     (key ? `${REGION_IMAGE_DIR}/REGIAO-${key}.png` : REGION_IMAGE_DEFAULT);
 
-  const simulateProGestao = (city, uf) => {
-    const seed = `${String(city || '').trim().toLowerCase()}|${String(uf || '').trim().toLowerCase()}`;
-    if (!seed.trim()) return 1;
-    let hash = 0;
-    for (let i = 0; i < seed.length; i += 1) {
-      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-      hash |= 0;
-    }
-    const level = Math.abs(hash) % 4;
-    return level + 1;
+  let proGestaoMapPromise = null;
+  let proGestaoMapCache = null;
+
+  const loadProGestaoMap = async () => {
+    if (proGestaoMapCache) return proGestaoMapCache;
+    if (proGestaoMapPromise) return proGestaoMapPromise;
+    proGestaoMapPromise = (async () => {
+      const res = await fetch(`${API}${PROGESTAO_LEVEL_URL}`, { cache: 'no-cache' });
+      if (!res.ok) return null;
+      const data = await res.json().catch(() => null);
+      const map = data?.map && typeof data.map === 'object' ? data.map : null;
+      if (map) proGestaoMapCache = map;
+      return map;
+    })().catch(() => null);
+    return proGestaoMapPromise;
+  };
+
+  const resolveProGestaoLevel = async (city, uf) => {
+    const c = String(city || '').trim();
+    const u = String(uf || '').trim();
+    if (!c || !u) return '';
+    const map = await loadProGestaoMap();
+    const key = `${normalizeKey(c)}|${normalizeKey(u)}`;
+    const raw = map ? map[key] : '';
+    const normalized = normalizeProGestaoLevel(raw);
+    return normalized || 'N/A';
   };
 
   const getAdminPass = () => sessionStorage.getItem(ADMIN_PASS_KEY) || '';
@@ -1175,10 +1213,10 @@
       const regionInput = row.querySelector('.vote-option-region');
       const proInput = row.querySelector('.vote-option-progestao');
       const regionLabel = formatRegionLabel(regionKey);
-      const proValue = (city || uf) ? simulateProGestao(city, uf) : '';
+      const proValue = (city || uf) ? await resolveProGestaoLevel(city, uf) : '';
 
       if (regionInput) regionInput.value = regionLabel;
-      if (proInput) proInput.value = formatProGestaoValue(proValue);
+      if (proInput) proInput.value = normalizeProGestaoLevel(proValue) || proValue;
 
       const url = resolveRegionImageUrl(regionKey);
       setFlagPreview(row, url || null);
@@ -1279,8 +1317,9 @@
         const uf = option.uf || parsed.uf || '';
         const regionKey = normalizeRegionKey(option.region) || getRegionKeyByUf(uf);
         const regionLabel = formatRegionLabel(regionKey);
-        const proGestao = (option.proGestao || option.pro_gestao || option.proGestaoLevel)
-          ?? ((city || uf) ? simulateProGestao(city, uf) : '');
+        const proGestao = normalizeProGestaoLevel(
+          option.proGestao || option.pro_gestao || option.proGestaoLevel || ''
+        );
         wrap.innerHTML = `
           <div class="vote-flag-preview is-empty">
             <img class="vote-flag-img" alt="Região padrão" src="${DEFAULT_REGION_URL}">
@@ -1312,7 +1351,7 @@
         if (cityInput) cityInput.value = city;
         if (ufInput) ufInput.value = uf;
         if (regionInput) regionInput.value = regionLabel;
-        if (proInput) proInput.value = formatProGestaoValue(proGestao);
+        if (proInput) proInput.value = proGestao;
 
         createAutocomplete(ufInput, () => Object.keys(UF_REGION), { maxItems: 10 });
         const cityAuto = createAutocomplete(
@@ -1787,7 +1826,8 @@
             const uf = optEl.querySelector('.vote-option-uf')?.value || '';
             const regionKey = optEl.dataset.regionKey || getRegionKeyByUf(uf);
             const proGestaoRaw = optEl.dataset.proGestao || optEl.querySelector('.vote-option-progestao')?.value || '';
-            const proGestao = parseInt(String(proGestaoRaw || '0'), 10) || simulateProGestao(city, uf);
+            let proGestao = normalizeProGestaoLevel(proGestaoRaw);
+            if (!proGestao && (city || uf)) proGestao = 'N/A';
             const text = formatCityUfText(city, uf);
             if (!text || !regionKey) invalidRotativos = true;
             return {
@@ -2044,10 +2084,9 @@
     };
 
     const formatProGestaoLabel = (value) => {
-      const num = parseInt(String(value || ''), 10);
-      if (!Number.isFinite(num) || num <= 0) return '';
-      const roman = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' }[num] || String(num);
-      return `Pró-Gestão ${roman}`;
+      const normalized = normalizeProGestaoLevel(value);
+      if (!normalized) return '';
+      return `Pró-Gestão ${normalized}`;
     };
 
     const normalizeNameKey = (value) =>
@@ -2276,12 +2315,12 @@
       `;
     };
 
-    const buildRotativosOptions = (q) => {
+    const buildRotativosOptions = async (q) => {
       const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
       const cols = Math.min(4, Math.max(1, options.length));
-      const cards = options.map((opt) => {
+      const cards = await Promise.all(options.map(async (opt) => {
         if (isBlankOption(opt)) {
           return buildBlankCard(q, opt, inputType, 'flag');
         }
@@ -2290,7 +2329,10 @@
         const city = base?.city || parsed.city || '';
         const uf = base?.uf || parsed.uf || '';
         const regionKey = normalizeRegionKey(base?.region) || getRegionKeyByUf(uf);
-        const proGestao = base?.proGestao || base?.pro_gestao || simulateProGestao(city, uf);
+        let proGestao = normalizeProGestaoLevel(base?.proGestao || base?.pro_gestao || base?.proGestaoLevel || '');
+        if (!proGestao && city && uf) {
+          proGestao = await resolveProGestaoLevel(city, uf);
+        }
         const title = formatCityUfTitle(city, uf);
         const region = formatRegionLabel(regionKey);
         const proLabel = formatProGestaoLabel(proGestao);
@@ -2310,7 +2352,7 @@
             </span>
           </label>
         `;
-      });
+      }));
       return `
         <div class="vote-flag-grid" style="--vote-cols:${cols}">
           ${cards.join('')}

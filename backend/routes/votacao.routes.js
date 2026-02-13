@@ -15,6 +15,7 @@ import {
   getVoteById,
   getUserResponseForVote,
 } from "../services/votacao.service.js";
+import { getProGestaoMap } from "../services/sheets.service.js";
 
 const r = Router();
 
@@ -50,6 +51,15 @@ r.get("/temas", async (_req, res) => {
     return res.json(data);
   } catch (e) {
     return sendError(res, e, "Erro ao listar temas");
+  }
+});
+
+r.get("/progestao", async (_req, res) => {
+  try {
+    const map = await getProGestaoMap();
+    return res.json({ map });
+  } catch (e) {
+    return sendError(res, e, "Erro ao carregar Pró-Gestão");
   }
 });
 

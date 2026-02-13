@@ -356,6 +356,27 @@ export async function getConselheiroSeats() {
   return seats;
 }
 
+export async function getProGestaoMap() {
+  const sheetName = "ProGestao";
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
+  const idxEnte = headerIndex(headers, "entefederativo");
+  const idxUf = headerIndex(headers, "uf");
+  const idxNivel = headerIndex(headers, "nivelatual");
+  if (idxEnte < 0 || idxUf < 0 || idxNivel < 0) {
+    throw new Error('Aba "ProGestao" está sem colunas obrigatórias.');
+  }
+  const map = {};
+  rows.forEach((row) => {
+    const ente = String(row[idxEnte] || "").trim();
+    const uf = String(row[idxUf] || "").trim();
+    const nivel = String(row[idxNivel] || "").trim();
+    if (!ente || !uf) return;
+    const key = `${normalizeKey(ente)}|${normalizeKey(uf)}`;
+    map[key] = nivel;
+  });
+  return map;
+}
+
 export async function listStaffGallery() {
   const sheetName = sheetForPerfil("Staff");
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
