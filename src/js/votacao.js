@@ -742,20 +742,16 @@
 
     if (!form || !builder || !titleInput) return;
 
-    const getModal = (root) => {
+    const getModal = (root, opts = { backdrop: 'static', keyboard: true }) => {
       if (!root || !window.bootstrap) return null;
-      return bootstrap.Modal.getOrCreateInstance(root, { backdrop: 'static', keyboard: true });
-    };
-    const getLockedModal = (root) => {
-      if (!root || !window.bootstrap) return null;
-      return bootstrap.Modal.getOrCreateInstance(root, { backdrop: 'static', keyboard: false });
+      return bootstrap.Modal.getOrCreateInstance(root, opts);
     };
     const successModal = getModal(successModalEl);
-    const typeModal = getModal(typeModalEl);
+    const typeModal = getModal(typeModalEl, { backdrop: 'static', keyboard: false });
     const proGestaoModalEl = document.getElementById('voteProGestaoModal');
-    const proGestaoModal = getLockedModal(proGestaoModalEl);
+    const proGestaoModal = getModal(proGestaoModalEl, { backdrop: 'static', keyboard: false });
     const proGestaoFormModalEl = document.getElementById('voteProGestaoFormModal');
-    const proGestaoFormModal = getModal(proGestaoFormModalEl);
+    const proGestaoFormModal = getModal(proGestaoFormModalEl, { backdrop: 'static', keyboard: false });
     const proGestaoFormSlot = document.getElementById('voteProGestaoFormSlot');
     const proGestaoFormTitle = document.getElementById('voteProGestaoFormTitle');
     const proGestaoTitle = document.getElementById('voteProGestaoTitle');
@@ -770,6 +766,7 @@
     let isProGestao = themeId === 'pro-gestao';
     let isRotativosTheme = themeId === 'membros-rotativos';
     let isSubmoduleTheme = !!themeId && themeId !== 'membros-rotativos';
+    let suppressOptionsModalReopen = false;
     let proGestaoMode = null;
     if (themeId) {
       document.body?.classList.add('vote-module-bg');
@@ -1576,6 +1573,9 @@
     proGestaoFormModalEl?.addEventListener('hidden.bs.modal', () => {
       if (!isSubmoduleTheme) return;
       proGestaoPlaceholder?.classList.add('d-none');
+      if (proGestaoModal && !suppressOptionsModalReopen) {
+        proGestaoModal.show();
+      }
     });
 
     proGestaoFormModalEl?.addEventListener('click', (event) => {
@@ -1609,12 +1609,23 @@
       }
     }
 
+    proGestaoModalEl?.addEventListener('hidden.bs.modal', () => {
+      if (!isSubmoduleTheme) return;
+      if (suppressOptionsModalReopen) return;
+      if (proGestaoFormModalEl?.classList.contains('show')) return;
+      proGestaoModal?.show();
+    });
+
     proGestaoModalEl?.addEventListener('click', async (event) => {
       const btn = event.target.closest('.vote-pro-gestao-btn');
       if (!btn) return;
       const mode = btn.dataset.mode;
+      suppressOptionsModalReopen = true;
       await applyProGestaoMode(mode);
       proGestaoModal?.hide();
+      setTimeout(() => {
+        suppressOptionsModalReopen = false;
+      }, 50);
     });
 
     addQuestionBtn?.addEventListener('click', () => {
