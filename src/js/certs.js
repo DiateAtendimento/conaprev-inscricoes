@@ -1,4 +1,4 @@
-﻿// /src/js/certs.js
+// /src/js/certs.js
 // Fluxo: trava at� 03/04/2026 14h (salvo modo dev) e, quando liberado, redireciona para o Apps Script.
 
 (() => {
@@ -57,7 +57,7 @@
 
     // Se j� estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
-      "https://script.google.com/macros/s/AKfycbyuz7FuSpALU9wH9vd_7rrUkR94N_Dz6ymwpUO3tGq8XnoLkWB4BjqDkMs0HFO4YZTn/exec";
+      "https://script.google.com/macros/s/AKfycbxHY-MgQebJdM84uEs787u8nPz8suPz0SyitE_2yLdaopOPVAEt_2y76-gcURnIUcXHtA/exec";
   });
 })();
 
