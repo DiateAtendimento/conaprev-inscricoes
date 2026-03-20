@@ -24,6 +24,7 @@ const PERFIS_OK = new Set([
   "Palestrante",
   "Staff",
   "Convidado",
+  "Apoiador",
   "Patrocinador",
   "COPAJURE",
 ]);

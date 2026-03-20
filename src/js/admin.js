@@ -16,8 +16,8 @@
     'Palestrante',
     'Staff',
     'Convidado',
-    'COPAJURE',
-    'Patrocinador'
+    'Apoiador',
+    'COPAJURE'
   ];
 
   // ======= Elements (podem Não existir nesta página) =======
