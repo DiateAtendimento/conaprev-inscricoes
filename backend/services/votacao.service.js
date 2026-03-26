@@ -1,7 +1,7 @@
 ﻿// backend/services/votacao.service.js
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
-import { buscarPorCpf } from "./sheets.service.js";
+import { buscarAutorizadoParaVotarPorCpf, buscarPorCpf } from "./sheets.service.js";
 
 const SHEET_VOTOS = "Votação";
 const SHEET_VOTACOES = "Votacoes";
@@ -442,24 +442,26 @@ export async function validateVoter(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
   if (!/^\d{11}$/.test(clean)) throw new Error("CPF inválido");
 
-  const user = await buscarPorCpf(clean, "Conselheiro");
-  if (!user) return { ok: false, reason: "NAO_CONSELHEIRO" };
-  if (!user.numerodeinscricao || String(user.numerodeinscricao).trim() === "") {
+  const authorized = await buscarAutorizadoParaVotarPorCpf(clean);
+  if (!authorized) return { ok: false, reason: "NAO_AUTORIZADO" };
+  if (!authorized.numerodeinscricao || String(authorized.numerodeinscricao).trim() === "") {
     return { ok: false, reason: "SEM_NUMERO" };
   }
 
-  const dias = await checarPresencaDias(user.numerodeinscricao, user.nome);
+  const user = await buscarPorCpf(clean, "Conselheiro").catch(() => null);
+  const dias = await checarPresencaDias(authorized.numerodeinscricao, authorized.nome || user?.nome);
   if (!dias.dia1 && !dias.dia2) return { ok: false, reason: "SEM_PRESENCA" };
 
   return {
     ok: true,
     user: {
       cpf: clean,
-      nome: user.nomenoprismacracha || user.nome || "",
-      nomeCompleto: user.nome || "",
-      numerodeinscricao: user.numerodeinscricao || "",
-      representatividade: user.representatividade || "",
-      titularidade: user.cargofuncao || "",
+      nome: user?.nomenoprismacracha || authorized.nome || user?.nome || "",
+      nomeCompleto: user?.nome || authorized.nome || "",
+      numerodeinscricao: authorized.numerodeinscricao || user?.numerodeinscricao || "",
+      representatividade: authorized.representatividade || user?.representatividade || "",
+      titularidade: user?.cargofuncao || user?.titularidade || "",
+      uf: authorized.ufsigla || user?.ufsigla || "",
     },
   };
 }
@@ -638,5 +640,4 @@ export async function getVoteResults(voteId) {
     stats,
   };
 }
-
 

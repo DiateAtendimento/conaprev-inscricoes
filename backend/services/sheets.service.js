@@ -96,6 +96,8 @@ function sheetForPerfil(perfil) {
   return map[perfil] || "Banco de dados";
 }
 
+const AUTHORIZED_VOTERS_SHEET = "Autorizados para votar";
+
 /* ====== Helpers de tempo (BR) ====== */
 // ISO com timezone -03:00 est�vel (sem depender do fuso do servidor)
 function nowBRISO() {
@@ -204,6 +206,22 @@ export async function buscarPorCpf(cpf, perfil) {
     if (cell === clean) {
       const out = mapRow(headers, rows[i]);
       out._rowIndex = i + 2; // 1-based + header
+      return out;
+    }
+  }
+  return null;
+}
+
+export async function buscarAutorizadoParaVotarPorCpf(cpf) {
+  const clean = String(cpf || "").replace(/\D/g, "");
+  const { headers, rows } = await readAllCached(AUTHORIZED_VOTERS_SHEET, CACHE_TTL_SEARCH_MS);
+  const idxCpf = headers.map(normalizeKey).indexOf("cpf");
+  if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado na aba "Autorizados para votar".');
+  for (let i = 0; i < rows.length; i++) {
+    const cell = String(rows[i][idxCpf] || "").replace(/\D/g, "");
+    if (cell === clean) {
+      const out = mapRow(headers, rows[i]);
+      out._rowIndex = i + 2;
       return out;
     }
   }
@@ -519,6 +537,5 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
-
 
 

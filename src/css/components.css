@@ -1078,11 +1078,26 @@ body.vote-admin-page.vote-module-bg::before{
     padding:14px;
   }
   .vote-user-menu{
-    top:10px;
-    right:10px;
+    top:auto;
+    right:12px;
+    bottom:12px;
+    left:auto;
+    z-index:1400;
   }
   .vote-user-info{
-    padding:8px 10px;
+    padding:10px 12px;
+    gap:10px;
+    border-radius:16px;
+    box-shadow:0 14px 28px rgba(15,23,42,.24);
+  }
+  .vote-user-name{
+    max-width:120px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .vote-user-info .btn{
+    padding:6px 12px;
   }
   .vote-admin-card{
     padding:16px;

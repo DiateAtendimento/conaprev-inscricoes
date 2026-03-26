@@ -7,6 +7,27 @@
   const ADMIN_PASS_KEY = 'votacao.admin.pass';
   const SESSION_KEY = 'votacao.admin.session';
   const USER_KEY = 'votacao.user.session';
+  const VOTE_THEME_CACHE_TTL_MS = 10_000;
+
+  const voteLog = (level, message, details) => {
+    const fn = console[level] || console.log;
+    const prefix = `[votacao] ${message}`;
+    if (details === undefined) {
+      fn.call(console, prefix);
+      return;
+    }
+    fn.call(console, prefix, details);
+  };
+
+  const voteLogError = (message, error, details) => {
+    const payload = {
+      ...(details || {}),
+      errorName: error?.name || 'Error',
+      errorMessage: error?.message || String(error || 'Erro desconhecido'),
+      stack: error?.stack || '',
+    };
+    console.error(`[votacao] ${message}`, payload);
+  };
 
   const THEMES = [
     { id: 'membros-rotativos', name: 'MEMBROS ROTATIVOS', title: 'Membros rotativos', icon: 'bi-arrow-repeat' },
@@ -462,6 +483,10 @@
       : null;
 
     let selectedTheme = null;
+    let adminThemesCache = null;
+    let adminThemesFetchInFlight = null;
+    const adminVotesCache = new Map();
+    const adminVotesFetchInFlight = new Map();
 
     const renderThemeGrid = (themes) => {
       if (!elThemeGrid) return;
@@ -482,20 +507,83 @@
       }).join('');
     };
 
-    const fetchThemes = async () => {
-      const stop = startLoading('Carregando temas...');
-      const res = await adminFetch('/api/votacao/admin/temas');
-      stop();
-      if (!res.ok) throw new Error('Falha ao carregar temas');
-      return res.json();
+    const fetchThemes = async ({ force = false, reason = 'admin' } = {}) => {
+      if (!force && adminThemesCache) {
+        voteLog('info', 'Admin: temas carregados do cache', { reason, total: adminThemesCache.length });
+        return adminThemesCache;
+      }
+      if (adminThemesFetchInFlight) {
+        voteLog('info', 'Admin: reaproveitando leitura de temas em andamento', { reason });
+        return adminThemesFetchInFlight;
+      }
+      adminThemesFetchInFlight = (async () => {
+        const stop = startLoading('Carregando temas...');
+        const started = performance.now();
+        try {
+          const res = await adminFetch('/api/votacao/admin/temas');
+          if (!res.ok) {
+            voteLog('warn', 'Admin: falha ao carregar temas', { reason, status: res.status });
+            throw new Error('Falha ao carregar temas');
+          }
+          const data = await res.json();
+          adminThemesCache = Array.isArray(data) ? data : [];
+          voteLog('info', 'Admin: temas carregados com sucesso', {
+            reason,
+            total: adminThemesCache.length,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return adminThemesCache;
+        } catch (error) {
+          voteLogError('Admin: erro ao carregar temas', error, { reason });
+          throw error;
+        } finally {
+          stop();
+          adminThemesFetchInFlight = null;
+        }
+      })();
+      return adminThemesFetchInFlight;
     };
 
-    const fetchVotes = async (themeId) => {
-      const stop = startLoading('Carregando votações...');
-      const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
-      stop();
-      if (!res.ok) throw new Error('Falha ao carregar votAções');
-      return res.json();
+    const fetchVotes = async (themeId, { force = false, reason = 'admin' } = {}) => {
+      if (!themeId) return [];
+      if (!force && adminVotesCache.has(themeId)) {
+        const cached = adminVotesCache.get(themeId) || [];
+        voteLog('info', 'Admin: votações carregadas do cache', { themeId, reason, total: cached.length });
+        return cached;
+      }
+      if (adminVotesFetchInFlight.has(themeId)) {
+        voteLog('info', 'Admin: reaproveitando leitura de votações em andamento', { themeId, reason });
+        return adminVotesFetchInFlight.get(themeId);
+      }
+      const pending = (async () => {
+        const stop = startLoading('Carregando votações...');
+        const started = performance.now();
+        try {
+          const res = await adminFetch(`/api/votacao/admin/temas/${encodeURIComponent(themeId)}/votacoes`);
+          if (!res.ok) {
+            voteLog('warn', 'Admin: falha ao carregar votações', { themeId, reason, status: res.status });
+            throw new Error('Falha ao carregar votações');
+          }
+          const data = await res.json();
+          const votes = Array.isArray(data) ? data : [];
+          adminVotesCache.set(themeId, votes);
+          voteLog('info', 'Admin: votações carregadas com sucesso', {
+            themeId,
+            reason,
+            total: votes.length,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return votes;
+        } catch (error) {
+          voteLogError('Admin: erro ao carregar votações', error, { themeId, reason });
+          throw error;
+        } finally {
+          stop();
+          adminVotesFetchInFlight.delete(themeId);
+        }
+      })();
+      adminVotesFetchInFlight.set(themeId, pending);
+      return pending;
     };
 
     const renderList = (votes = []) => {
@@ -621,16 +709,20 @@
     };
 
     const loadAdminView = async () => {
-      const themes = await fetchThemes();
+      const themes = await fetchThemes({ reason: 'load-admin-view' });
       renderThemeGrid(themes.map((t) => {
         const theme = THEMES.find((x) => x.id === t.id);
         return { ...t, icon: theme?.icon || 'bi-ballot-check' };
       }));
       if (selectedTheme) {
-        const votes = await fetchVotes(selectedTheme.id);
+        const votes = await fetchVotes(selectedTheme.id, { reason: 'load-admin-view' });
         renderList(votes);
         if (elThemeTitle) elThemeTitle.textContent = selectedTheme.name;
       }
+      voteLog('info', 'Admin: visão carregada', {
+        selectedTheme: selectedTheme?.id || '',
+        themes: Array.isArray(themes) ? themes.length : 0,
+      });
     };
 
     elButton.addEventListener('click', (event) => {
@@ -660,11 +752,13 @@
       sessionStorage.setItem(ADMIN_PASS_KEY, pass);
       const res = await adminFetch('/api/votacao/admin/temas');
       if (!res.ok) {
+        voteLog('warn', 'Admin: autenticação falhou', { status: res.status });
         elAuthMsg?.classList.remove('d-none');
         elAuthMsg.textContent = 'Senha inválida.';
         sessionStorage.removeItem(ADMIN_PASS_KEY);
         return;
       }
+      voteLog('info', 'Admin: autenticação concluída');
       sessionStorage.setItem(SESSION_KEY, 'ok');
       elAuthMsg?.classList.add('d-none');
       elAuthPass.value = '';
@@ -700,7 +794,7 @@
       const themeId = card.dataset.theme;
       selectedTheme = THEMES.find((t) => t.id === themeId) || null;
       if (elThemeTitle && selectedTheme) elThemeTitle.textContent = selectedTheme.name;
-      const votes = await fetchVotes(themeId);
+      const votes = await fetchVotes(themeId, { reason: 'theme-click' });
       renderList(votes);
     });
 
@@ -723,7 +817,10 @@
           });
           if (!ok) return;
           await adminFetch(`/api/votacao/admin/votacoes/${encodeURIComponent(voteId)}`, { method: 'DELETE' });
-          const votes = await fetchVotes(selectedTheme?.id || '');
+          adminThemesCache = null;
+          if (selectedTheme?.id) adminVotesCache.delete(selectedTheme.id);
+          voteLog('info', 'Admin: votação excluída', { voteId, themeId: selectedTheme?.id || '' });
+          const votes = await fetchVotes(selectedTheme?.id || '', { force: true, reason: 'delete' });
           renderList(votes);
         }
         if (action === 'toggle') {
@@ -732,7 +829,10 @@
             method: 'POST',
             body: JSON.stringify({ ativo: !active }),
           });
-          const votes = await fetchVotes(selectedTheme?.id || '');
+          adminThemesCache = null;
+          if (selectedTheme?.id) adminVotesCache.delete(selectedTheme.id);
+          voteLog('info', 'Admin: status de votação alterado', { voteId, ativo: !active, themeId: selectedTheme?.id || '' });
+          const votes = await fetchVotes(selectedTheme?.id || '', { force: true, reason: 'toggle' });
           renderList(votes);
         }
         if (action === 'results') {
@@ -741,6 +841,9 @@
             const data = await res.json();
             renderResults(data);
             resultsModal?.show();
+            voteLog('info', 'Admin: resultados carregados', { voteId, total: data?.total || 0 });
+          } else {
+            voteLog('warn', 'Admin: falha ao carregar resultados', { voteId, status: res.status });
           }
         }
         if (action === 'link') {
@@ -806,6 +909,7 @@
     let isSubmoduleTheme = !!themeId && themeId !== 'membros-rotativos';
     let suppressOptionsModalReopen = false;
     let proGestaoMode = null;
+    let cityLookupByUfPromise = null;
     if (themeId) {
       document.body?.classList.add('vote-module-bg');
     }
@@ -854,21 +958,36 @@
     const loadCityData = async () => {
       if (cityDataPromise) return cityDataPromise;
       cityDataPromise = (async () => {
-        const res = await fetch(CITY_DATA_URL, { cache: 'no-cache' });
-        if (!res.ok) return { states: [] };
-        const data = await res.json().catch(() => null);
-        if (!data) return { states: [] };
-        if (Array.isArray(data.states)) return data;
-        if (Array.isArray(data)) return { states: data };
-        if (typeof data === 'object') {
-          const states = Object.entries(data).map(([uf, cities]) => ({
-            uf,
-            region: getRegionKeyByUf(uf),
-            cities: Array.isArray(cities) ? cities : [],
-          }));
-          return { states };
+        const started = performance.now();
+        try {
+          const res = await fetch(CITY_DATA_URL, { cache: 'no-cache' });
+          if (!res.ok) {
+            voteLog('warn', 'Builder: falha ao carregar base de municípios', { status: res.status });
+            return { states: [] };
+          }
+          const data = await res.json().catch(() => null);
+          if (!data) return { states: [] };
+          let normalized = { states: [] };
+          if (Array.isArray(data.states)) normalized = data;
+          else if (Array.isArray(data)) normalized = { states: data };
+          else if (typeof data === 'object') {
+            normalized = {
+              states: Object.entries(data).map(([uf, cities]) => ({
+                uf,
+                region: getRegionKeyByUf(uf),
+                cities: Array.isArray(cities) ? cities : [],
+              })),
+            };
+          }
+          voteLog('info', 'Builder: base de municípios carregada', {
+            states: Array.isArray(normalized.states) ? normalized.states.length : 0,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return normalized;
+        } catch (error) {
+          voteLogError('Builder: erro ao carregar base de municípios', error);
+          return { states: [] };
         }
-        return { states: [] };
       })();
       return cityDataPromise;
     };
@@ -882,16 +1001,45 @@
     const loadAssocList = async () => {
       if (assocListPromise) return assocListPromise;
       assocListPromise = (async () => {
-        const res = await fetch(ASSOC_MANIFEST_URL, { cache: 'no-cache' });
-        if (!res.ok) return [];
-        const list = await res.json().catch(() => []);
-        if (!Array.isArray(list)) return [];
-        return list
-          .map((file) => String(file || '').replace(/\.[^.]+$/, '').trim())
-          .filter(Boolean)
-          .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+        const started = performance.now();
+        try {
+          const res = await fetch(ASSOC_MANIFEST_URL, { cache: 'no-cache' });
+          if (!res.ok) {
+            voteLog('warn', 'Builder: falha ao carregar associações', { status: res.status });
+            return [];
+          }
+          const list = await res.json().catch(() => []);
+          if (!Array.isArray(list)) return [];
+          const normalized = list
+            .map((file) => String(file || '').replace(/\.[^.]+$/, '').trim())
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+          voteLog('info', 'Builder: lista de associações carregada', {
+            total: normalized.length,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return normalized;
+        } catch (error) {
+          voteLogError('Builder: erro ao carregar associações', error);
+          return [];
+        }
       })();
       return assocListPromise;
+    };
+
+    const getCityLookupByUf = async () => {
+      if (cityLookupByUfPromise) return cityLookupByUfPromise;
+      cityLookupByUfPromise = (async () => {
+        const states = await getCityStates();
+        const lookup = new Map();
+        states.forEach((state) => {
+          const key = String(state?.uf || '').trim().toUpperCase();
+          if (!key) return;
+          lookup.set(key, (state?.cities || []).map((city) => String(city || '').trim()).filter(Boolean));
+        });
+        return lookup;
+      })();
+      return cityLookupByUfPromise;
     };
 
     const getCityStates = async () => {
@@ -1043,9 +1191,8 @@
       if (!isMunicipiosMode()) return [];
       const key = String(uf || '').trim().toUpperCase();
       if (!key) return [];
-      const states = await getCityStates();
-      const state = states.find((s) => String(s.uf || '').trim().toUpperCase() === key);
-      return (state?.cities || []).map((city) => String(city || '').trim()).filter(Boolean);
+      const lookup = await getCityLookupByUf();
+      return lookup.get(key) || [];
     };
 
     const createAutocomplete = (input, getItems, opts = {}) => {
@@ -1794,6 +1941,11 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      voteLog('info', 'Builder: iniciando persistência da votação', {
+        isEdit,
+        themeId: themeId || '',
+        currentVoteId: currentVote?.id || '',
+      });
       const questions = [];
       const cards = Array.from(builder.querySelectorAll('.vote-question-card'));
       for (const card of cards) {
@@ -1920,11 +2072,14 @@
         });
         stop();
         if (!res.ok) {
+          voteLog('warn', 'Builder: falha ao salvar votação existente', { voteId: currentVote.id, status: res.status });
           await showUiModal({ title: 'Erro', message: 'Erro ao salvar.', variant: 'danger' });
           return;
         }
+        voteLog('info', 'Builder: votação salva com sucesso', { voteId: currentVote.id, questions: questions.length });
       } else {
         if (!themeId) {
+          voteLog('warn', 'Builder: tentativa de criar votação sem tema');
           await showUiModal({ title: 'Erro', message: 'Tema não encontrado.', variant: 'danger' });
           return;
         }
@@ -1935,10 +2090,12 @@
         });
         stop();
         if (!res.ok) {
+          voteLog('warn', 'Builder: falha ao criar votação', { themeId, status: res.status });
           await showUiModal({ title: 'Erro', message: 'Erro ao criar votação.', variant: 'danger' });
           return;
         }
         currentVote = await res.json();
+        voteLog('info', 'Builder: votação criada com sucesso', { voteId: currentVote?.id || '', themeId, questions: questions.length });
       }
 
         if (isEdit) {
@@ -2022,6 +2179,11 @@
     let pollTimer = null;
     let currentThemeId = null;
     let lastThemes = null;
+    let lastThemesSignature = '';
+    let themesFetchInFlight = null;
+    let themesCache = null;
+    let themesCacheAt = 0;
+    let pollingBusy = false;
 
     const PHOTO_DIR = '/imagens/fotos-conselheiros';
     const PHOTO_MANIFEST_URL = `${PHOTO_DIR}/manifest.json`;
@@ -2197,11 +2359,17 @@
         userMenu.classList.add('d-none');
         userName.textContent = '';
         setUserAvatar(null);
+        voteLog('info', 'Menu do usuário limpo');
         return;
       }
       userName.textContent = user.nome || 'Usuário';
       userMenu.classList.remove('d-none');
       setUserAvatar(user);
+      voteLog('info', 'Menu do usuário atualizado', {
+        nome: user.nome || '',
+        numero: user.numerodeinscricao || '',
+        representatividade: user.representatividade || '',
+      });
     };
 
     const showUserIntro = (user) => {
@@ -2252,6 +2420,9 @@
 
     const renderModules = (themes) => {
       if (!moduleGrid) return;
+      const nextSignature = JSON.stringify((themes || []).map((t) => ({ id: t.id, active: !!t.active })));
+      if (nextSignature === lastThemesSignature) return;
+      lastThemesSignature = nextSignature;
       moduleGrid.innerHTML = themes.map((t) => {
         const theme = THEMES.find((x) => x.id === t.id) || {};
         const isDisabled = !t.active;
@@ -2267,12 +2438,47 @@
           </div>
         `;
       }).join('');
+      voteLog('info', 'Módulos renderizados', {
+        total: Array.isArray(themes) ? themes.length : 0,
+        ativos: Array.isArray(themes) ? themes.filter((t) => t.active).length : 0,
+      });
     };
 
-    const fetchThemes = async () => {
-      const res = await apiFetch('/api/votacao/temas');
-      if (!res.ok) return null;
-      return res.json();
+    const fetchThemes = async ({ force = false, reason = 'manual' } = {}) => {
+      const now = Date.now();
+      if (!force && themesCache && (now - themesCacheAt) < VOTE_THEME_CACHE_TTL_MS) {
+        voteLog('info', 'Temas carregados do cache', { reason, ageMs: now - themesCacheAt });
+        return themesCache;
+      }
+      if (themesFetchInFlight) {
+        voteLog('info', 'Reaproveitando leitura de temas em andamento', { reason });
+        return themesFetchInFlight;
+      }
+      themesFetchInFlight = (async () => {
+        const started = performance.now();
+        try {
+          const res = await apiFetch('/api/votacao/temas');
+          if (!res.ok) {
+            voteLog('warn', 'Falha ao buscar temas', { reason, status: res.status });
+            return null;
+          }
+          const data = await res.json().catch(() => null);
+          themesCache = Array.isArray(data) ? data : [];
+          themesCacheAt = Date.now();
+          voteLog('info', 'Temas carregados com sucesso', {
+            reason,
+            total: themesCache.length,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return themesCache;
+        } catch (error) {
+          voteLogError('Erro ao buscar temas', error, { reason });
+          return null;
+        } finally {
+          themesFetchInFlight = null;
+        }
+      })();
+      return themesFetchInFlight;
     };
 
     const getQuestionOptions = (q) =>
@@ -2479,12 +2685,19 @@
     const startPolling = () => {
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(async () => {
-        const themes = await fetchThemes();
-        if (themes && themes.length) {
-          lastThemes = themes;
-          renderModules(themes);
+        if (pollingBusy || document.hidden) return;
+        pollingBusy = true;
+        try {
+          const themes = await fetchThemes({ force: true, reason: 'polling' });
+          if (themes && themes.length) {
+            lastThemes = themes;
+            renderModules(themes);
+          }
+        } finally {
+          pollingBusy = false;
         }
       }, 10000);
+      voteLog('info', 'Polling de temas iniciado', { intervalMs: 10000 });
     };
 
     const showDenied = async (msg) => {
@@ -2609,10 +2822,19 @@
       const latestUrl = `/api/votacao/temas/${encodeURIComponent(themeId)}/latest?cpf=${encodeURIComponent(cpf || '')}`;
 
       try {
+        const started = performance.now();
+        voteLog('info', 'Buscando votações do tema', { themeId, hasCpf: !!cpf });
         const res = await apiFetch(listUrl, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
-          return { votes: Array.isArray(data?.votes) ? data.votes : [], used: 'list' };
+          const votes = Array.isArray(data?.votes) ? data.votes : [];
+          voteLog('info', 'Votações carregadas', {
+            themeId,
+            strategy: 'list',
+            total: votes.length,
+            durationMs: Math.round(performance.now() - started),
+          });
+          return { votes, used: 'list' };
         }
         if (res.status === 404) {
           const latest = await apiFetch(latestUrl, { signal: controller.signal });
@@ -2621,13 +2843,21 @@
           if (!data.active || !data.vote) return { votes: [] };
           const vote = data.vote;
           vote.previousAnswers = Array.isArray(data.previousAnswers) ? data.previousAnswers : [];
+          voteLog('info', 'Votação carregada por fallback latest', {
+            themeId,
+            strategy: 'latest',
+            durationMs: Math.round(performance.now() - started),
+          });
           return { votes: [vote], used: 'latest' };
         }
+        voteLog('warn', 'Endpoint de votações retornou status inesperado', { themeId, status: res.status });
         return { error: 'Votação indisponível.' };
       } catch (error) {
         if (error?.name === 'AbortError') {
+          voteLog('warn', 'Timeout ao carregar questionário', { themeId, timeoutMs: 12000 });
           return { error: 'Tempo limite ao carregar o questionário.' };
         }
+        voteLogError('Erro ao carregar questionário', error, { themeId });
         return { error: 'Falha ao carregar o questionário.' };
       } finally {
         clearTimeout(timer);
@@ -2839,32 +3069,50 @@
       if (cpf.length !== 11) {
         loginMsg.classList.remove('d-none');
         loginMsg.textContent = 'CPF inválido. Verifique e tente novamente.';
+        voteLog('warn', 'Tentativa de login com CPF inválido', { tamanho: cpf.length });
         return;
       }
+      voteLog('info', 'Iniciando validação de eleitor', { cpfFinal: cpf.slice(-4) });
       const stop = startLoading('Validando CPF...');
-      const res = await apiFetch('/api/votacao/login', {
-        method: 'POST',
-        body: JSON.stringify({ cpf }),
-      });
-      stop();
-      const data = await res.json();
-      if (!data.ok) {
-        await showDenied('Desculpe! Ação não permitida');
-        return;
-      }
-      loginMsg.classList.add('d-none');
-      loginMsg.textContent = '';
-      currentUser = data.user;
-      sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser));
-      setUserMenu(currentUser);
-      loginCard?.classList.add('d-none');
-      await showUserIntro(currentUser);
-      modules?.classList.remove('d-none');
-      startPolling();
-      const themes = await fetchThemes();
-      if (themes && themes.length) {
-        lastThemes = themes;
-        renderModules(themes);
+      try {
+        const res = await apiFetch('/api/votacao/login', {
+          method: 'POST',
+          body: JSON.stringify({ cpf }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          voteLog('warn', 'Falha HTTP no login de votação', { status: res.status, body: data });
+          await showDenied('Desculpe! Ação não permitida');
+          return;
+        }
+        if (!data?.ok) {
+          voteLog('warn', 'Eleitor negado na validação', { reason: data?.reason || 'DESCONHECIDO' });
+          await showDenied('Desculpe! Ação não permitida');
+          return;
+        }
+        loginMsg.classList.add('d-none');
+        loginMsg.textContent = '';
+        currentUser = data.user;
+        sessionStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+        setUserMenu(currentUser);
+        loginCard?.classList.add('d-none');
+        await showUserIntro(currentUser);
+        modules?.classList.remove('d-none');
+        startPolling();
+        const themes = await fetchThemes({ reason: 'login' });
+        if (themes && themes.length) {
+          lastThemes = themes;
+          renderModules(themes);
+        }
+        voteLog('info', 'Login de votação concluído', {
+          numero: currentUser?.numerodeinscricao || '',
+          nome: currentUser?.nome || '',
+        });
+      } catch (error) {
+        voteLogError('Erro inesperado no login de votação', error, { cpfFinal: cpf.slice(-4) });
+        await showUiModal({ title: 'Aviso', message: 'Falha ao validar acesso ao módulo de votação.', variant: 'danger' });
+      } finally {
+        stop();
       }
     });
 
@@ -2875,15 +3123,18 @@
         return;
       }
       const themeId = card.dataset.theme;
+      voteLog('info', 'Tema selecionado pelo usuário', { themeId });
       currentThemeId = themeId;
       const stop = startLoading('Carregando questionário...');
       const result = await fetchVotesForTheme(themeId, currentUser?.cpf || '').finally(stop);
       if (!result || result.error) {
+        voteLog('warn', 'Falha ao abrir tema', { themeId, error: result?.error || 'ERRO_DESCONHECIDO' });
         await showUiModal({ title: 'Aviso', message: result?.error || 'Votação indisponível.', variant: 'warning' });
         return;
       }
       const votes = Array.isArray(result.votes) ? result.votes : [];
       if (!votes.length) {
+        voteLog('warn', 'Tema sem votações disponíveis', { themeId });
         await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
         return;
       }
@@ -2947,6 +3198,7 @@
       formWrap?.classList.add('d-none');
       successMsg?.classList.add('d-none');
       if (cpfInput) cpfInput.value = '';
+      voteLog('info', 'Sessão de votação encerrada pelo usuário');
     });
 
     questionsWrap?.addEventListener('change', async (event) => {
@@ -3107,6 +3359,7 @@
           if (!res.ok) {
             stop();
             const err = await res.json().catch(() => ({}));
+            voteLog('warn', 'Falha ao enviar respostas em lote', { voteId: vote.id, status: res.status, error: err?.error || '' });
             if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
               await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
               return;
@@ -3115,6 +3368,7 @@
             return;
           }
           await res.json().catch(() => ({}));
+          voteLog('info', 'Resposta enviada com sucesso', { voteId: vote.id, totalAnswers: answers.length });
           clearDraftAnswers(currentUser.cpf, vote.id);
           setVoteSent(currentUser.cpf, vote.id, true);
           setVoteDirty(currentUser.cpf, vote.id, false);
@@ -3159,6 +3413,7 @@
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        voteLog('warn', 'Falha ao enviar voto', { voteId: currentVote.id, status: res.status, error: err?.error || '' });
         if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
           await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
           return;
@@ -3168,6 +3423,7 @@
       }
 
       const data = await res.json();
+      voteLog('info', 'Voto enviado com sucesso', { voteId: currentVote.id, totalAnswers: answers.length });
       successMsg.textContent = `${data.nome || currentUser.nome}, seu voto foi enviado com sucesso!`;
       successMsg?.classList.remove('d-none');
       await showUiModal({
@@ -3193,11 +3449,15 @@
         loginCard?.classList.add('d-none');
         modules?.classList.remove('d-none');
         startPolling();
-        fetchThemes().then((themes) => {
+        fetchThemes({ reason: 'session-restore' }).then((themes) => {
           if (themes && themes.length) {
             lastThemes = themes;
             renderModules(themes);
           }
+        });
+        voteLog('info', 'Sessão de votação restaurada do sessionStorage', {
+          numero: currentUser?.numerodeinscricao || '',
+          nome: currentUser?.nome || '',
         });
       }
     } catch {}
@@ -3207,6 +3467,3 @@
   initBuilderPage();
   initPublicPage();
 })();
-
-
-
