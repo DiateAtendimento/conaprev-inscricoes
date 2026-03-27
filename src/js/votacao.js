@@ -2200,6 +2200,7 @@
 
     const REGION_DIR = REGION_IMAGE_DIR;
     const DEFAULT_REGION_URL = REGION_IMAGE_DEFAULT;
+    let assocImageIndexPromise = null;
 
     const stripDiacritics = (value) =>
       String(value || '')
@@ -2207,6 +2208,14 @@
         .replace(/[\u0300-\u036f]/g, '');
 
     const normalizeToken = (value) =>
+      stripDiacritics(value)
+        .replace(/\.[^.]+$/, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .toLowerCase();
+
+    const normalizeAssetKey = (value) =>
       stripDiacritics(value)
         .replace(/\.[^.]+$/, '')
         .replace(/[^a-zA-Z0-9]+/g, ' ')
@@ -2224,6 +2233,45 @@
         return { city: match[1].trim(), uf: match[2].trim() };
       }
       return { city: raw, uf: '' };
+    };
+
+    const loadAssocImageIndex = async () => {
+      if (assocImageIndexPromise) return assocImageIndexPromise;
+      assocImageIndexPromise = (async () => {
+        const map = new Map();
+        try {
+          const res = await fetch(ASSOC_MANIFEST_URL, { cache: 'no-cache' });
+          if (!res.ok) return map;
+          const list = await res.json().catch(() => []);
+          if (!Array.isArray(list)) return map;
+          list.forEach((file) => {
+            if (typeof file !== 'string') return;
+            const key = normalizeAssetKey(file);
+            if (key) map.set(key, file);
+          });
+        } catch {}
+        return map;
+      })();
+      return assocImageIndexPromise;
+    };
+
+    const resolveAssocImageUrlPublic = async (name) => {
+      const value = String(name || '').trim();
+      if (!value) return '';
+      const index = await loadAssocImageIndex();
+      const key = normalizeAssetKey(value);
+      let filename = index.get(key);
+      if (!filename) {
+        let bestKey = '';
+        index.forEach((_file, idxKey) => {
+          if (idxKey === key) return;
+          if ((idxKey.includes(key) || key.includes(idxKey)) && idxKey.length > bestKey.length) {
+            bestKey = idxKey;
+          }
+        });
+        if (bestKey) filename = index.get(bestKey);
+      }
+      return filename ? `${ASSOC_IMAGE_DIR}/${encodeURIComponent(filename)}` : '';
     };
 
     const toTitleCase = (value) =>
@@ -2661,29 +2709,108 @@
       `;
     };
 
-    const buildSimpleCards = (q) => {
+    const resolveVisualCardData = async (q, opt) => {
+      const base = (typeof opt === 'string') ? { text: opt } : opt;
+      const text = String(base?.text || '').trim();
+      const parsed = parseCityUfFromText(text);
+      const explicitUf = String(base?.uf || '').trim().toUpperCase();
+      const uf = explicitUf || String(parsed.uf || '').trim().toUpperCase();
+      const city = String(base?.city || parsed.city || '').trim();
+      const assocName = String(base?.associacao || base?.association || '').trim();
+      const regionKey = normalizeRegionKey(base?.region) || getRegionKeyByUf(uf);
+      const hasCity = !!(base?.city || (parsed.city && parsed.uf));
+      const hasAssoc = !!assocName;
+      const isUfOnly = !!uf && !hasCity && (text === uf || !text);
+
+      if (hasAssoc) {
+        const imgUrl = await resolveAssocImageUrlPublic(assocName);
+        return {
+          title: assocName || 'Associação',
+          subtitle: '',
+          meta: '',
+          imageUrl: imgUrl || DEFAULT_REGION_URL,
+          imageAlt: `Logo ${assocName || 'Associação'}`,
+        };
+      }
+
+      if (isStructuredSubmoduleTheme(currentThemeId) && text && !hasCity && !hasAssoc) {
+        const assocImage = await resolveAssocImageUrlPublic(text);
+        if (assocImage) {
+          return {
+            title: text,
+            subtitle: '',
+            meta: '',
+            imageUrl: assocImage,
+            imageAlt: `Logo ${text}`,
+          };
+        }
+      }
+
+      if (hasCity || currentThemeId === 'membros-rotativos') {
+        let proGestao = normalizeProGestaoLevel(base?.proGestao || base?.pro_gestao || base?.proGestaoLevel || '');
+        if (!proGestao && city && uf) {
+          proGestao = await resolveProGestaoLevel(city, uf);
+        }
+        return {
+          title: formatCityUfTitle(city, uf) || text || 'Município',
+          subtitle: formatRegionLabel(regionKey),
+          meta: formatProGestaoLabel(proGestao),
+          imageUrl: resolveRegionImageUrl(regionKey),
+          imageAlt: `Região de ${formatCityUfTitle(city, uf) || text || 'município'}`,
+        };
+      }
+
+      if (isUfOnly || (uf && /^[A-Z]{2}$/.test(uf))) {
+        const name = UF_NAMES[uf] || uf || text || 'Estado';
+        return {
+          title: name,
+          subtitle: uf || '',
+          meta: '',
+          imageUrl: resolveStateFlagUrlPublic(uf),
+          imageAlt: `Bandeira de ${name}`,
+        };
+      }
+
+      const fallbackAssocImage = text ? await resolveAssocImageUrlPublic(text) : '';
+      return {
+        title: text || 'Opção',
+        subtitle: '',
+        meta: '',
+        imageUrl: fallbackAssocImage || DEFAULT_REGION_URL,
+        imageAlt: text || 'Opção',
+      };
+    };
+
+    const buildUniversalCards = async (q) => {
       const options = getQuestionOptions(q);
       const isMulti = !!q.allowMultiple;
       const inputType = isMulti ? 'checkbox' : 'radio';
-      const cols = Math.min(3, Math.max(1, options.length));
-      const cards = options.map((opt) => {
+      const cols = Math.min(4, Math.max(1, options.length));
+      const cards = await Promise.all(options.map(async (opt) => {
         if (isBlankOption(opt)) {
-          return buildBlankCard(q, opt, inputType, 'simple');
+          return buildBlankCard(q, opt, inputType, 'flag');
         }
         const base = (typeof opt === 'string') ? { text: opt } : opt;
-        const text = String(base?.text || '').trim();
         const labelId = `${q.id}_${base?.id || opt?.id}`;
+        const visual = await resolveVisualCardData(q, opt);
         return `
-          <label class="vote-option-card" for="${labelId}">
+          <label class="vote-flag-card" for="${labelId}">
             <span class="vote-flag-select">
               <input class="form-check-input" type="${inputType}" name="${q.id}" id="${labelId}" value="${base?.id || opt?.id}">
             </span>
-            <span class="vote-option-text">${text || 'Opção'}</span>
+            <span class="vote-flag-media">
+              <img src="${visual.imageUrl || DEFAULT_REGION_URL}" alt="${visual.imageAlt || 'Opção'}">
+            </span>
+            <span class="vote-flag-text">
+              <span class="vote-flag-name">${visual.title || 'Opção'}</span>
+              ${visual.subtitle ? `<span class="vote-flag-region">${visual.subtitle}</span>` : ''}
+              ${visual.meta ? `<span class="vote-flag-pro">${visual.meta}</span>` : ''}
+            </span>
           </label>
         `;
-      });
+      }));
       return `
-        <div class="vote-option-grid" style="--vote-cols:${cols}">
+        <div class="vote-flag-grid" style="--vote-cols:${cols}">
           ${cards.join('')}
         </div>
       `;
@@ -3004,7 +3131,7 @@
       } else if (isStructuredSubmoduleTheme(currentThemeId) && hasUf) {
         grid = buildStateCards(q);
       } else {
-        grid = buildSimpleCards(q);
+        grid = await buildUniversalCards(q);
       }
       const wrap = questionsWrap.querySelector('.vote-flag-grid-wrap');
       if (wrap) wrap.innerHTML = grid;
