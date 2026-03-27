@@ -322,38 +322,30 @@ function normalizePresenceName(value) {
     .replace(/\s+/g, " ");
 }
 
-/* ===== presença Dia1/Dia2 ===== */
-async function checarPresencaDias(codInscricao, nomeOpcional) {
+/* ===== presença Dia2 ===== */
+async function checarPresencaDia2(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
-  const abas = ["Dia1", "Dia2"];
-  let dia1 = false, dia2 = false;
   const targetCode = normalizePresenceCode(codInscricao);
   const targetName = normalizePresenceName(nomeOpcional);
 
-  for (let i = 0; i < abas.length; i++) {
-    const title = abas[i];
-    try {
-      const resp = await sheets.spreadsheets.values.get({ spreadsheetId: cfg.sheetId, range: `${title}!A2:B` });
-      const rows = resp.data.values || [];
-      for (const r of rows) {
-        const num = normalizePresenceCode(r[0]);
-        const nome = normalizePresenceName(r[1]);
-        if (num === targetCode) {
-          if (targetName && nome) {
-            const sameName = nome === targetName;
-            const partialName = nome.includes(targetName) || targetName.includes(nome);
-            if (!sameName && !partialName) continue;
-          }
-          if (i === 0) dia1 = true;
-          if (i === 1) dia2 = true;
-          break;
-        }
+  try {
+    const resp = await sheets.spreadsheets.values.get({ spreadsheetId: cfg.sheetId, range: "Dia2!A2:B" });
+    const rows = resp.data.values || [];
+    for (const r of rows) {
+      const num = normalizePresenceCode(r[0]);
+      const nome = normalizePresenceName(r[1]);
+      if (num !== targetCode) continue;
+      if (targetName && nome) {
+        const sameName = nome === targetName;
+        const partialName = nome.includes(targetName) || targetName.includes(nome);
+        if (!sameName && !partialName) continue;
       }
-    } catch {
-      // aba pode Não existir
+      return true;
     }
+  } catch {
+    // aba pode nao existir
   }
-  return { dia1, dia2 };
+  return false;
 }
 
 /* ===== consultas ===== */
@@ -530,8 +522,8 @@ export async function validateVoter(cpf) {
   }
 
   const user = await buscarPorCpf(clean, "Conselheiro").catch(() => null);
-  const dias = await checarPresencaDias(authorized.numerodeinscricao, authorized.nome || user?.nome);
-  if (!dias.dia1 && !dias.dia2) {
+  const presenteDia2 = await checarPresencaDia2(authorized.numerodeinscricao, authorized.nome || user?.nome);
+  if (!presenteDia2) {
     const out = { ok: false, reason: "SEM_PRESENCA" };
     setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
     return out;
