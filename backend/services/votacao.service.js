@@ -36,6 +36,8 @@ const THEMES = [
 
 /* ===== cache leve em mem�ria ===== */
 const CACHE_TTL_MS = 10_000;
+const SHEET_READY_TTL_MS = 60_000;
+const VALIDATION_CACHE_TTL_MS = 5 * 60_000;
 const _cache = new Map(); // key -> { expires, data }
 function getCache(key) {
   const hit = _cache.get(key);
@@ -120,6 +122,8 @@ async function getSpreadsheetMeta() {
 }
 
 async function ensureSheetWithHeaders(sheetName, headers) {
+  const readyKey = `sheet-ready:${sheetName}`;
+  if (getCache(readyKey)) return;
   const sheets = await getSheets();
   const meta = await getSpreadsheetMeta();
   const exists = meta.sheets.find((s) => s.title === sheetName);
@@ -141,6 +145,7 @@ async function ensureSheetWithHeaders(sheetName, headers) {
       requestBody: { values: [headers] },
     });
   }
+  setCache(readyKey, true, SHEET_READY_TTL_MS);
 }
 
 async function readAll(sheetName) {
@@ -162,6 +167,86 @@ async function readAllCached(sheetName, cacheKey) {
 
 function parseJSON(val) {
   try { return JSON.parse(val); } catch { return null; }
+}
+
+function mapVoteRow(row, idx) {
+  return {
+    _rowIndex: idx + 2,
+    id: row[0],
+    tema: row[1],
+    title: row[2],
+    active: String(row[3] || "").toUpperCase() === "SIM",
+    questions: parseJSON(row[4]) || [],
+    createdAt: row[5],
+    updatedAt: row[6],
+    ano: row[7],
+  };
+}
+
+async function readVotesSheetCached() {
+  await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
+  return readAllCached(SHEET_VOTOS, "votos:all");
+}
+
+async function readVotacoesSheetCached() {
+  await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
+  return readAllCached(SHEET_VOTACOES, "votacoes:all");
+}
+
+function buildVoteRecord(validationUser, vote, answers, date, time, durationMs) {
+  const temaLabel = String(vote.title || vote.tema || "").trim();
+  return {
+    temaLabel,
+    row: [
+      String(validationUser.numerodeinscricao || ""),
+      String(validationUser.nome || ""),
+      date,
+      time,
+      temaLabel,
+      formatResponsesText(vote, answers || [], durationMs),
+    ],
+  };
+}
+
+function findExistingVoteRowIndex(rows, numeroInscricao, temaLabel) {
+  let existingRowIndex = -1;
+  rows.forEach((r, idx) => {
+    const numero = String(r[0] || "").trim();
+    const tema = String(r[4] || "").trim();
+    if (numero !== String(numeroInscricao || "").trim()) return;
+    if (tema === String(temaLabel || "").trim()) existingRowIndex = idx + 2;
+  });
+  return existingRowIndex;
+}
+
+function extractAnswersFromStoredValue(storedValue, vote) {
+  const parsed = parseResponsesText(storedValue, vote);
+  let answers = parsed.answers || [];
+
+  if (!answers.length) {
+    const json = parseJSON(storedValue);
+    if (json && json.answers) {
+      answers = json.answers.map((ans) => {
+        if (ans.type === "text") {
+          return { questionId: ans.questionId, type: "text", value: String(ans.value || "") };
+        }
+        const optionIds = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+        return { questionId: ans.questionId, type: "options", optionIds };
+      });
+    }
+  } else {
+    answers = answers.map((ans) => {
+      if (ans.type === "text") return ans;
+      const optionIds = (ans.optionTexts || []).map((text) => {
+        const q = (vote.questions || []).find((qq) => qq.id === ans.questionId);
+        const opt = (q?.options || []).find((o) => normalize(o.text) === normalize(cleanAnswerText(text)));
+        return opt?.id;
+      }).filter(Boolean);
+      return { questionId: ans.questionId, type: "options", optionIds };
+    });
+  }
+
+  return { answers };
 }
 
 function formatResponsesText(vote, answers = [], durationMs = 0) {
@@ -272,19 +357,8 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
 
 /* ===== consultas ===== */
 export async function listThemesWithLatest() {
-  await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
-  const { rows } = await readAllCached(SHEET_VOTACOES, "votacoes:all");
-  const votes = rows.map((r, idx) => ({
-    _rowIndex: idx + 2,
-    id: r[0],
-    tema: r[1],
-    title: r[2],
-    active: String(r[3] || "").toUpperCase() === "SIM",
-    questions: parseJSON(r[4]) || [],
-    createdAt: r[5],
-    updatedAt: r[6],
-    ano: r[7],
-  }));
+  const { rows } = await readVotacoesSheetCached();
+  const votes = rows.map(mapVoteRow);
 
   return THEMES.map((t) => {
     const same = votes.filter((v) => normalize(v.tema) === normalize(t.name));
@@ -294,7 +368,7 @@ export async function listThemesWithLatest() {
       name: t.name,
       title: t.title,
       latest,
-      active: !!latest?.active,
+      active: same.some((vote) => vote.active),
     };
   });
 }
@@ -302,37 +376,15 @@ export async function listThemesWithLatest() {
 export async function listVotesByTema(temaInput) {
   const tema = resolveTheme(temaInput);
   if (!tema) throw new Error("Tema inválido");
-  await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
-  const { rows } = await readAllCached(SHEET_VOTACOES, "votacoes:all");
-  return rows.map((r, idx) => ({
-    _rowIndex: idx + 2,
-    id: r[0],
-    tema: r[1],
-    title: r[2],
-    active: String(r[3] || "").toUpperCase() === "SIM",
-    questions: parseJSON(r[4]) || [],
-    createdAt: r[5],
-    updatedAt: r[6],
-    ano: r[7],
-  })).filter((v) => normalize(v.tema) === normalize(tema.name));
+  const { rows } = await readVotacoesSheetCached();
+  return rows.map(mapVoteRow).filter((v) => normalize(v.tema) === normalize(tema.name));
 }
 
 export async function getVoteById(id) {
-  await ensureSheetWithHeaders(SHEET_VOTACOES, VOTACOES_HEADERS);
-  const { rows } = await readAllCached(SHEET_VOTACOES, "votacoes:all");
+  const { rows } = await readVotacoesSheetCached();
   for (let i = 0; i < rows.length; i++) {
     if (String(rows[i][0]) === String(id)) {
-      return {
-        _rowIndex: i + 2,
-        id: rows[i][0],
-        tema: rows[i][1],
-        title: rows[i][2],
-        active: String(rows[i][3] || "").toUpperCase() === "SIM",
-        questions: parseJSON(rows[i][4]) || [],
-        createdAt: rows[i][5],
-        updatedAt: rows[i][6],
-        ano: rows[i][7],
-      };
+      return mapVoteRow(rows[i], i);
     }
   }
   return null;
@@ -460,18 +512,31 @@ export async function setVoteActive(id, active) {
 export async function validateVoter(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
   if (!/^\d{11}$/.test(clean)) throw new Error("CPF inválido");
+  const cacheKey = `validate:${clean}`;
+  const cached = getCache(cacheKey);
+  if (cached) return cached;
 
   const authorized = await buscarAutorizadoParaVotarPorCpf(clean);
-  if (!authorized) return { ok: false, reason: "NAO_AUTORIZADO" };
+  if (!authorized) {
+    const out = { ok: false, reason: "NAO_AUTORIZADO" };
+    setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
+    return out;
+  }
   if (!authorized.numerodeinscricao || String(authorized.numerodeinscricao).trim() === "") {
-    return { ok: false, reason: "SEM_NUMERO" };
+    const out = { ok: false, reason: "SEM_NUMERO" };
+    setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
+    return out;
   }
 
   const user = await buscarPorCpf(clean, "Conselheiro").catch(() => null);
   const dias = await checarPresencaDias(authorized.numerodeinscricao, authorized.nome || user?.nome);
-  if (!dias.dia1 && !dias.dia2) return { ok: false, reason: "SEM_PRESENCA" };
+  if (!dias.dia1 && !dias.dia2) {
+    const out = { ok: false, reason: "SEM_PRESENCA" };
+    setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
+    return out;
+  }
 
-  return {
+  const out = {
     ok: true,
     user: {
       cpf: clean,
@@ -483,123 +548,130 @@ export async function validateVoter(cpf) {
       uf: authorized.ufsigla || user?.ufsigla || "",
     },
   };
+  setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
+  return out;
 }
 
 export async function getUserResponseForVote(vote, cpf) {
   if (!vote) return null;
-  const clean = String(cpf || "").replace(/\D/g, "");
-  if (!/^\d{11}$/.test(clean)) return null;
-
-  const user = await buscarPorCpf(clean, "Conselheiro");
-  if (!user || !user.numerodeinscricao) return null;
-
-  await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
+  const validation = await validateVoter(cpf).catch(() => null);
+  if (!validation?.ok || !validation.user?.numerodeinscricao) return null;
   const temaLabel = String(vote.title || vote.tema || "").trim();
-  const { rows } = await readAllCached(SHEET_VOTOS, `votos:${vote.id}`);
+  const { rows } = await readVotesSheetCached();
 
   let found = null;
   rows.forEach((r) => {
     const numero = String(r[0] || "").trim();
     const tema = String(r[4] || "").trim();
-    if (numero !== String(user.numerodeinscricao || "").trim()) return;
+    if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
     if (tema !== temaLabel) return;
     found = r[5];
   });
   if (!found) return null;
 
-  const parsed = parseResponsesText(found, vote);
-  let answers = parsed.answers || [];
+  return extractAnswersFromStoredValue(found, vote);
+}
 
-  if (!answers.length) {
-    const json = parseJSON(found);
-    if (json && json.answers) {
-      answers = json.answers.map((ans) => {
-        if (ans.type === "text") {
-          return { questionId: ans.questionId, type: "text", value: String(ans.value || "") };
-        }
-        const optionIds = Array.isArray(ans.optionIds) ? ans.optionIds : [];
-        return { questionId: ans.questionId, type: "options", optionIds };
-      });
-    }
-  } else {
-    answers = answers.map((ans) => {
-      if (ans.type === "text") return ans;
-      const optionIds = (ans.optionTexts || []).map((text) => {
-        const q = (vote.questions || []).find((qq) => qq.id === ans.questionId);
-        const opt = (q?.options || []).find((o) => normalize(o.text) === normalize(cleanAnswerText(text)));
-        return opt?.id;
-      }).filter(Boolean);
-      return { questionId: ans.questionId, type: "options", optionIds };
-    });
-  }
+export async function getUserResponsesForVotes(votes, cpf) {
+  const list = Array.isArray(votes) ? votes.filter(Boolean) : [];
+  if (!list.length) return new Map();
 
-  return { answers };
+  const validation = await validateVoter(cpf).catch(() => null);
+  if (!validation?.ok || !validation.user?.numerodeinscricao) return new Map();
+
+  const { rows } = await readVotesSheetCached();
+  const byTema = new Map();
+  rows.forEach((r) => {
+    const numero = String(r[0] || "").trim();
+    const tema = String(r[4] || "").trim();
+    if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
+    byTema.set(tema, r[5]);
+  });
+
+  const results = new Map();
+  list.forEach((vote) => {
+    const temaLabel = String(vote.title || vote.tema || "").trim();
+    const found = byTema.get(temaLabel);
+    if (!found) return;
+    results.set(vote.id, extractAnswersFromStoredValue(found, vote));
+  });
+  return results;
 }
 
 export async function submitVote({ voteId, cpf, answers, durationMs }) {
-  const vote = await getVoteById(voteId);
-  if (!vote) throw new Error("Votação não encontrada");
-  if (!vote.active) {
-    throw new Error("VOTACAO_INDISPONIVEL");
-  }
+  const out = await submitVotesBatch({
+    cpf,
+    votes: [{ voteId, answers, durationMs }],
+  });
+  return { ok: out.ok, nome: out.nome || "" };
+}
+
+export async function submitVotesBatch({ cpf, votes }) {
+  const payloadVotes = Array.isArray(votes) ? votes.filter((item) => item?.voteId) : [];
+  if (!payloadVotes.length) throw new Error("Dados incompletos");
+
+  const loadedVotes = await Promise.all(payloadVotes.map((item) => getVoteById(item.voteId)));
+  loadedVotes.forEach((vote) => {
+    if (!vote) throw new Error("Votação não encontrada");
+    if (!vote.active) throw new Error("VOTACAO_INDISPONIVEL");
+  });
 
   const validation = await validateVoter(cpf);
   if (!validation.ok) throw new Error("NAO_PERMITIDO");
 
   await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
   const { date, time } = nowBRParts();
-  const temaLabel = vote.title || vote.tema;
-  const responsesText = formatResponsesText(vote, answers || [], durationMs);
   const sheets = await getSheets();
+  const { rows } = await readVotesSheetCached();
+  const updates = [];
+  const appends = [];
 
-  const cacheKey = `votos:${vote.id}`;
-  const { rows } = await readAllCached(SHEET_VOTOS, cacheKey);
-  let existingRowIndex = -1;
-
-  rows.forEach((r, idx) => {
-    const numero = String(r[0] || "").trim();
-    const tema = String(r[4] || "").trim();
-    if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
-    if (tema === String(temaLabel).trim()) existingRowIndex = idx + 2;
+  payloadVotes.forEach((item, index) => {
+    const vote = loadedVotes[index];
+    const record = buildVoteRecord(validation.user, vote, item.answers || [], date, time, item.durationMs);
+    const existingRowIndex = findExistingVoteRowIndex(rows, validation.user.numerodeinscricao, record.temaLabel);
+    if (existingRowIndex > 1) {
+      updates.push({
+        range: `${SHEET_VOTOS}!A${existingRowIndex}:${lastColLetter(VOTOS_HEADERS)}${existingRowIndex}`,
+        values: [record.row],
+      });
+      return;
+    }
+    appends.push(record.row);
   });
 
-  const row = [
-    String(validation.user.numerodeinscricao || ""),
-    String(validation.user.nome || ""),
-    date,
-    time,
-    temaLabel,
-    responsesText,
-  ];
-
-  if (existingRowIndex > 1) {
-    const range = `${SHEET_VOTOS}!A${existingRowIndex}:${lastColLetter(VOTOS_HEADERS)}${existingRowIndex}`;
-    await sheets.spreadsheets.values.update({
+  if (updates.length) {
+    await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: cfg.sheetId,
-      range,
-      valueInputOption: "RAW",
-      requestBody: { values: [row] },
+      requestBody: {
+        valueInputOption: "RAW",
+        data: updates,
+      },
     });
-  } else {
+  }
+
+  if (appends.length) {
     await sheets.spreadsheets.values.append({
       spreadsheetId: cfg.sheetId,
       range: `${SHEET_VOTOS}!A1:${lastColLetter(VOTOS_HEADERS)}`,
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
-      requestBody: { values: [row] },
+      requestBody: { values: appends },
     });
   }
 
   invalidateCache("votos:");
-  return { ok: true, nome: validation.user.nome || "" };
+  return {
+    ok: true,
+    nome: validation.user.nome || "",
+    submitted: loadedVotes.map((vote) => vote.id),
+  };
 }
 
 export async function getVoteResults(voteId) {
   const vote = await getVoteById(voteId);
   if (!vote) throw new Error("Votação não encontrada");
-  await ensureSheetWithHeaders(SHEET_VOTOS, VOTOS_HEADERS);
-
-  const { rows } = await readAllCached(SHEET_VOTOS, `votos:${voteId}`);
+  const { rows } = await readVotesSheetCached();
   const responses = [];
   const temaLabel = String(vote.title || vote.tema || "").trim();
   rows.forEach((r) => {

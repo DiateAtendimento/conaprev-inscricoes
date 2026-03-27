@@ -14,6 +14,8 @@ import {
   getVoteResults,
   getVoteById,
   getUserResponseForVote,
+  getUserResponsesForVotes,
+  submitVotesBatch,
 } from "../services/votacao.service.js";
 import { getProGestaoMap } from "../services/sheets.service.js";
 
@@ -69,14 +71,10 @@ r.get("/temas/:tema/votacoes", async (req, res) => {
     const cpf = String(req.query?.cpf || "").replace(/\D/g, "");
     const list = await listVotesByTema(tema);
     const votes = list.filter((vote) => vote.active);
-    for (const vote of votes) {
-      if (!cpf) {
-        vote.previousAnswers = [];
-        continue;
-      }
-      const prev = await getUserResponseForVote(vote, cpf);
-      vote.previousAnswers = prev?.answers || [];
-    }
+    const previousByVoteId = cpf ? await getUserResponsesForVotes(votes, cpf) : new Map();
+    votes.forEach((vote) => {
+      vote.previousAnswers = previousByVoteId.get(vote.id)?.answers || [];
+    });
     return res.json({ votes });
   } catch (e) {
     return sendError(res, e, "Erro ao listar votações");
@@ -109,9 +107,11 @@ r.get("/temas/:tema/latest", async (req, res) => {
 
 r.post("/votar", async (req, res) => {
   try {
-    const { voteId, cpf, answers, durationMs } = req.body || {};
-    if (!voteId || !cpf) return res.status(400).json({ error: "Dados incompletos" });
-    const out = await submitVote({ voteId, cpf, answers, durationMs });
+    const { voteId, cpf, answers, durationMs, votes } = req.body || {};
+    if (!cpf) return res.status(400).json({ error: "Dados incompletos" });
+    const out = Array.isArray(votes)
+      ? await submitVotesBatch({ cpf, votes })
+      : await submitVote({ voteId, cpf, answers, durationMs });
     return res.json(out);
   } catch (e) {
     return sendError(res, e, "Erro ao enviar voto");
@@ -203,5 +203,4 @@ r.get("/admin/votacoes/:id", adminGuard, async (req, res) => {
 });
 
 export default r;
-
 

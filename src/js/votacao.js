@@ -7,7 +7,8 @@
   const ADMIN_PASS_KEY = 'votacao.admin.pass';
   const SESSION_KEY = 'votacao.admin.session';
   const USER_KEY = 'votacao.user.session';
-  const VOTE_THEME_CACHE_TTL_MS = 10_000;
+  const VOTE_THEME_CACHE_TTL_MS = 30_000;
+  const VOTE_THEME_POLL_MS = 30_000;
 
   const voteLog = (level, message, details) => {
     const fn = console[level] || console.log;
@@ -2685,7 +2686,7 @@
     const startPolling = () => {
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(async () => {
-        if (pollingBusy || document.hidden) return;
+        if (pollingBusy || document.hidden || !formWrap?.classList.contains('d-none')) return;
         pollingBusy = true;
         try {
           const themes = await fetchThemes({ force: true, reason: 'polling' });
@@ -2696,8 +2697,8 @@
         } finally {
           pollingBusy = false;
         }
-      }, 10000);
-      voteLog('info', 'Polling de temas iniciado', { intervalMs: 10000 });
+      }, VOTE_THEME_POLL_MS);
+      voteLog('info', 'Polling de temas iniciado', { intervalMs: VOTE_THEME_POLL_MS });
     };
 
     const showDenied = async (msg) => {
@@ -3345,35 +3346,41 @@
           return;
         }
         const stop = startLoading('Enviando respostas...');
-        for (const vote of voteList) {
-          const answers = voteAnswersById.get(vote.id) || [];
-          const res = await apiFetch('/api/votacao/votar', {
-            method: 'POST',
-            body: JSON.stringify({
-              voteId: vote.id,
-              cpf: currentUser.cpf,
-              answers,
-              durationMs: Date.now() - startedAt,
-            }),
+        const batchPayload = voteList.map((vote) => ({
+          voteId: vote.id,
+          answers: voteAnswersById.get(vote.id) || [],
+          durationMs: Date.now() - startedAt,
+        }));
+        const res = await apiFetch('/api/votacao/votar', {
+          method: 'POST',
+          body: JSON.stringify({
+            cpf: currentUser.cpf,
+            votes: batchPayload,
+          }),
+        });
+        stop();
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          voteLog('warn', 'Falha ao enviar respostas em lote', {
+            totalVotes: batchPayload.length,
+            status: res.status,
+            error: err?.error || '',
           });
-          if (!res.ok) {
-            stop();
-            const err = await res.json().catch(() => ({}));
-            voteLog('warn', 'Falha ao enviar respostas em lote', { voteId: vote.id, status: res.status, error: err?.error || '' });
-            if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
-              await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
-              return;
-            }
-            await showDenied('Desculpe! Ação não permitida');
+          if (String(err.error || '').includes('VOTACAO_INDISPONIVEL')) {
+            await showUiModal({ title: 'Aviso', message: 'Votação indisponível.', variant: 'warning' });
             return;
           }
-          await res.json().catch(() => ({}));
+          await showDenied('Desculpe! Ação não permitida');
+          return;
+        }
+        await res.json().catch(() => ({}));
+        voteList.forEach((vote) => {
+          const answers = voteAnswersById.get(vote.id) || [];
           voteLog('info', 'Resposta enviada com sucesso', { voteId: vote.id, totalAnswers: answers.length });
           clearDraftAnswers(currentUser.cpf, vote.id);
           setVoteSent(currentUser.cpf, vote.id, true);
           setVoteDirty(currentUser.cpf, vote.id, false);
-        }
-        stop();
+        });
         successMsg.textContent = `${currentUser.nome}, seu voto foi enviado com sucesso!`;
         successMsg?.classList.remove('d-none');
         await showUiModal({
