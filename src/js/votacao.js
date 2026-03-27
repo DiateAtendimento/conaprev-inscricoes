@@ -39,6 +39,8 @@
     { id: 'comissao-copajure', name: 'COMISSÃO DO COPAJURE', title: 'Comissão do COPAJURE', icon: 'bi-diagram-3' },
   ];
 
+  const isStructuredSubmoduleTheme = (id) => id === 'pro-gestao' || id === 'comissao-copajure';
+
   const mergeKnownThemes = (themes = []) => {
     const incoming = Array.isArray(themes) ? themes : [];
     const byId = new Map(incoming.map((theme) => [theme?.id, theme]));
@@ -909,8 +911,6 @@
     const proGestaoFormTitle = document.getElementById('voteProGestaoFormTitle');
     const proGestaoTitle = document.getElementById('voteProGestaoTitle');
     const proGestaoPlaceholder = document.getElementById('voteProGestaoPlaceholder');
-
-    const isStructuredSubmoduleTheme = (id) => id === 'pro-gestao' || id === 'comissao-copajure';
 
     const getSearchParam = (name) => new URLSearchParams(window.location.search).get(name);
     const editId = getSearchParam('edit');
