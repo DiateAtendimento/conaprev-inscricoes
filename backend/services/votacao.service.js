@@ -220,11 +220,29 @@ function parseResponsesText(text, vote) {
   return { answers: parsed, durationMs };
 }
 
+function normalizePresenceCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function normalizePresenceName(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
 /* ===== presença Dia1/Dia2 ===== */
 async function checarPresencaDias(codInscricao, nomeOpcional) {
   const sheets = await getSheets();
   const abas = ["Dia1", "Dia2"];
   let dia1 = false, dia2 = false;
+  const targetCode = normalizePresenceCode(codInscricao);
+  const targetName = normalizePresenceName(nomeOpcional);
 
   for (let i = 0; i < abas.length; i++) {
     const title = abas[i];
@@ -232,12 +250,13 @@ async function checarPresencaDias(codInscricao, nomeOpcional) {
       const resp = await sheets.spreadsheets.values.get({ spreadsheetId: cfg.sheetId, range: `${title}!A2:B` });
       const rows = resp.data.values || [];
       for (const r of rows) {
-        const num = String(r[0] || "").trim().toUpperCase();
-        const nome = String(r[1] || "").trim().toUpperCase();
-        if (num === String(codInscricao).trim().toUpperCase()) {
-          if (nomeOpcional) {
-            const cmp = String(nomeOpcional || "").trim().toUpperCase();
-            if (nome && cmp && nome !== cmp) continue;
+        const num = normalizePresenceCode(r[0]);
+        const nome = normalizePresenceName(r[1]);
+        if (num === targetCode) {
+          if (targetName && nome) {
+            const sameName = nome === targetName;
+            const partialName = nome.includes(targetName) || targetName.includes(nome);
+            if (!sameName && !partialName) continue;
           }
           if (i === 0) dia1 = true;
           if (i === 1) dia2 = true;
@@ -640,4 +659,3 @@ export async function getVoteResults(voteId) {
     stats,
   };
 }
-
