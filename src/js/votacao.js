@@ -1215,6 +1215,7 @@
       const maxItems = opts.maxItems || 12;
       const minChars = opts.minChars || 0;
       const emptyMessage = opts.emptyMessage || '';
+      const onSelect = typeof opts.onSelect === 'function' ? opts.onSelect : null;
       const wrapper = input.closest('.vote-field') || input.parentElement;
       if (!wrapper) return null;
 
@@ -1280,6 +1281,7 @@
       const selectItem = (value) => {
         input.value = value;
         input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (onSelect) onSelect(value);
         closeMenu();
       };
 
@@ -1386,6 +1388,31 @@
       row.dataset.regionKey = regionKey;
       row.dataset.proGestao = proValue ? String(proValue) : '';
       return { regionKey, proGestao: proValue };
+    };
+
+    const resetMunicipioOption = (row) => {
+      if (!row) return;
+      const cityInput = row.querySelector('.vote-option-city');
+      const regionInput = row.querySelector('.vote-option-region');
+      const proInput = row.querySelector('.vote-option-progestao');
+      if (cityInput) cityInput.value = '';
+      if (regionInput) regionInput.value = '';
+      if (proInput) proInput.value = '';
+      setConfirmState(row, false);
+      setFlagPreview(row, null);
+      row.dataset.flagFound = '0';
+      row.dataset.regionKey = '';
+      row.dataset.proGestao = '';
+    };
+
+    const setMunicipioFieldState = (row) => {
+      if (!row) return;
+      const cityInput = row.querySelector('.vote-option-city');
+      const ufInput = row.querySelector('.vote-option-uf');
+      if (!cityInput || !ufInput) return;
+      const hasUf = !!String(ufInput.value || '').trim();
+      cityInput.disabled = !hasUf;
+      cityInput.placeholder = hasUf ? 'Município' : 'Selecione a UF primeiro';
     };
 
     const resolveStateFlagUrl = (uf) => {
@@ -1519,16 +1546,52 @@
         const cityAuto = createAutocomplete(
           cityInput,
           () => getCitiesByUf(ufInput?.value),
-          { maxItems: 12, emptyMessage: 'Selecione uma UF' }
+          {
+            maxItems: 12,
+            minChars: 1,
+            emptyMessage: 'Selecione uma UF',
+            onSelect: () => {
+              updateFlagFromInputs(wrap);
+            },
+          }
         );
         if (ufInput) {
           const syncCity = () => {
-            if (cityInput) cityInput.value = '';
+            resetMunicipioOption(wrap);
+            setMunicipioFieldState(wrap);
             cityAuto?.refresh();
           };
           ufInput.addEventListener('input', syncCity);
           ufInput.addEventListener('change', syncCity);
         }
+        if (cityInput) {
+          cityInput.addEventListener('focus', () => {
+            setMunicipioFieldState(wrap);
+          });
+          cityInput.addEventListener('blur', async () => {
+            const currentCity = String(cityInput.value || '').trim();
+            const currentUf = String(ufInput?.value || '').trim().toUpperCase();
+            if (!currentCity) {
+              resetMunicipioOption(wrap);
+              setMunicipioFieldState(wrap);
+              return;
+            }
+            if (!currentUf) {
+              resetMunicipioOption(wrap);
+              setMunicipioFieldState(wrap);
+              return;
+            }
+            const exists = await cityExistsInUf(currentCity, currentUf);
+            if (!exists) {
+              cityInput.value = '';
+              resetMunicipioOption(wrap);
+              setMunicipioFieldState(wrap);
+              return;
+            }
+            updateFlagFromInputs(wrap);
+          });
+        }
+        setMunicipioFieldState(wrap);
         if (city && uf) {
           updateFlagFromInputs(wrap);
         }
@@ -1871,6 +1934,7 @@
         row.dataset.flagFound = '0';
         row.dataset.regionKey = '';
         row.dataset.proGestao = '';
+        setMunicipioFieldState(row);
         return;
       }
 
@@ -1922,12 +1986,16 @@
         const row = target.closest('.vote-option-input');
         if (!row) return;
         if (row.classList.contains('is-confirmed')) setConfirmState(row, false);
+        if (target.classList.contains('vote-option-uf')) {
+          setMunicipioFieldState(row);
+        }
         if (target.classList.contains('vote-option-city')) {
           const ufInput = row.querySelector('.vote-option-uf');
           const parsed = parseCityUfFromText(target.value);
           if (parsed?.uf && ufInput) {
             target.value = parsed.city || '';
             ufInput.value = parsed.uf.toUpperCase();
+            setMunicipioFieldState(row);
           }
         }
         if (isMunicipiosMode()) {
