@@ -827,6 +827,9 @@ body.vote-admin-page.vote-module-bg::before{
   margin:20px auto 0;
   margin-bottom:28rem;
 }
+#voteModules.vote-public-section{
+  padding-top:72px;
+}
 .vote-form-modal{
   border-radius:20px;
   border:1px solid rgba(11,77,168,.18);
@@ -1067,6 +1070,9 @@ body.vote-admin-page.vote-module-bg::before{
   .vote-public-section{
     margin-top:16px;
   }
+  #voteModules.vote-public-section{
+    padding-top:88px;
+  }
   .vote-public-hero{
     padding:16px 18px;
   }
@@ -1078,9 +1084,9 @@ body.vote-admin-page.vote-module-bg::before{
     padding:14px;
   }
   .vote-user-menu{
-    top:auto;
+    top:12px;
     right:12px;
-    bottom:12px;
+    bottom:auto;
     left:auto;
     z-index:1400;
   }

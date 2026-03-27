@@ -32,6 +32,7 @@ const THEMES = [
   { id: "comite-compensacao", name: "COMITÊ DA COMPENSAÇÃO PREVIDENCIÁRIA", title: "Comitê da compensação previdenciária" },
   { id: "certificacao-profissional", name: "CERTIFICAÇÃO PROFISSIONAL", title: "Certificação profissional" },
   { id: "pro-gestao", name: "PRÓ GESTÃO", title: "Pró Gestão" },
+  { id: "comissao-copajure", name: "COMISSÃO DO COPAJURE", title: "Comissão do COPAJURE" },
 ];
 
 /* ===== cache leve em mem�ria ===== */

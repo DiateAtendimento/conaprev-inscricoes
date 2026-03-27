@@ -36,7 +36,21 @@
     { id: 'comite-compensacao', name: 'COMITÊ DA COMPENSACÃO PREVIDENCIÁRIA', title: 'Comitê da compensação previdenciária', icon: 'bi-shield-check' },
     { id: 'certificacao-profissional', name: 'CERTIFICAÇÃO PROFISSIONAL', title: 'Certificação profissional', icon: 'bi-award' },
     { id: 'pro-gestao', name: 'PRÓ GESTÃO', title: 'Pró Gestão', icon: 'bi-patch-check' },
+    { id: 'comissao-copajure', name: 'COMISSÃO DO COPAJURE', title: 'Comissão do COPAJURE', icon: 'bi-diagram-3' },
   ];
+
+  const mergeKnownThemes = (themes = []) => {
+    const incoming = Array.isArray(themes) ? themes : [];
+    const byId = new Map(incoming.map((theme) => [theme?.id, theme]));
+    return THEMES.map((theme) => ({
+      ...theme,
+      ...(byId.get(theme.id) || {}),
+      id: theme.id,
+      name: (byId.get(theme.id) || {}).name || theme.name,
+      title: (byId.get(theme.id) || {}).title || theme.title,
+      active: Boolean((byId.get(theme.id) || {}).active),
+    }));
+  };
 
   const REGION_IMAGE_DIR = '/imagens/membros-rotat-mun';
   const REGION_IMAGE_DEFAULT = `${REGION_IMAGE_DIR}/PADRAO.svg`;
@@ -527,7 +541,7 @@
             throw new Error('Falha ao carregar temas');
           }
           const data = await res.json();
-          adminThemesCache = Array.isArray(data) ? data : [];
+          adminThemesCache = mergeKnownThemes(Array.isArray(data) ? data : []);
           voteLog('info', 'Admin: temas carregados com sucesso', {
             reason,
             total: adminThemesCache.length,
@@ -880,8 +894,6 @@
     const msgLink = document.getElementById('voteCreateLink');
     const successModalEl = document.getElementById('voteCreateSuccessModal');
     const successModalLink = document.getElementById('voteCreateModalLink');
-    const typeModalEl = document.getElementById('voteTypeModal');
-
     if (!form || !builder || !titleInput) return;
 
     const getModal = (root, opts = { backdrop: 'static', keyboard: true }) => {
@@ -889,7 +901,6 @@
       return bootstrap.Modal.getOrCreateInstance(root, opts);
     };
     const successModal = getModal(successModalEl);
-    const typeModal = getModal(typeModalEl, { backdrop: 'static', keyboard: false });
     const proGestaoModalEl = document.getElementById('voteProGestaoModal');
     const proGestaoModal = getModal(proGestaoModalEl, { backdrop: 'static', keyboard: false });
     const proGestaoFormModalEl = document.getElementById('voteProGestaoFormModal');
@@ -899,13 +910,15 @@
     const proGestaoTitle = document.getElementById('voteProGestaoTitle');
     const proGestaoPlaceholder = document.getElementById('voteProGestaoPlaceholder');
 
+    const isStructuredSubmoduleTheme = (id) => id === 'pro-gestao' || id === 'comissao-copajure';
+
     const getSearchParam = (name) => new URLSearchParams(window.location.search).get(name);
     const editId = getSearchParam('edit');
     const themeId = getSearchParam('tema');
 
     let currentVote = null;
     let isEdit = false;
-    let isProGestao = themeId === 'pro-gestao';
+    let isProGestao = isStructuredSubmoduleTheme(themeId);
     let isRotativosTheme = themeId === 'membros-rotativos';
     let isSubmoduleTheme = !!themeId && themeId !== 'membros-rotativos';
     let suppressOptionsModalReopen = false;
@@ -1089,6 +1102,7 @@
       if (title.includes('comite da compensacao')) return 'comite-compensacao';
       if (title.includes('certificacao profissional')) return 'certificacao-profissional';
       if (title.includes('pro gestao')) return 'pro-gestao';
+      if (title.includes('comissao do copajure')) return 'comissao-copajure';
       return '';
     };
 
@@ -1676,7 +1690,7 @@
           const questions = getQuestionsFromVote(currentVote);
           const voteThemeId = resolveThemeIdFromVote(currentVote);
           if (voteThemeId) {
-            isProGestao = voteThemeId === 'pro-gestao';
+            isProGestao = isStructuredSubmoduleTheme(voteThemeId);
             isRotativosTheme = voteThemeId === 'membros-rotativos';
             isSubmoduleTheme = voteThemeId !== 'membros-rotativos';
           }
@@ -1816,15 +1830,7 @@
     });
 
     addQuestionBtn?.addEventListener('click', () => {
-      typeModal?.show();
-    });
-
-    typeModalEl?.addEventListener('click', (event) => {
-      const btn = event.target.closest('.vote-type-btn');
-      if (!btn) return;
-      const type = btn.dataset.type;
-      addQuestion(type);
-      typeModal?.hide();
+      addQuestion('options');
     });
 
     builder.addEventListener('click', async (event) => {
@@ -2464,7 +2470,7 @@
             return null;
           }
           const data = await res.json().catch(() => null);
-          themesCache = Array.isArray(data) ? data : [];
+          themesCache = mergeKnownThemes(Array.isArray(data) ? data : []);
           themesCacheAt = Date.now();
           voteLog('info', 'Temas carregados com sucesso', {
             reason,
@@ -2726,14 +2732,15 @@
 
     const getPublicVoteLabel = (vote) => {
       if (!vote) return '';
-      if (currentThemeId === 'pro-gestao') {
+      if (isStructuredSubmoduleTheme(currentThemeId)) {
         const mode = inferPublicProGestaoMode(vote.questions || vote.perguntas || vote.questoes || []);
+        const themeTitle = THEMES.find((theme) => theme.id === currentThemeId)?.title || 'Módulo';
         const labels = {
           estados: 'Estados',
           municipios: 'Municípios',
           associacoes: 'Associações',
         };
-        return `Pró-Gestão - ${labels[mode] || 'Municípios'}`;
+        return `${themeTitle} - ${labels[mode] || 'Municípios'}`;
       }
       return formatVoteTitle(vote.title || '');
     };
@@ -2992,9 +2999,9 @@
       });
       if (currentThemeId === 'membros-rotativos' || hasCity) {
         grid = await buildRotativosOptions(q);
-      } else if (currentThemeId === 'pro-gestao' && hasAssoc) {
+      } else if (isStructuredSubmoduleTheme(currentThemeId) && hasAssoc) {
         grid = buildAssocCards(q);
-      } else if (currentThemeId === 'pro-gestao' && hasUf) {
+      } else if (isStructuredSubmoduleTheme(currentThemeId) && hasUf) {
         grid = buildStateCards(q);
       } else {
         grid = buildSimpleCards(q);
