@@ -38,6 +38,19 @@
     { id: 'comissao-copajure', name: 'COMISSÃO DO COPAJURE', title: 'Comissão do COPAJURE', icon: 'bi-diagram-3' },
   ];
 
+  const mergeKnownThemes = (themes = []) => {
+    const incoming = Array.isArray(themes) ? themes : [];
+    const byId = new Map(incoming.map((theme) => [theme?.id, theme]));
+    return THEMES.map((theme) => ({
+      ...theme,
+      ...(byId.get(theme.id) || {}),
+      id: theme.id,
+      name: (byId.get(theme.id) || {}).name || theme.name,
+      title: (byId.get(theme.id) || {}).title || theme.title,
+      active: Boolean((byId.get(theme.id) || {}).active),
+    }));
+  };
+
   const REGION_IMAGE_DIR = '/imagens/membros-rotat-mun';
   const REGION_IMAGE_DEFAULT = `${REGION_IMAGE_DIR}/PADRAO.svg`;
   const STATE_FLAG_DIR = '/imagens/fotos-bandeiras-estados';
@@ -527,7 +540,7 @@
             throw new Error('Falha ao carregar temas');
           }
           const data = await res.json();
-          adminThemesCache = Array.isArray(data) ? data : [];
+          adminThemesCache = mergeKnownThemes(Array.isArray(data) ? data : []);
           voteLog('info', 'Admin: temas carregados com sucesso', {
             reason,
             total: adminThemesCache.length,
@@ -2456,7 +2469,7 @@
             return null;
           }
           const data = await res.json().catch(() => null);
-          themesCache = Array.isArray(data) ? data : [];
+          themesCache = mergeKnownThemes(Array.isArray(data) ? data : []);
           themesCacheAt = Date.now();
           voteLog('info', 'Temas carregados com sucesso', {
             reason,
