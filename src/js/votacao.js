@@ -1049,7 +1049,10 @@
         states.forEach((state) => {
           const key = String(state?.uf || '').trim().toUpperCase();
           if (!key) return;
-          lookup.set(key, (state?.cities || []).map((city) => String(city || '').trim()).filter(Boolean));
+          const rawCities = Array.isArray(state?.cities)
+            ? state.cities
+            : (state?.cities ? [state.cities] : []);
+          lookup.set(key, rawCities.map((city) => String(city || '').trim()).filter(Boolean));
         });
         return lookup;
       })();
@@ -1066,9 +1069,12 @@
       if (!stateUf) return true;
       const states = await getCityStates();
       const state = states.find((s) => String(s.uf || '').trim().toUpperCase() === stateUf);
-      if (!state || !Array.isArray(state.cities) || !state.cities.length) return true;
+      const cities = Array.isArray(state?.cities)
+        ? state.cities
+        : (state?.cities ? [state.cities] : []);
+      if (!state || !cities.length) return true;
       const target = normalizeToken(city);
-      return state.cities.some((name) => normalizeToken(name) === target);
+      return cities.some((name) => normalizeToken(name) === target);
     };
 
     const parseCityUfFromText = (text) => {
