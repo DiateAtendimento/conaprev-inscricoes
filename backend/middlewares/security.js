@@ -1,39 +1,44 @@
-﻿// backend/middlewares/security.js
 import helmet from "helmet";
 import hpp from "hpp";
 import rateLimit from "express-rate-limit";
 
-/**
- * Rate limiter �seguro� para produ��o.
- * � Usa cabeçalhos padrão (RFC)
- * � Evita herdar o trust proxy permissivo (j� est� em app.set('trust proxy', 1))
- * � Mensagem clara em caso de excesso
- */
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 min
-  max: 300,                 // ajuste conforme sua necessidade
-  standardHeaders: true,    // RateLimit-* headers
-  legacyHeaders: false,     // X-RateLimit-* desabilitados
-  message: {
-    error: "Too many requests, please try again later.",
-    code: "RATE_LIMITED",
-  },
-});
+const RATE_LIMIT_MESSAGE = {
+  error: "Too many requests, please try again later.",
+  code: "RATE_LIMITED",
+};
 
-/**
- * Helmet com defaults (pode ajustar CSP depois, se necesSório)
- */
 const helmetMw = helmet({
-  // exemplo: descomente se usar inline styles/scripts e quiser flexibilizar CSP depois
   // contentSecurityPolicy: false,
 });
 
-const security = [
+function createLimiter({ windowMs, max, skip }) {
+  return rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: RATE_LIMIT_MESSAGE,
+    skip,
+  });
+}
+
+// Mantem protecao geral da API, mas sem derrubar o fluxo publico de votacao.
+const generalLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  skip: (req) => req.path.startsWith("/api/votacao"),
+});
+
+// Fluxo de votacao com limite mais folgado para cenarios de evento/rede compartilhada.
+const votingLimiter = createLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 2500,
+});
+
+const securityBase = [
   helmetMw,
-  hpp(),     // protege contra HTTP Parameter Pollution
-  limiter,   // aplica rate limit global
+  hpp(),
 ];
 
-export default security;
-
-
+export { generalLimiter, votingLimiter };
+export default securityBase;
