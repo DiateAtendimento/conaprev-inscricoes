@@ -42,7 +42,7 @@
   function avisarLiberacao() {
     showMessage(
       "Certificado indisponível",
-      "O certificado estará disponível para emissão em <strong>01/04/2026 (Quarta-feira) às 14h</strong>, horário de Brasíia."
+      "O certificado estará disponível para emissão em <strong>03/04/2026 (Sexta-feira) às 14h</strong>, horário de Brasília."
     );
   }
 
@@ -57,9 +57,8 @@
 
     // Se j� estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
-      "https://script.google.com/macros/s/AKfycbxHY-MgQebJdM84uEs787u8nPz8suPz0SyitE_2yLdaopOPVAEt_2y76-gcURnIUcXHtA/exec";
+      "https://script.google.com/macros/s/AKfycbwTAT6QguyjB8TDEMrb8-iYkZCoRwfwTzA9OtQnKMS5Uccrb2d9vVBOIDE6gxFUYHpRpQ/exec";
   });
 })();
-
 
 
