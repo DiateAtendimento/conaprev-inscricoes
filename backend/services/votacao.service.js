@@ -777,10 +777,17 @@ export async function getVoteResults(voteId) {
     responses.forEach((resp) => {
       const ans = (resp.answers || []).find((a) => a.questionId === q.id);
       if (!ans) return;
+      const ids = Array.isArray(ans.optionIds) ? ans.optionIds : [];
+      if (ids.length) {
+        ids.forEach((id) => {
+          if (Object.prototype.hasOwnProperty.call(counts, id)) counts[id] += 1;
+        });
+        return;
+      }
       const texts = Array.isArray(ans.optionTexts) ? ans.optionTexts : [];
       texts.forEach((text) => {
         const opt = (q.options || []).find((o) => normalize(o.text) === normalize(cleanAnswerText(text)));
-        if (opt && counts.hasOwnProperty(opt.id)) counts[opt.id] += 1;
+        if (opt && Object.prototype.hasOwnProperty.call(counts, opt.id)) counts[opt.id] += 1;
       });
     });
     return { questionId: q.id, type: "options", counts };
