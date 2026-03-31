@@ -201,6 +201,51 @@
     return raw;
   };
 
+  const collectStructuredVoteEntriesShared = (items = []) => {
+    const list = Array.isArray(items) ? items : [items];
+    return list.flatMap((item) => {
+      const options = item?.options || item?.opcoes || item?.alternativas;
+      return Array.isArray(options) && options.length ? options : [item];
+    }).filter(Boolean);
+  };
+
+  const inferStructuredVoteModeShared = (items = []) => {
+    const entries = collectStructuredVoteEntriesShared(items);
+    const texts = entries.flatMap((entry) => [
+      entry?.text,
+      entry?.title,
+      entry?.titulo,
+      entry?.label,
+      entry?.associacao,
+      entry?.association,
+      entry?.city,
+      entry?.municipio,
+    ]).map((value) => String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+
+    if (
+      entries.some((entry) => entry?.associacao || entry?.association)
+      || texts.some((text) => text.includes('associac'))
+    ) {
+      return 'associacoes';
+    }
+
+    if (
+      entries.some((entry) => entry?.city || entry?.municipio)
+      || texts.some((text) => text.includes('municip'))
+    ) {
+      return 'municipios';
+    }
+
+    if (
+      entries.some((entry) => entry?.uf || (typeof entry?.text === 'string' && /^[A-Za-z]{2}$/.test(entry.text.trim())))
+      || texts.some((text) => text.includes('estado') || text.includes('uf'))
+    ) {
+      return 'estados';
+    }
+
+    return 'municipios';
+  };
+
   const resolveRegionImageUrl = (key) =>
     (key ? `${REGION_IMAGE_DIR}/REGIAO-${key}.png` : REGION_IMAGE_DEFAULT);
 
@@ -1140,52 +1185,7 @@
       );
     };
 
-    const collectStructuredVoteEntries = (items = []) => {
-      const list = Array.isArray(items) ? items : [items];
-      return list.flatMap((item) => {
-        const options = item?.options || item?.opcoes || item?.alternativas;
-        return Array.isArray(options) && options.length ? options : [item];
-      }).filter(Boolean);
-    };
-
-    const inferStructuredVoteMode = (items = []) => {
-      const entries = collectStructuredVoteEntries(items);
-      const texts = entries.flatMap((entry) => [
-        entry?.text,
-        entry?.title,
-        entry?.titulo,
-        entry?.label,
-        entry?.associacao,
-        entry?.association,
-        entry?.city,
-        entry?.municipio,
-      ]).map((value) => normalizeToken(value || ''));
-
-      if (
-        entries.some((entry) => entry?.associacao || entry?.association)
-        || texts.some((text) => text.includes('associac'))
-      ) {
-        return 'associacoes';
-      }
-
-      if (
-        entries.some((entry) => entry?.city || entry?.municipio)
-        || texts.some((text) => text.includes('municip'))
-      ) {
-        return 'municipios';
-      }
-
-      if (
-        entries.some((entry) => entry?.uf || (typeof entry?.text === 'string' && /^[A-Za-z]{2}$/.test(entry.text.trim())))
-        || texts.some((text) => text.includes('estado') || text.includes('uf'))
-      ) {
-        return 'estados';
-      }
-
-      return 'municipios';
-    };
-
-    const inferProGestaoMode = (questions = []) => inferStructuredVoteMode(questions);
+    const inferProGestaoMode = (questions = []) => inferStructuredVoteModeShared(questions);
 
     const ensureProGestaoIntro = () => {
       if (!isProGestao) {
@@ -2969,7 +2969,7 @@
       return currentVote.questions || currentVote.perguntas || currentVote.questoes || [];
     };
 
-    const inferPublicProGestaoMode = (questions = []) => inferStructuredVoteMode(questions);
+    const inferPublicProGestaoMode = (questions = []) => inferStructuredVoteModeShared(questions);
 
     const getPublicVoteLabel = (vote) => {
       if (!vote) return '';
