@@ -1140,15 +1140,52 @@
       );
     };
 
-    const inferProGestaoMode = (questions = []) => {
-      const options = (questions || []).flatMap((q) => q?.options || q?.opcoes || q?.alternativas || []);
-      if (options.some((opt) => opt?.associacao || opt?.association)) return 'associacoes';
-      if (options.some((opt) => opt?.city || opt?.municipio)) return 'municipios';
-      if (options.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())))) {
+    const collectStructuredVoteEntries = (items = []) => {
+      const list = Array.isArray(items) ? items : [items];
+      return list.flatMap((item) => {
+        const options = item?.options || item?.opcoes || item?.alternativas;
+        return Array.isArray(options) && options.length ? options : [item];
+      }).filter(Boolean);
+    };
+
+    const inferStructuredVoteMode = (items = []) => {
+      const entries = collectStructuredVoteEntries(items);
+      const texts = entries.flatMap((entry) => [
+        entry?.text,
+        entry?.title,
+        entry?.titulo,
+        entry?.label,
+        entry?.associacao,
+        entry?.association,
+        entry?.city,
+        entry?.municipio,
+      ]).map((value) => normalizeToken(value || ''));
+
+      if (
+        entries.some((entry) => entry?.associacao || entry?.association)
+        || texts.some((text) => text.includes('associac'))
+      ) {
+        return 'associacoes';
+      }
+
+      if (
+        entries.some((entry) => entry?.city || entry?.municipio)
+        || texts.some((text) => text.includes('municip'))
+      ) {
+        return 'municipios';
+      }
+
+      if (
+        entries.some((entry) => entry?.uf || (typeof entry?.text === 'string' && /^[A-Za-z]{2}$/.test(entry.text.trim())))
+        || texts.some((text) => text.includes('estado') || text.includes('uf'))
+      ) {
         return 'estados';
       }
+
       return 'municipios';
     };
+
+    const inferProGestaoMode = (questions = []) => inferStructuredVoteMode(questions);
 
     const ensureProGestaoIntro = () => {
       if (!isProGestao) {
@@ -1729,7 +1766,7 @@
       if (isOptions) {
         const optionsWrap = card.querySelector('.vote-options');
         if (isProGestao && !proGestaoMode) {
-          proGestaoMode = inferProGestaoMode(question.options || []);
+          proGestaoMode = inferProGestaoMode(question);
         }
         (question.options || []).forEach((opt) => optionsWrap.appendChild(createOptionEl(opt)));
         const limitType = card.querySelector('.vote-limit-type');
@@ -2932,15 +2969,7 @@
       return currentVote.questions || currentVote.perguntas || currentVote.questoes || [];
     };
 
-    const inferPublicProGestaoMode = (questions = []) => {
-      const options = (questions || []).flatMap((q) => q?.options || q?.opcoes || q?.alternativas || []);
-      if (options.some((opt) => opt?.associacao || opt?.association)) return 'associacoes';
-      if (options.some((opt) => opt?.city || opt?.municipio)) return 'municipios';
-      if (options.some((opt) => opt?.uf || (typeof opt?.text === 'string' && /^[A-Za-z]{2}$/.test(opt.text.trim())))) {
-        return 'estados';
-      }
-      return 'municipios';
-    };
+    const inferPublicProGestaoMode = (questions = []) => inferStructuredVoteMode(questions);
 
     const getPublicVoteLabel = (vote) => {
       if (!vote) return '';
