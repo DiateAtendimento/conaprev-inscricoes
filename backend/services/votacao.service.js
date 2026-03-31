@@ -71,6 +71,8 @@ function cleanAnswerText(value) {
     .replace(/\s+/g, " ");
 }
 
+const VOTE_META_MARKER = "__VOTE_META__";
+
 function resolveTheme(input) {
   const norm = normalize(input);
   return THEMES.find((t) => normalize(t.id) === norm || normalize(t.name) === norm) || null;
@@ -197,6 +199,7 @@ async function readVotacoesSheetCached() {
 function buildVoteRecord(validationUser, vote, answers, date, time, durationMs) {
   const temaLabel = String(vote.title || vote.tema || "").trim();
   return {
+    voteId: String(vote.id || "").trim(),
     temaLabel,
     row: [
       String(validationUser.numerodeinscricao || ""),
@@ -209,15 +212,48 @@ function buildVoteRecord(validationUser, vote, answers, date, time, durationMs) 
   };
 }
 
-function findExistingVoteRowIndex(rows, numeroInscricao, temaLabel) {
-  let existingRowIndex = -1;
+function parseStoredVoteMeta(storedValue) {
+  const raw = String(storedValue || "").trim();
+  if (!raw) return null;
+
+  const lines = raw.split("\n").map((line) => line.trim()).filter(Boolean);
+  const metaLine = [...lines].reverse().find((line) => line.startsWith(VOTE_META_MARKER));
+  if (metaLine) {
+    const payload = parseJSON(metaLine.slice(VOTE_META_MARKER.length).trim());
+    if (payload && typeof payload === "object") return payload;
+  }
+
+  const json = parseJSON(raw);
+  if (json && typeof json === "object") return json;
+  return null;
+}
+
+function findExistingVoteRowIndex(rows, numeroInscricao, voteId, temaLabel) {
+  const numeroTarget = String(numeroInscricao || "").trim();
+  const voteIdTarget = String(voteId || "").trim();
+  const temaTarget = String(temaLabel || "").trim();
+
+  let exactVoteRowIndex = -1;
+  const legacyTitleMatches = [];
+
   rows.forEach((r, idx) => {
     const numero = String(r[0] || "").trim();
+    if (numero !== numeroTarget) return;
+
     const tema = String(r[4] || "").trim();
-    if (numero !== String(numeroInscricao || "").trim()) return;
-    if (tema === String(temaLabel || "").trim()) existingRowIndex = idx + 2;
+    const meta = parseStoredVoteMeta(r[5]);
+    const storedVoteId = String(meta?.voteId || "").trim();
+
+    if (voteIdTarget && storedVoteId && storedVoteId === voteIdTarget) {
+      exactVoteRowIndex = idx + 2;
+      return;
+    }
+    if (!storedVoteId && tema === temaTarget) legacyTitleMatches.push(idx + 2);
   });
-  return existingRowIndex;
+
+  if (exactVoteRowIndex > 1) return exactVoteRowIndex;
+  if (legacyTitleMatches.length === 1) return legacyTitleMatches[0];
+  return -1;
 }
 
 function extractAnswersFromStoredValue(storedValue, vote) {
@@ -225,7 +261,7 @@ function extractAnswersFromStoredValue(storedValue, vote) {
   let answers = parsed.answers || [];
 
   if (!answers.length) {
-    const json = parseJSON(storedValue);
+    const json = parseStoredVoteMeta(storedValue);
     if (json && json.answers) {
       answers = json.answers.map((ans) => {
         if (ans.type === "text") {
@@ -266,7 +302,12 @@ function formatResponsesText(vote, answers = [], durationMs = 0) {
     return `${index + 1}. ${q.text || "Pergunta"}\nResposta: ${labels.length ? labels.join(", ") : "-"}`;
   }).join("\n\n");
   const secs = Math.max(0, Math.round((Number(durationMs || 0) || 0) / 1000));
-  return `${body}\n\nTempo de resposta (s): ${secs}`;
+  const meta = JSON.stringify({
+    voteId: String(vote?.id || ""),
+    answers: answers || [],
+    durationMs: Number(durationMs || 0) || 0,
+  });
+  return `${body}\n\nTempo de resposta (s): ${secs}\n${VOTE_META_MARKER} ${meta}`;
 }
 
 function parseResponsesText(text, vote) {
@@ -550,6 +591,7 @@ export async function getUserResponseForVote(vote, cpf) {
   const validation = await validateVoter(cpf).catch(() => null);
   if (!validation?.ok || !validation.user?.numerodeinscricao) return null;
   const temaLabel = String(vote.title || vote.tema || "").trim();
+  const voteId = String(vote.id || "").trim();
   const { rows } = await readVotesSheetCached();
 
   let found = null;
@@ -557,8 +599,15 @@ export async function getUserResponseForVote(vote, cpf) {
     const numero = String(r[0] || "").trim();
     const tema = String(r[4] || "").trim();
     if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
-    if (tema !== temaLabel) return;
-    found = r[5];
+    const meta = parseStoredVoteMeta(r[5]);
+    const storedVoteId = String(meta?.voteId || "").trim();
+    if (voteId && storedVoteId) {
+      if (storedVoteId !== voteId) return;
+      found = r[5];
+      return;
+    }
+    if (storedVoteId) return;
+    if (tema === temaLabel && !found) found = r[5];
   });
   if (!found) return null;
 
@@ -573,18 +622,28 @@ export async function getUserResponsesForVotes(votes, cpf) {
   if (!validation?.ok || !validation.user?.numerodeinscricao) return new Map();
 
   const { rows } = await readVotesSheetCached();
-  const byTema = new Map();
+  const byVoteId = new Map();
+  const legacyByTema = new Map();
   rows.forEach((r) => {
     const numero = String(r[0] || "").trim();
     const tema = String(r[4] || "").trim();
     if (numero !== String(validation.user.numerodeinscricao || "").trim()) return;
-    byTema.set(tema, r[5]);
+    const meta = parseStoredVoteMeta(r[5]);
+    const storedVoteId = String(meta?.voteId || "").trim();
+    if (storedVoteId) {
+      byVoteId.set(storedVoteId, r[5]);
+      return;
+    }
+    const current = legacyByTema.get(tema) || [];
+    current.push(r[5]);
+    legacyByTema.set(tema, current);
   });
 
   const results = new Map();
   list.forEach((vote) => {
+    const voteId = String(vote.id || "").trim();
     const temaLabel = String(vote.title || vote.tema || "").trim();
-    const found = byTema.get(temaLabel);
+    const found = byVoteId.get(voteId) || ((legacyByTema.get(temaLabel) || []).length === 1 ? legacyByTema.get(temaLabel)[0] : null);
     if (!found) return;
     results.set(vote.id, extractAnswersFromStoredValue(found, vote));
   });
@@ -622,7 +681,7 @@ export async function submitVotesBatch({ cpf, votes }) {
   payloadVotes.forEach((item, index) => {
     const vote = loadedVotes[index];
     const record = buildVoteRecord(validation.user, vote, item.answers || [], date, time, item.durationMs);
-    const existingRowIndex = findExistingVoteRowIndex(rows, validation.user.numerodeinscricao, record.temaLabel);
+    const existingRowIndex = findExistingVoteRowIndex(rows, validation.user.numerodeinscricao, record.voteId, record.temaLabel);
     if (existingRowIndex > 1) {
       updates.push({
         range: `${SHEET_VOTOS}!A${existingRowIndex}:${lastColLetter(VOTOS_HEADERS)}${existingRowIndex}`,
@@ -669,6 +728,21 @@ export async function getVoteResults(voteId) {
   const temaLabel = String(vote.title || vote.tema || "").trim();
   rows.forEach((r) => {
     const tema = String(r[4] || "").trim();
+    const meta = parseStoredVoteMeta(r[5]);
+    const storedVoteId = String(meta?.voteId || "").trim();
+
+    if (storedVoteId) {
+      if (storedVoteId !== String(voteId)) return;
+      const extracted = extractAnswersFromStoredValue(r[5], vote);
+      if (extracted.answers.length) {
+        responses.push({
+          answers: extracted.answers,
+          durationMs: Number(meta?.durationMs || 0) || 0,
+        });
+      }
+      return;
+    }
+
     if (tema !== temaLabel) return;
     const parsed = parseResponsesText(r[5], vote);
     if (parsed.answers.length) {

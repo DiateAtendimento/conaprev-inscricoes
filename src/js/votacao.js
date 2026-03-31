@@ -524,6 +524,15 @@
       }).join('');
     };
 
+    const refreshAdminThemeState = async (reason) => {
+      const themes = await fetchThemes({ force: true, reason });
+      renderThemeGrid(themes);
+      if (!selectedTheme) return themes;
+      selectedTheme = THEMES.find((t) => t.id === selectedTheme.id) || selectedTheme;
+      if (elThemeTitle && selectedTheme) elThemeTitle.textContent = selectedTheme.name;
+      return themes;
+    };
+
     const fetchThemes = async ({ force = false, reason = 'admin' } = {}) => {
       if (!force && adminThemesCache) {
         voteLog('info', 'Admin: temas carregados do cache', { reason, total: adminThemesCache.length });
@@ -837,6 +846,7 @@
           adminThemesCache = null;
           if (selectedTheme?.id) adminVotesCache.delete(selectedTheme.id);
           voteLog('info', 'Admin: votação excluída', { voteId, themeId: selectedTheme?.id || '' });
+          await refreshAdminThemeState('delete');
           const votes = await fetchVotes(selectedTheme?.id || '', { force: true, reason: 'delete' });
           renderList(votes);
         }
@@ -849,6 +859,7 @@
           adminThemesCache = null;
           if (selectedTheme?.id) adminVotesCache.delete(selectedTheme.id);
           voteLog('info', 'Admin: status de votação alterado', { voteId, ativo: !active, themeId: selectedTheme?.id || '' });
+          await refreshAdminThemeState('toggle');
           const votes = await fetchVotes(selectedTheme?.id || '', { force: true, reason: 'toggle' });
           renderList(votes);
         }
