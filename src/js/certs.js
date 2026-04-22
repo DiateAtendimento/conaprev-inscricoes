@@ -57,8 +57,7 @@
 
     // Se j� estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
-      "https://script.google.com/macros/s/AKfycbwTAT6QguyjB8TDEMrb8-iYkZCoRwfwTzA9OtQnKMS5Uccrb2d9vVBOIDE6gxFUYHpRpQ/exec";
+      "https://script.google.com/macros/s/AKfycbyadfGID9li6Hk5-M0_GOnuAPapCApYBLEa7LXdRnk-frEha1BOc087O-TJztKh7Peq7w/exec";
   });
 })();
-
 
