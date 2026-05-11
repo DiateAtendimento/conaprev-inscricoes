@@ -8,7 +8,7 @@ const EVENTO = window.EVENTO || { INICIO: '2025-09-22T08:00:00-03:00' };
  *  ============================= */
 const MAINTENANCE_MODE = true;          // todos veem o gate (a menos que usem o preview)
 const RELEASE_AT       = EVENTO.INICIO; // data/hora de liberAção
-const PREVIEW_TOKEN    = 'CONAPREV84_DEV'; // ?preview=CONAPREV84_DEV (salva cookie)
+const PREVIEW_TOKEN    = 'CONAPREV85_DEV'; // ?preview=CONAPREV85_DEV (salva cookie)
 
 /* Helpers cookie/query */
 function setCookie(name, value, days = 7) {
@@ -83,7 +83,7 @@ function mountGate() {
         <div class="col-12 col-lg-6">
           <h1 class="fw-semibold" style="font-size:clamp(24px,3vw,36px);line-height:1.2;">
             Aguarde, falta pouco para a liberação das inscrições da
-            <strong>84ª Reunião Ordinária do CONAPREV</strong>.
+            <strong>85ª Reunião Ordinária do CONAPREV</strong>.
           </h1>
           <p class="text-secondary mt-2">
             Abertura prevista para <strong>${pad(release.getDate())}/${pad(release.getMonth() + 1)}/${release.getFullYear()}</strong>
@@ -148,5 +148,4 @@ function mountGate() {
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
-
 

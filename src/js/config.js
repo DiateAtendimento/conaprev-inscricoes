@@ -2,9 +2,9 @@
 (() => {
   // Janela de liberAção das Inscrições (usado pelo gate)
   window.EVENTO = {
-    INICIO: '2026-03-30T08:00:00-03:00',
-    FIM:    '2026-13-31T13:00:00-03:00', // FIM > INICIO
-    LOCAL:  'Brasília/DF',
+    INICIO: '2026-05-18T00:00:00-03:00',
+    FIM:    '2026-07-17T23:59:59-03:00',
+    LOCAL:  'Gramado/RS',
   };
 
   // Base da API (Render em produ��o; localhost no dev)
@@ -47,5 +47,4 @@
   // (Opcional) Auth global
   // window.AUTH_TOKEN = '...';
 })();
-
 
