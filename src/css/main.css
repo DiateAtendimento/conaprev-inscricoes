@@ -1288,6 +1288,21 @@ body.gate-active .topbar{ display:none !important; }
   grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
   gap:18px;
 }
+.mi-gallery-grid-wrap{
+  margin-top:8px;
+}
+.mi-gallery-grid-wrap.is-scrollable{
+  max-height:320px;
+  overflow-y:auto;
+  padding-right:8px;
+}
+.mi-gallery-grid-wrap.is-scrollable::-webkit-scrollbar{
+  width:8px;
+}
+.mi-gallery-grid-wrap.is-scrollable::-webkit-scrollbar-thumb{
+  background:rgba(15,23,42,.22);
+  border-radius:999px;
+}
 .mi-staff-card{
   text-align:center;
 }

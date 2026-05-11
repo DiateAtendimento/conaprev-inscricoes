@@ -15,9 +15,7 @@
     atualizar: `${API}/api/inscricoes/atualizar`,
     confirmar: `${API}/api/inscricoes/confirmar`,
     cancelar:  `${API}/api/inscricoes/cancelar`,
-    assentosConselheiros: `${API}/api/inscricoes/assentos/conselheiros`,
-    staffs: `${API}/api/inscricoes/staffs`,
-    palestrantes: `${API}/api/inscricoes/palestrantes`
+    galeria: `${API}/api/inscricoes/galeria`
   };
 
   async function apiCriar(payload){
@@ -241,380 +239,148 @@
       }
     }
 
-    // Mapa de assentos
-    const seatsWrap = document.createElement('div');
-    seatsWrap.id = 'miSeatsWrap';
-    seatsWrap.className = 'mt-4 d-none';
-    seatsWrap.innerHTML = `
-      <div class="fw-semibold mb-2">Conselheiros inscritos</div>
-      <div class="mi-seat-map">
-        <div class="mi-seat-map__legend mb-2">
-          <span class="badge mi-seat-badge available">Livre</span>
-          <span class="badge mi-seat-badge occupied">Ocupado</span>
-        </div>
-        <div id="miSeatsMsg" class="small text-muted"></div>
-        <div class="mi-seat-map__body">
-          <div class="mi-seat-screen" aria-hidden="true">
-            <span>Tela</span>
-          </div>
-          <div class="mi-seat-grid-wrap" aria-label="Mapa de assentos em espinha de peixe">
-            <div id="miSeatGrid" class="mi-seat-grid"></div>
-          </div>
-        </div>
+    const galleryWrap = document.createElement('div');
+    galleryWrap.id = 'miGalleryWrap';
+    galleryWrap.className = 'mt-4 d-none';
+    galleryWrap.innerHTML = `
+      <div id="miGalleryTitle" class="fw-semibold mb-2">Inscritos</div>
+      <div id="miGalleryMsg" class="small text-muted"></div>
+      <div id="miGalleryGridWrap" class="mi-gallery-grid-wrap">
+        <div id="miGalleryGrid" class="mi-staff-grid"></div>
       </div>
     `;
-    pane.appendChild(seatsWrap);
-
-    const staffWrap = document.createElement('div');
-    staffWrap.id = 'miStaffWrap';
-    staffWrap.className = 'mt-4 d-none';
-    staffWrap.innerHTML = `
-      <div class="fw-semibold mb-2">Equipe Staff</div>
-      <div id="miStaffMsg" class="small text-muted"></div>
-      <div id="miStaffGrid" class="mi-staff-grid"></div>
-    `;
-    pane.appendChild(staffWrap);
-
-    const speakerWrap = document.createElement('div');
-    speakerWrap.id = 'miSpeakerWrap';
-    speakerWrap.className = 'mt-4 d-none';
-    speakerWrap.innerHTML = `
-      <div class="fw-semibold mb-2">Palestrantes inscritos</div>
-      <div id="miSpeakerMsg" class="small text-muted"></div>
-      <div id="miSpeakerGrid" class="mi-speaker-grid"></div>
-    `;
-    pane.appendChild(speakerWrap);
+    pane.appendChild(galleryWrap);
 
     pane.dataset.enhanced = '1';
     btnSearch.addEventListener('click', onPesquisarCpf);
   }
 
-  const SEAT_CACHE_KEY = 'mi:seat-cache:conselheiros';
-  const SEAT_CACHE_TTL_MS = 1000 * 60 * 30; // 30 min
+  function setGalleryMsg(text, tone = 'text-muted') {
+    const el = document.getElementById('miGalleryMsg');
+    if (!el) return;
+    el.textContent = text || '';
+    el.className = `small ${tone}`;
+  }
 
-  function readSeatCache() {
-    try {
-      const raw = localStorage.getItem(SEAT_CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.data) || !parsed.ts) return null;
-      if (Date.now() - parsed.ts > SEAT_CACHE_TTL_MS) return null;
-      return parsed.data;
-    } catch {
-      return null;
+  function getGalleryTitle(perfil) {
+    const labels = {
+      Conselheiro: 'Conselheiros inscritos',
+      CNRPPS: 'CNRPPS inscritos',
+      Palestrante: 'Palestrantes inscritos',
+      Staff: 'Staff inscrito',
+      Convidado: 'Convidados inscritos',
+      Apoiador: 'Apoiadores inscritos',
+      Patrocinador: 'Patrocinadores inscritos',
+      COPAJURE: 'COPAJURE inscrito',
+    };
+    return labels[String(perfil || '').trim()] || 'Inscritos';
+  }
+
+  function getDefaultGalleryPhoto(perfil) {
+    if (perfil === 'Staff') return DEFAULT_STAFF_PHOTO_URL;
+    if (perfil === 'Palestrante') return DEFAULT_SPEAKER_PHOTO_URL;
+    return DEFAULT_PHOTO_URL;
+  }
+
+  async function resolveGalleryPhotoUrl(perfil, nome) {
+    if (perfil === 'Staff') return resolveStaffPhotoUrlByName(nome);
+    if (perfil === 'Palestrante') return resolveSpeakerPhotoUrlByName(nome);
+    return resolvePhotoUrlByName(nome);
+  }
+
+  function attachGalleryFallback(img, perfil, nome, initialUrl) {
+    if (!img || !nome) return;
+    if (perfil === 'Staff') {
+      attachStaffFallback(img, nome, initialUrl);
+      return;
     }
+    if (perfil === 'Palestrante') {
+      attachSpeakerFallback(img, nome, initialUrl);
+      return;
+    }
+    img.onerror = () => {
+      if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
+    };
   }
 
-  function writeSeatCache(data) {
-    try {
-      localStorage.setItem(SEAT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
-    } catch {}
+  function buildGalleryMeta(item) {
+    const sigla = String(item?.sigladaentidade || '').trim();
+    const ufSigla = String(item?.ufsigla || '').trim();
+    return sigla || ufSigla;
   }
 
-  function setSeatsMsg(text, tone = 'text-muted') {
-    const el = document.getElementById('miSeatsMsg');
-    if (!el) return;
-    el.textContent = text || '';
-    el.className = `small ${tone}`;
-  }
+  async function renderProfileGallery(list = []) {
+    const grid = $('#miGalleryGrid');
+    const gridWrap = $('#miGalleryGridWrap');
+    if (!grid || !gridWrap) return;
 
-  function setStaffMsg(text, tone = 'text-muted') {
-    const el = document.getElementById('miStaffMsg');
-    if (!el) return;
-    el.textContent = text || '';
-    el.className = `small ${tone}`;
-  }
+    grid.innerHTML = '';
+    gridWrap.classList.toggle('is-scrollable', list.length > 14);
 
-  function setSpeakerMsg(text, tone = 'text-muted') {
-    const el = document.getElementById('miSpeakerMsg');
-    if (!el) return;
-    el.textContent = text || '';
-    el.className = `small ${tone}`;
-  }
+    list.forEach((item) => {
+      const nome = String(item?.nome || '').trim();
+      const codigo = String(item?.numerodeinscricao || '').trim();
+      const meta = buildGalleryMeta(item);
+      const gender = guessGenderByName(nome);
+      const card = document.createElement('div');
+      card.className = `mi-staff-card ${gender === 'female' ? 'is-female' : 'is-male'}`;
+      card.innerHTML = `
+        <div class="mi-staff-photo">
+          <img alt="Foto de ${escapeHtml(nome || 'Inscrito')}" src="${escapeHtml(getDefaultGalleryPhoto(state.perfil))}">
+        </div>
+        <div class="mi-staff-name">${escapeHtml(nome || 'Inscrito')}</div>
+        ${meta ? `<div class="mi-staff-entity">${escapeHtml(meta)}</div>` : ''}
+        ${codigo ? `<div class="mi-staff-code">${escapeHtml(codigo)}</div>` : ''}
+      `;
+      grid.appendChild(card);
 
-  function buildOccMap(data) {
-    const occ = {};
-    (data || []).forEach(s => {
-      const seatNum = Number(s?.seat);
-      if (!Number.isFinite(seatNum)) return;
-      occ[seatNum] = s?.name || true;
+      const img = card.querySelector('img');
+      if (!img || !nome) return;
+      resolveGalleryPhotoUrl(state.perfil, nome).then((url) => {
+        const safeUrl = url || getDefaultGalleryPhoto(state.perfil);
+        img.src = safeUrl;
+        attachGalleryFallback(img, state.perfil, nome, safeUrl);
+      });
     });
-    return occ;
   }
 
   async function renderSeats() {
-    const wrap = $('#miSeatsWrap');
-    const grid = $('#miSeatGrid');
-    const staffWrap = $('#miStaffWrap');
-    const speakerWrap = $('#miSpeakerWrap');
-    if (!wrap || !grid) return;
-    if (state.perfil !== 'Conselheiro') {
+    const wrap = $('#miGalleryWrap');
+    const title = $('#miGalleryTitle');
+    const grid = $('#miGalleryGrid');
+    const gridWrap = $('#miGalleryGridWrap');
+    if (!wrap || !title || !grid || !gridWrap) return;
+
+    if (!state.perfil) {
       wrap.classList.add('d-none');
-      if (state.perfil === 'Staff') {
-        staffWrap?.classList.remove('d-none');
-        speakerWrap?.classList.add('d-none');
-        await renderStaffGallery();
-      } else if (state.perfil === 'Palestrante') {
-        speakerWrap?.classList.remove('d-none');
-        staffWrap?.classList.add('d-none');
-        await renderSpeakersGallery();
-      } else {
-        staffWrap?.classList.add('d-none');
-        speakerWrap?.classList.add('d-none');
-      }
       return;
     }
-    staffWrap?.classList.add('d-none');
-    speakerWrap?.classList.add('d-none');
+
     wrap.classList.remove('d-none');
+    title.textContent = getGalleryTitle(state.perfil);
     grid.innerHTML = '';
+    gridWrap.classList.remove('is-scrollable');
 
     try {
-      setSeatsMsg('Carregando mapa de assentos...', 'text-muted');
-      openLottie('seats', 'Carregando mapa de assentoSó');
-      const res = await fetch(ROUTES.assentosConselheiros, { method: 'GET' });
+      setGalleryMsg('Carregando inscritos...', 'text-muted');
+      openLottie('seats', 'Carregando inscritos');
+      const url = `${ROUTES.galeria}?perfil=${encodeURIComponent(state.perfil)}`;
+      const res = await fetch(url, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
-      const normalized = Array.isArray(data) ? data : [];
+      const list = Array.isArray(data) ? data : [];
 
-      if (normalized.length > 0) {
-        writeSeatCache(normalized);
-        setSeatsMsg('', 'text-muted');
-        renderFishboneSeats(buildOccMap(normalized));
+      if (!list.length) {
+        setGalleryMsg('Nenhuma inscrição encontrada até o momento.', 'text-muted');
         return;
       }
 
-      const cached = readSeatCache();
-      if (cached?.length) {
-        setSeatsMsg('Sem dados ao vivo; usando dados salvos recentemente.', 'text-warning');
-        renderFishboneSeats(buildOccMap(cached));
-        return;
-      }
-
-      setSeatsMsg('Nenhum assento ocupado no momento.', 'text-muted');
-      renderFishboneSeats({});
+      setGalleryMsg('', 'text-muted');
+      await renderProfileGallery(list);
     } catch {
-      const cached = readSeatCache();
-      if (cached?.length) {
-        setSeatsMsg('Falha ao carregar ao vivo; usando dados salvos recentemente.', 'text-warning');
-        renderFishboneSeats(buildOccMap(cached));
-        return;
-      }
-      setSeatsMsg('Falha ao carregar os assentos.', 'text-danger');
-      renderFishboneSeats({});
+      setGalleryMsg('Falha ao carregar os inscritos.', 'text-danger');
     } finally {
       closeLottie();
     }
-  }
-
-  function renderFishboneSeats(occ = {}) {
-    const grid = document.getElementById('miSeatGrid');
-    if (!grid) return;
-
-    grid.innerHTML = '';
-
-    // Dois blocos retangulares (como no mock)
-    const ROWS = 6;
-    const COLS = 6;
-    const isMobile = window.matchMedia && window.matchMedia('(max-width: 576px)').matches;
-    const GAP_COLS = isMobile ? 1 : 3; // corredor central em colunas vazias
-    const TOTAL = 62;
-
-    const pos = [];
-    const addPos = (n, row, col) => pos.push({ n, row, col });
-
-    let seat = 1;
-    const leftStartCol = 1;
-    const rightStartCol = 1 + COLS + GAP_COLS;
-
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (seat > TOTAL) break;
-        addPos(seat, 1 + r, leftStartCol + c);
-        seat++;
-      }
-      for (let c = 0; c < COLS; c++) {
-        if (seat > TOTAL) break;
-        addPos(seat, 1 + r, rightStartCol + c);
-        seat++;
-      }
-      if (seat > TOTAL) break;
-    }
-
-    grid.style.setProperty('--grid-rows', ROWS);
-    grid.style.setProperty('--grid-cols', COLS * 2 + GAP_COLS);
-
-    const PHOTO_DIR = PHOTO_DIR_LOCAL;
-    const PHOTO_MANIFEST_URL = `${PHOTO_DIR_LOCAL}/manifest.json`;
-    const DEFAULT_PHOTO_URL = `${PHOTO_DIR_LOCAL}/padrao.svg`;
-    const photoCache = new Map();
-    let photoIndexPromise = null;
-    const photoAliases = new Map([
-      ['allex albert rodrigues', 'Allex-albert.svg'],
-    ]);
-
-    function getSeatPreviewEl() {
-      let el = document.getElementById('miSeatPreview');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'miSeatPreview';
-        document.body.appendChild(el);
-      }
-      return el;
-    }
-
-    function showSeatPreview(nome, url, anchorEl) {
-      const el = getSeatPreviewEl();
-      const safeUrl = url || DEFAULT_PHOTO_URL;
-      el.innerHTML = `
-        <div class="mi-seat-card">
-          <img src="${safeUrl}" alt="Foto de ${escapeHtml(nome)}">
-        </div>
-      `;
-      el.style.display = 'block';
-      positionSeatPreview(anchorEl);
-    }
-
-    function positionSeatPreview(anchorEl) {
-      const el = document.getElementById('miSeatPreview');
-      if (!el || el.style.display === 'none' || !anchorEl) return;
-      const seatRect = anchorEl.getBoundingClientRect();
-      const r = el.getBoundingClientRect();
-      const centerX = seatRect.left + seatRect.width / 2;
-      let x = centerX - r.width / 2;
-      let y = seatRect.top - r.height - 10; // 10px acima do assento
-      x = Math.max(8, Math.min(x, window.innerWidth - r.width - 8));
-      y = Math.max(8, y);
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-    }
-
-    function hideSeatPreview() {
-      const el = document.getElementById('miSeatPreview');
-      if (el) el.style.display = 'none';
-    }
-
-    const stripDiacritics = (value) =>
-      String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    function normalizeNameKey(value) {
-      return stripDiacritics(value)
-        .replace(/\.[^.]+$/, '')
-        .replace(/[^a-zA-Z0-9]+/g, ' ')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
-    }
-
-    async function loadPhotoIndex() {
-      if (photoIndexPromise) return photoIndexPromise;
-      photoIndexPromise = (async () => {
-        const map = new Map();
-        const tryFetch = async (url) => {
-          const res = await fetch(url, { cache: 'no-cache' });
-          if (!res.ok) return [];
-          const list = await res.json().catch(() => []);
-          return Array.isArray(list) ? list : [];
-        };
-        let list = [];
-        try { list = await tryFetch(PHOTO_MANIFEST_URL); } catch {}
-        list.forEach((file) => {
-          if (typeof file !== 'string') return;
-          const key = normalizeNameKey(file);
-          if (key) map.set(key, file);
-        });
-        return map;
-      })();
-      return photoIndexPromise;
-    }
-
-    async function resolvePhotoUrl(name) {
-      const key = normalizeNameKey(name);
-      if (!key) return null;
-      if (photoCache.has(key)) return photoCache.get(key);
-
-      const index = await loadPhotoIndex();
-      let filename = index.get(key) || photoAliases.get(key);
-      if (!filename) {
-        const nameTokens = new Set(key.split(' ').filter(Boolean));
-        let bestKey = '';
-        index.forEach((_file, idxKey) => {
-          const idxTokens = idxKey.split(' ').filter(Boolean);
-          if (idxTokens.length < 2) return;
-          const allPresent = idxTokens.every(t => nameTokens.has(t));
-          if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
-        });
-        if (bestKey) filename = index.get(bestKey);
-      }
-      const url = filename ? `${PHOTO_DIR_LOCAL}/${filename}` : DEFAULT_PHOTO_URL;
-      photoCache.set(key, url);
-      return url;
-    }
-
-    pos.forEach(({ n, row, col }) => {
-      const btn = document.createElement('button');
-      const ocupado = !!occ[n];
-      btn.type = 'button';
-      const num = document.createElement('span');
-      num.className = 'mi-seat-num';
-      num.textContent = n;
-      btn.className = `mi-seat ${ocupado ? 'occupied' : 'available'}`;
-      btn.style.gridRow = String(row);
-      btn.style.gridColumn = String(col);
-      if (ocupado && typeof occ[n] === 'string') {
-        btn.title = occ[n];
-      }
-      btn.appendChild(num);
-
-      if (ocupado && typeof occ[n] === 'string') {
-        const nome = occ[n].trim();
-        resolvePhotoUrl(nome).then(photoUrl => {
-          if (!btn.isConnected) return;
-          const safeUrl = photoUrl || DEFAULT_PHOTO_URL;
-          btn.classList.add('mi-seat--has-card');
-          const card = document.createElement('div');
-          card.className = 'mi-seat-card';
-          const img = document.createElement('img');
-          img.alt = `Foto de ${nome}`;
-          img.src = safeUrl;
-          img.onerror = () => {
-            const file = (img.src || '').split('/').pop();
-            const local = file ? `${PHOTO_DIR_LOCAL}/${file}` : DEFAULT_PHOTO_URL;
-            if (local && local !== DEFAULT_PHOTO_URL && img.src !== local) {
-              img.src = local;
-              return;
-            }
-            if (img.src !== DEFAULT_PHOTO_URL) img.src = DEFAULT_PHOTO_URL;
-          };
-          card.appendChild(img);
-          btn.appendChild(card);
-
-          btn.addEventListener('mouseenter', () => showSeatPreview(nome, safeUrl, btn));
-          btn.addEventListener('mouseleave', hideSeatPreview);
-          btn.addEventListener('blur', hideSeatPreview);
-        });
-      }
-      grid.appendChild(btn);
-    });
-
-    // 5) FIT automático (caber em largura E altura sem scroll)
-    requestAnimationFrame(() => {
-      const wrap = document.querySelector('.mi-seat-grid-wrap');
-      if (!wrap) return;
-
-      grid.style.transform = 'scale(1)';
-
-      const wrapRect = wrap.getBoundingClientRect();
-      const gridRect = grid.getBoundingClientRect();
-
-      const scaleW = wrapRect.width / gridRect.width;
-      const scaleH = wrapRect.height / gridRect.height;
-      // permite crescer um pouco quando há espaço, para evitar mapa "miúdo"
-      const maxScale = 1.2;
-      const scale = Math.min(maxScale, scaleW, scaleH);
-      grid.style.transform = `scale(${scale})`;
-    });
   }
 
   /* ===============================
@@ -710,103 +476,6 @@
           });
         }
       });
-    }
-  }
-
-  async function renderStaffGallery() {
-    const wrap = $('#miStaffWrap');
-    const grid = $('#miStaffGrid');
-    if (!wrap || !grid) return;
-    if (state.perfil !== 'Staff') {
-      wrap.classList.add('d-none');
-      return;
-    }
-    wrap.classList.remove('d-none');
-    grid.innerHTML = '';
-
-    try {
-      setStaffMsg('Carregando equipe...', 'text-muted');
-      const res = await fetch(ROUTES.staffs, { method: 'GET' });
-      const data = res.ok ? await res.json() : [];
-      const list = Array.isArray(data) ? data : [];
-      if (!list.length) {
-        setStaffMsg('Nenhuma inscrição de staff encontrada.', 'text-muted');
-        return;
-      }
-      setStaffMsg('', 'text-muted');
-      list.forEach((item) => {
-        const nome = String(item?.nome || '').trim();
-        const sigla = String(item?.sigladaentidade || '').trim();
-        const codigo = String(item?.numerodeinscricao || '').trim();
-        const gender = guessGenderByName(nome);
-        const card = document.createElement('div');
-        card.className = `mi-staff-card ${gender === 'female' ? 'is-female' : 'is-male'}`;
-        card.innerHTML = `
-          <div class="mi-staff-photo">
-            <img alt="Foto de ${escapeHtml(nome || 'Staff')}" src="${DEFAULT_STAFF_PHOTO_URL}">
-          </div>
-          <div class="mi-staff-name">${escapeHtml(nome || 'Staff')}</div>
-          ${sigla ? `<div class="mi-staff-entity">${escapeHtml(sigla)}</div>` : ''}
-          ${codigo ? `<div class="mi-staff-code">${escapeHtml(codigo)}</div>` : ''}
-        `;
-        grid.appendChild(card);
-        const img = card.querySelector('img');
-        if (img && nome) {
-          resolveStaffPhotoUrlByName(nome).then((url) => {
-            if (url) img.src = url;
-            attachStaffFallback(img, nome, url);
-          });
-        }
-      });
-    } catch {
-      setStaffMsg('Falha ao carregar o staff.', 'text-danger');
-    }
-  }
-
-  async function renderSpeakersGallery() {
-    const wrap = $('#miSpeakerWrap');
-    const grid = $('#miSpeakerGrid');
-    if (!wrap || !grid) return;
-    if (state.perfil !== 'Palestrante') {
-      wrap.classList.add('d-none');
-      return;
-    }
-    wrap.classList.remove('d-none');
-    grid.innerHTML = '';
-
-    try {
-      setSpeakerMsg('Carregando palestrantes...', 'text-muted');
-      const res = await fetch(ROUTES.palestrantes, { method: 'GET' });
-      const data = res.ok ? await res.json() : [];
-      const list = Array.isArray(data) ? data : [];
-      if (!list.length) {
-        setSpeakerMsg('Nenhum palestrante encontrado.', 'text-muted');
-        return;
-      }
-      setSpeakerMsg('', 'text-muted');
-      list.forEach((item) => {
-        const nome = String(item?.nome || '').trim();
-        const ufSigla = String(item?.ufsigla || '').trim();
-        const card = document.createElement('div');
-        card.className = 'mi-speaker-card';
-        card.innerHTML = `
-          <div class="mi-speaker-photo">
-            <img alt="Foto de ${escapeHtml(nome || 'Palestrante')}" src="${DEFAULT_SPEAKER_PHOTO_URL}">
-          </div>
-          <div class="mi-speaker-name">${escapeHtml(nome || 'Palestrante')}</div>
-          ${ufSigla ? `<div class="mi-speaker-uf">${escapeHtml(ufSigla)}</div>` : ''}
-        `;
-        grid.appendChild(card);
-        const img = card.querySelector('img');
-        if (img && nome) {
-          resolveSpeakerPhotoUrlByName(nome).then((url) => {
-            if (url) img.src = url;
-            attachSpeakerFallback(img, nome, url);
-          });
-        }
-      });
-    } catch {
-      setSpeakerMsg('Falha ao carregar palestrantes.', 'text-danger');
     }
   }
 
@@ -1482,5 +1151,3 @@
   });
 
 })();
-
-

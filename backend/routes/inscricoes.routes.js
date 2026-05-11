@@ -11,6 +11,7 @@ import {
   getConselheiroSeats,
   listStaffGallery,
   listPalestrantesGallery,
+  listInscricoesGallery,
   listarInscricoes,
   marcarConferido,
 } from "../services/sheets.service.js";
@@ -308,6 +309,23 @@ r.get("/palestrantes", async (_req, res) => {
 });
 
 /**
+ * GET /api/inscricoes/galeria?perfil=...
+ */
+r.get("/galeria", async (req, res) => {
+  try {
+    const perfil = String(req.query.perfil || "");
+    if (!PERFIS_OK.has(perfil)) {
+      return res.status(400).json({ error: "Perfil inválido" });
+    }
+    const list = await listInscricoesGallery(perfil);
+    return res.json(Array.isArray(list) ? list : []);
+  } catch (e) {
+    console.error("[GET /inscricoes/galeria]", e);
+    return res.json([]);
+  }
+});
+
+/**
  * GET /api/inscricoes/:id/comprovante.pdf
  */
 r.get("/:id/comprovante.pdf", async (req, res) => {
@@ -325,5 +343,4 @@ r.get("/:id/comprovante.pdf", async (req, res) => {
 });
 
 export default r;
-
 

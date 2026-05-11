@@ -445,6 +445,36 @@ export async function listPalestrantesGallery() {
   return out;
 }
 
+export async function listInscricoesGallery(perfil) {
+  const sheetName = sheetForPerfil(perfil);
+  const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
+  const normHdrs = headers.map(h => normalizeKey(h));
+  const idxCode = normHdrs.indexOf("numerodeinscricao");
+  const idxName = normHdrs.indexOf("nome");
+  const idxSigla = normHdrs.indexOf("sigladaentidade");
+  const idxUfSigla = normHdrs.indexOf("ufsigla");
+
+  if (idxCode < 0) throw new Error('Cabeçalho "Número de Inscrição" não encontrado.');
+  if (idxName < 0) throw new Error('Cabeçalho "Nome" não encontrado.');
+
+  const out = [];
+  rows.forEach((r) => {
+    const code = r[idxCode];
+    const name = r[idxName];
+    if (!String(code || "").trim() || !String(name || "").trim()) return;
+    out.push({
+      numerodeinscricao: code,
+      nome: name,
+      sigladaentidade: idxSigla >= 0 ? r[idxSigla] : "",
+      ufsigla: idxUfSigla >= 0 ? r[idxUfSigla] : "",
+      perfil: String(perfil || ""),
+    });
+  });
+
+  out.sort((a, b) => protoKey(a.numerodeinscricao) - protoKey(b.numerodeinscricao));
+  return out;
+}
+
 
 export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false } = {}) {
   const sheetName = sheetForPerfil(perfil);
@@ -537,5 +567,4 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
-
 
