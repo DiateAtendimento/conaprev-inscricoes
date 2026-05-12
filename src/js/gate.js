@@ -93,7 +93,7 @@ function mountGate() {
 
         <!-- Contador à direita -->
         <div class="col-12 col-lg-6">
-          <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center">
+          <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center flex-wrap">
             <div class="gate-box">
               <div id="gDays" class="gate-num">00</div>
               <div class="gate-lab">DIAS</div>
@@ -114,9 +114,26 @@ function mountGate() {
               <div class="gate-lab">SEC</div>
             </div>
           </div>
+          <div class="d-flex justify-content-center mt-4">
+            <div id="gateLottie" class="gate-lottie"></div>
+          </div>
         </div>
       </div>
     </main>
+
+    <!-- Footer com contatos (móvel) -->
+    <footer class="gate-footer d-lg-none text-center py-4 border-top border-secondary">
+      <div class="mb-3">
+        <a href="mailto:conaprev@previdencia.gov.br" class="d-block text-decoration-none text-light mb-2">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          conaprev@previdencia.gov.br
+        </a>
+        <a href="tel:+556120215347" class="d-block text-decoration-none text-light">
+          <i class="bi bi-telephone" aria-hidden="true"></i>
+          (61) 2021-5347
+        </a>
+      </div>
+    </footer>
   `;
 
   // Timer
@@ -125,6 +142,16 @@ function mountGate() {
   const mEl = document.getElementById('gMinutes');
   const sEl = document.getElementById('gSeconds');
   const target = releaseTs;
+
+  if (window.lottie && document.getElementById('gateLottie')) {
+    window.lottie.loadAnimation({
+      container: document.getElementById('gateLottie'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: '/animacoes/lottie-calendar.json'
+    });
+  }
 
   function tick() {
     const t = target - Date.now();
