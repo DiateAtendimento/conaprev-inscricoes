@@ -705,11 +705,11 @@
   <script>
     (function () {
       const show = () => {
-        document.getElementById('app')?.classList.remove('d-none');
-        document.body.classList.remove('gate-active');
-        document.getElementById('gate-root')?.remove();
+        // Só mostra app se o gate NÃO está ativo
+        if (!document.body.classList.contains('gate-active')) {
+          document.getElementById('app')?.classList.remove('d-none');
+        }
       };
-      show();
       window.addEventListener('DOMContentLoaded', show);
       window.addEventListener('load', show);
     })();

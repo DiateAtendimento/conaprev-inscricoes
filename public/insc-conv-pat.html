@@ -469,14 +469,13 @@
   <script src="/src/js/admin.js" defer></script>
 
   <script>
-    // Força abrir o app e remove qualquer vestígio do gate
+    // Abre o app somente se o gate NÃO está ativo
     (function () {
       const show = () => {
-        document.getElementById('app')?.classList.remove('d-none');
-        document.body.classList.remove('gate-active');
-        document.getElementById('gate-root')?.remove();
+        if (!document.body.classList.contains('gate-active')) {
+          document.getElementById('app')?.classList.remove('d-none');
+        }
       };
-      show();
       window.addEventListener('DOMContentLoaded', show);
       window.addEventListener('load', show);
     })();
