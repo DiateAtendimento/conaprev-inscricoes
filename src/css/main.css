@@ -1055,6 +1055,7 @@ body.gate-active .topbar{ display:none !important; }
 .gate-lab{ font-size:10px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; opacity:.7; margin-top:6px; }
 .gate-sep{ font-weight:900; font-size:clamp(28px, 5.2vw, 48px); line-height:1; color:#fff; transform:translateY(-4px); user-select:none; }
 body.gate-active #app{ display:none !important; }
+body.gate-active .site-footer{ display:none !important; }
 .gate-footer{ background:transparent; }
 .gate-footer a{ color:#fff; transition:opacity .2s ease; }
 .gate-footer a:hover{ opacity:.8; }

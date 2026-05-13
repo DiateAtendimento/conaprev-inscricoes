@@ -118,8 +118,8 @@ function mountGate() {
       </div>
     </main>
 
-    <!-- Footer com contatos (móvel) -->
-    <footer class="gate-footer d-lg-none text-center py-4 border-top border-secondary">
+    <!-- Footer com contatos -->
+    <footer class="gate-footer text-center py-4 border-top border-secondary">
       <div class="mb-3">
         <a href="mailto:conaprev@previdencia.gov.br" class="d-block text-decoration-none text-light mb-2">
           <i class="bi bi-envelope" aria-hidden="true"></i>
