@@ -114,9 +114,6 @@ function mountGate() {
               <div class="gate-lab">SEC</div>
             </div>
           </div>
-          <div class="d-flex justify-content-center mt-4">
-            <div id="gateLottie" class="gate-lottie"></div>
-          </div>
         </div>
       </div>
     </main>
@@ -142,16 +139,6 @@ function mountGate() {
   const mEl = document.getElementById('gMinutes');
   const sEl = document.getElementById('gSeconds');
   const target = releaseTs;
-
-  if (window.lottie && document.getElementById('gateLottie')) {
-    window.lottie.loadAnimation({
-      container: document.getElementById('gateLottie'),
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: '/animacoes/lottie-calendar.json'
-    });
-  }
 
   function tick() {
     const t = target - Date.now();
