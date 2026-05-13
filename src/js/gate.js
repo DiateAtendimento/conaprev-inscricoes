@@ -119,13 +119,13 @@ function mountGate() {
     </main>
 
     <!-- Footer com contatos -->
-    <footer class="gate-footer text-center py-4 border-top border-secondary">
+    <footer class="gate-footer text-center py-4 mt-4">
       <div class="mb-3">
-        <a href="mailto:conaprev@previdencia.gov.br" class="d-block text-decoration-none text-light mb-2">
+        <a href="mailto:conaprev@previdencia.gov.br" class="d-block text-decoration-none text-light mb-2 gate-contact-link">
           <i class="bi bi-envelope" aria-hidden="true"></i>
           conaprev@previdencia.gov.br
         </a>
-        <a href="tel:+556120215347" class="d-block text-decoration-none text-light">
+        <a href="tel:+556120215347" class="d-block text-decoration-none text-light gate-contact-link">
           <i class="bi bi-telephone" aria-hidden="true"></i>
           (61) 2021-5347
         </a>
