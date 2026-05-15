@@ -33,10 +33,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ===== Atalho de hospedagem (abre em nova aba com noopener) =====
+  // ===== Atalho de hospedagem (abre o PDF em nova aba com noopener) =====
   document.getElementById('btnHospedagem')?.addEventListener('click', (e) => {
     e.preventDefault();
-    window.open('/hospedagem.html', '_blank', 'noopener');
+    window.open('/oficios/sugestao-hospedagem.pdf', '_blank', 'noopener');
   });
 
   // IMPORTANTE:
@@ -84,5 +84,4 @@ window.testCancelar = async () => {
     console.log('cancelar:', r);
   } catch (e) { console.error(e); }
 };
-
 
