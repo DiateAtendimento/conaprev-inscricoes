@@ -93,7 +93,7 @@ function mountGate() {
 
         <!-- Contador à direita -->
         <div class="col-12 col-lg-6">
-          <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center">
+          <div class="d-flex align-items-stretch gap-2 justify-content-lg-end justify-content-center flex-wrap">
             <div class="gate-box">
               <div id="gDays" class="gate-num">00</div>
               <div class="gate-lab">DIAS</div>
@@ -117,6 +117,20 @@ function mountGate() {
         </div>
       </div>
     </main>
+
+    <!-- Footer com contatos -->
+    <footer class="gate-footer text-center py-4 mt-4">
+      <div class="mb-3">
+        <a href="mailto:conaprev@previdencia.gov.br" class="d-block text-decoration-none text-light mb-2 gate-contact-link">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          conaprev@previdencia.gov.br
+        </a>
+        <a href="tel:+556120215347" class="d-block text-decoration-none text-light gate-contact-link">
+          <i class="bi bi-telephone" aria-hidden="true"></i>
+          (61) 2021-5347
+        </a>
+      </div>
+    </footer>
   `;
 
   // Timer

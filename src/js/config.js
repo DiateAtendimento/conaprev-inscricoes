@@ -2,7 +2,7 @@
 (() => {
   // Janela de liberAção das Inscrições (usado pelo gate)
   window.EVENTO = {
-    INICIO: '2026-05-18T00:00:00-03:00',
+    INICIO: '2026-05-18T08:00:00-03:00',
     FIM:    '2026-07-17T23:59:59-03:00',
     LOCAL:  'Gramado/RS',
   };

@@ -1054,6 +1054,16 @@ body.gate-active .topbar{ display:none !important; }
 .gate-num{ font-size:clamp(28px, 6vw, 56px); font-weight:900; line-height:1; letter-spacing:.5px; font-variant-numeric:tabular-nums; }
 .gate-lab{ font-size:10px; font-weight:800; letter-spacing:.9px; text-transform:uppercase; opacity:.7; margin-top:6px; }
 .gate-sep{ font-weight:900; font-size:clamp(28px, 5.2vw, 48px); line-height:1; color:#fff; transform:translateY(-4px); user-select:none; }
+body.gate-active #app{ display:none !important; }
+body.gate-active .site-footer{ display:none !important; }
+.gate-footer{ background:transparent; }
+.gate-footer .gate-contact-link{ color:#fff; transition:opacity .2s ease; font-size:1rem; }
+.gate-footer .gate-contact-link:hover{ opacity:.8; }
+.gate-footer .gate-contact-link i{ margin-right:8px; }
+@media (min-width: 769px) {
+  .gate-footer .gate-contact-link{ font-size:1.1rem; }
+}
+
 
 /* =========================
    RESPONSIVO � adicional
