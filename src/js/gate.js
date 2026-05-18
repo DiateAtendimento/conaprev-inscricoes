@@ -6,7 +6,7 @@ const EVENTO = window.EVENTO || { INICIO: '2025-09-22T08:00:00-03:00' };
 /** =============================
  *  Config do �port�o� (gate)
  *  ============================= */
-const MAINTENANCE_MODE = true;          // todos veem o gate (a menos que usem o preview)
+const MAINTENANCE_MODE = false;         // liberar automaticamente quando a data chegar
 const RELEASE_AT       = EVENTO.INICIO; // data/hora de liberAção
 const PREVIEW_TOKEN    = 'CONAPREV85_DEV'; // ?preview=CONAPREV85_DEV (salva cookie)
 
