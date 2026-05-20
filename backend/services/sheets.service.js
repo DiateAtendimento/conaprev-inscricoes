@@ -17,10 +17,28 @@ const CACHE_TTL_SEARCH_MS  = 10_000;
 const _cache = new Map(); // key -> { expires, data } | Promise
 const _ck = (sheetName) => `sheet:${sheetName}`;
 const _pk = (sheetName) => `${_ck(sheetName)}:pending`;
+const _sequenceLocks = new Map(); // perfil -> Promise
 
 function invalidateSheetCache(sheetName) {
   _cache.delete(_ck(sheetName));
   _cache.delete(_pk(sheetName));
+}
+
+async function withSequenceLock(perfil, task) {
+  const previous = _sequenceLocks.get(perfil) || Promise.resolve();
+  let release;
+  const current = new Promise((resolve) => { release = resolve; });
+  _sequenceLocks.set(perfil, previous.then(() => current));
+
+  await previous;
+  try {
+    return await task();
+  } finally {
+    release();
+    if (_sequenceLocks.get(perfil) === current) {
+      _sequenceLocks.delete(perfil);
+    }
+  }
 }
 
 async function readAllCached(sheetName, ttlMs = CACHE_TTL_DEFAULT_MS) {
@@ -231,61 +249,64 @@ export async function buscarAutorizadoParaVotarPorCpf(cpf) {
 
 async function gerarNumeroInscricao(perfil) {
   const sheetName = sheetForPerfil(perfil);
+  const extractNumber = (value) => {
+    const match = String(value || "").match(/(\d+)\s*$/);
+    return match ? parseInt(match[1], 10) : NaN;
+  };
+
   try {
     const { headers, rows } = await readAll(sheetName);
-    const norm = headers.map(normalizeKey);
-    const idxCode = norm.indexOf("numerodeinscricao");
-    const idxCpf = norm.indexOf("cpf");
-    const idxNome = norm.indexOf("nome");
-    if (idxCode >= 0 && idxCpf >= 0 && idxNome >= 0) {
-      const nums = rows
-        .filter(r => String(r[idxCpf] || "").trim() && String(r[idxNome] || "").trim())
-        .map(r => parseInt(String(r[idxCode] || "").replace(/^\D+/, ""), 10))
-        .filter(n => !isNaN(n))
-        .sort((a, b) => a - b);
-      for (let i = 1; i <= 500; i++) if (!nums.includes(i)) return ("00" + i).slice(-3);
-      throw new Error("Limite de inscrições atingido");
+    const idxCode = headers.map(normalizeKey).indexOf("numerodeinscricao");
+    if (idxCode >= 0) {
+      const max = rows
+        .map(r => extractNumber(r[idxCode]))
+        .filter(Number.isFinite)
+        .reduce((acc, n) => Math.max(acc, n), 0);
+
+      if (max >= 500) throw new Error("Limite de inscrições atingido");
+      return String(max + 1).padStart(3, "0");
     }
   } catch {}
 
   const sheets = await getSheets();
   const resp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A2:A` });
-  const nums = (resp.data.values || [])
+  const max = (resp.data.values || [])
     .flat()
-    .map(v => parseInt(String(v).replace(/^\D+/, ""), 10))
-    .filter(n => !isNaN(n))
-    .sort((a, b) => a - b);
-  for (let i = 1; i <= 500; i++) if (!nums.includes(i)) return ("00" + i).slice(-3);
-  throw new Error("Limite de inscrições atingido");
+    .map(extractNumber)
+    .filter(Number.isFinite)
+    .reduce((acc, n) => Math.max(acc, n), 0);
+
+  if (max >= 500) throw new Error("Limite de inscrições atingido");
+  return String(max + 1).padStart(3, "0");
 }
 
 export async function inscreverDados(formData, perfil) {
-  validarDados(formData);
-  const exists = await buscarPorCpf(formData.cpf, perfil);
-  if (exists) throw new Error("CPF já inscrito neste perfil.");
+  return withSequenceLock(perfil, async () => {
+    validarDados(formData);
+    const exists = await buscarPorCpf(formData.cpf, perfil);
+    if (exists) throw new Error("CPF já inscrito neste perfil.");
 
-  const prefix = PROFILE_PREFIX[perfil] || "";
-  const raw = await gerarNumeroInscricao(perfil);
-  const codigo = prefix + raw;
+    const prefix = PROFILE_PREFIX[perfil] || "";
+    const raw = await gerarNumeroInscricao(perfil);
+    const codigo = prefix + raw;
 
-  const sheetName = sheetForPerfil(perfil);
-  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
-  formData.numerodeinscricao = codigo;
-  const row = createRowFromFormData(formData, perfil, headers);
+    const sheetName = sheetForPerfil(perfil);
+    const { headers } = await readAll(sheetName);
+    formData.numerodeinscricao = codigo;
+    const row = createRowFromFormData(formData, perfil, headers);
 
-  const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: SHEET_ID,
-    range: `${sheetName}!A1:${String.fromCharCode(64 + headers.length)}`,
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [row] }
+    const sheets = await getSheets();
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A1:${String.fromCharCode(64 + headers.length)}`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: { values: [row] }
+    });
+
+    invalidateSheetCache(sheetName);
+    return codigo;
   });
-
-  // ap�s escrita, invalida cache dessa aba
-  invalidateSheetCache(sheetName);
-
-  return codigo;
 }
 
 export async function atualizarDados(formData, perfil) {
@@ -305,23 +326,24 @@ export async function atualizarDados(formData, perfil) {
 }
 
 export async function confirmarInscricao(formData, perfil) {
-  const sheetName = sheetForPerfil(perfil);
-  const idx = Number(formData._rowIndex);
-  if (!idx || idx < 2) throw new Error("Linha inválida.");
-  const sheets = await getSheets();
-  const cellResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}` });
-  const cur = (cellResp.data.values || [])[0]?.[0];
-  if (cur) return cur;
-  const prefix = PROFILE_PREFIX[perfil] || "";
-  const raw = await gerarNumeroInscricao(perfil);
-  const codigo = prefix + raw;
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}`, valueInputOption: "RAW", requestBody: { values: [[codigo]] }
+  return withSequenceLock(perfil, async () => {
+    const sheetName = sheetForPerfil(perfil);
+    const idx = Number(formData._rowIndex);
+    if (!idx || idx < 2) throw new Error("Linha inválida.");
+    const sheets = await getSheets();
+    const cellResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}` });
+    const cur = (cellResp.data.values || [])[0]?.[0];
+    if (cur) return cur;
+    const prefix = PROFILE_PREFIX[perfil] || "";
+    const raw = await gerarNumeroInscricao(perfil);
+    const codigo = prefix + raw;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}`, valueInputOption: "RAW", requestBody: { values: [[codigo]] }
+    });
+
+    invalidateSheetCache(sheetName);
+    return codigo;
   });
-
-  invalidateSheetCache(sheetName);
-
-  return codigo;
 }
 
 export async function cancelarInscricao(formData, perfil) {
@@ -567,4 +589,3 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
 
   return { ok: true };
 }
-
