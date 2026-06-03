@@ -168,6 +168,35 @@ function headerIndex(headers, wantedNorm) {
   return idx; // -1 se Não achou
 }
 
+function columnLetterFromIndex(index) {
+  if (!Number.isInteger(index) || index < 0) throw new Error("Índice de coluna inválido.");
+  let n = index + 1;
+  let out = "";
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    out = String.fromCharCode(65 + rem) + out;
+    n = Math.floor((n - 1) / 26);
+  }
+  return out;
+}
+
+function parseRowIndexFromUpdatedRange(updatedRange) {
+  const match = String(updatedRange || "").match(/![A-Z]+(\d+):[A-Z]+(\d+)$/i);
+  if (!match) return NaN;
+  return Number(match[1] || match[2] || NaN);
+}
+
+function buildCodigoFromRowIndex(perfil, rowIndex) {
+  const lineNumber = Number(rowIndex);
+  if (!Number.isInteger(lineNumber) || lineNumber < 2) {
+    throw new Error("Não foi possível determinar a linha da inscrição.");
+  }
+
+  const prefix = PROFILE_PREFIX[perfil] || "";
+  const sequence = String(lineNumber - 1).padStart(3, "0");
+  return prefix + sequence;
+}
+
 function matchQuery(rowObj, q) {
   if (!q) return true;
   const term = String(q).trim().toLowerCase();
@@ -247,61 +276,40 @@ export async function buscarAutorizadoParaVotarPorCpf(cpf) {
 }
 
 
-async function gerarNumeroInscricao(perfil) {
-  const sheetName = sheetForPerfil(perfil);
-  const extractNumber = (value) => {
-    const match = String(value || "").match(/(\d+)\s*$/);
-    return match ? parseInt(match[1], 10) : NaN;
-  };
-
-  try {
-    const { headers, rows } = await readAll(sheetName);
-    const idxCode = headers.map(normalizeKey).indexOf("numerodeinscricao");
-    if (idxCode >= 0) {
-      const max = rows
-        .map(r => extractNumber(r[idxCode]))
-        .filter(Number.isFinite)
-        .reduce((acc, n) => Math.max(acc, n), 0);
-
-      if (max >= 500) throw new Error("Limite de inscrições atingido");
-      return String(max + 1).padStart(3, "0");
-    }
-  } catch {}
-
-  const sheets = await getSheets();
-  const resp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A2:A` });
-  const max = (resp.data.values || [])
-    .flat()
-    .map(extractNumber)
-    .filter(Number.isFinite)
-    .reduce((acc, n) => Math.max(acc, n), 0);
-
-  if (max >= 500) throw new Error("Limite de inscrições atingido");
-  return String(max + 1).padStart(3, "0");
-}
-
 export async function inscreverDados(formData, perfil) {
   return withSequenceLock(perfil, async () => {
     validarDados(formData);
     const exists = await buscarPorCpf(formData.cpf, perfil);
     if (exists) throw new Error("CPF já inscrito neste perfil.");
 
-    const prefix = PROFILE_PREFIX[perfil] || "";
-    const raw = await gerarNumeroInscricao(perfil);
-    const codigo = prefix + raw;
-
     const sheetName = sheetForPerfil(perfil);
     const { headers } = await readAll(sheetName);
-    formData.numerodeinscricao = codigo;
+    const colCode = headerIndex(headers, "numerodeinscricao");
+    if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
+
+    formData.numerodeinscricao = "";
     const row = createRowFromFormData(formData, perfil, headers);
+    const lastColLetter = columnLetterFromIndex(headers.length - 1);
 
     const sheets = await getSheets();
-    await sheets.spreadsheets.values.append({
+    const appendResp = await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A1:${String.fromCharCode(64 + headers.length)}`,
+      range: `${sheetName}!A1:${lastColLetter}`,
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: [row] }
+    });
+
+    const updatedRange = appendResp.data?.updates?.updatedRange || "";
+    const rowIndex = parseRowIndexFromUpdatedRange(updatedRange);
+    const codigo = buildCodigoFromRowIndex(perfil, rowIndex);
+    const codeCell = `${sheetName}!${columnLetterFromIndex(colCode)}${rowIndex}`;
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: codeCell,
+      valueInputOption: "RAW",
+      requestBody: { values: [[codigo]] }
     });
 
     invalidateSheetCache(sheetName);
@@ -316,7 +324,7 @@ export async function atualizarDados(formData, perfil) {
   const idx = Number(formData._rowIndex);
   if (!idx || idx < 2) throw new Error("Linha inválida.");
   const row = createRowFromFormData(formData, perfil, headers);
-  const range = `${sheetName}!A${idx}:${String.fromCharCode(64 + headers.length)}${idx}`;
+  const range = `${sheetName}!A${idx}:${columnLetterFromIndex(headers.length - 1)}${idx}`;
   const sheets = await getSheets();
   await sheets.spreadsheets.values.update({
     spreadsheetId: SHEET_ID, range, valueInputOption: "RAW", requestBody: { values: [row] }
@@ -330,15 +338,24 @@ export async function confirmarInscricao(formData, perfil) {
     const sheetName = sheetForPerfil(perfil);
     const idx = Number(formData._rowIndex);
     if (!idx || idx < 2) throw new Error("Linha inválida.");
+    const { headers } = await readAll(sheetName);
+    const colCode = headerIndex(headers, "numerodeinscricao");
+    if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
+
+    const codeColLetter = columnLetterFromIndex(colCode);
     const sheets = await getSheets();
-    const cellResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}` });
+    const cellResp = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!${codeColLetter}${idx}`
+    });
     const cur = (cellResp.data.values || [])[0]?.[0];
     if (cur) return cur;
-    const prefix = PROFILE_PREFIX[perfil] || "";
-    const raw = await gerarNumeroInscricao(perfil);
-    const codigo = prefix + raw;
+    const codigo = buildCodigoFromRowIndex(perfil, idx);
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID, range: `${sheetName}!A${idx}`, valueInputOption: "RAW", requestBody: { values: [[codigo]] }
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!${codeColLetter}${idx}`,
+      valueInputOption: "RAW",
+      requestBody: { values: [[codigo]] }
     });
 
     invalidateSheetCache(sheetName);
@@ -355,7 +372,7 @@ export async function cancelarInscricao(formData, perfil) {
   if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
 
   const sheets = await getSheets();
-  const lastColLetter = String.fromCharCode(64 + headers.length);
+  const lastColLetter = columnLetterFromIndex(headers.length - 1);
   const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
 
   const curResp = await sheets.spreadsheets.values.get({
@@ -562,7 +579,7 @@ export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoP
   const valEm   = conferido ? nowBRISO() : ""; // ISO com timezone BR (-03:00)
 
   // range da linha inteira (para montar o array completo com as 3 posi��es)
-  const lastColLetter = String.fromCharCode(64 + headers.length);
+  const lastColLetter = columnLetterFromIndex(headers.length - 1);
   const range = `${sheetName}!A${idx}:${lastColLetter}${idx}`;
 
   // lá a linha atual
