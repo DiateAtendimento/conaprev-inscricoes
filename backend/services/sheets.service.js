@@ -2,6 +2,11 @@
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
 import { normalizeKey, titleCase } from "./normalize.service.js";
+import {
+  DEFAULT_MAX_INSCRICOES_POR_PERFIL,
+  buildCodigoFromSequence,
+  findNextAvailableSequence,
+} from "./inscricao-sequence.service.js";
 
 const SHEET_ID = cfg.sheetId;
 
@@ -87,17 +92,6 @@ const HEADER_ALIASES = {
   conferido: "conferido",
   conferidopor: "conferidopor",
   conferidoem: "conferidoem"
-};
-
-const PROFILE_PREFIX = {
-  "Conselheiro": "CNL",
-  "CNRPPS": "CJU",
-  "Palestrante": "PLT",
-  "Staff": "STF",
-  "Convidado": "CON",
-  "Apoiador": "PAT",
-  "Patrocinador": "PAT",
-  "COPAJURE": "CPJ"
 };
 
 function sheetForPerfil(perfil) {
@@ -186,17 +180,6 @@ function parseRowIndexFromUpdatedRange(updatedRange) {
   return Number(match[1] || match[2] || NaN);
 }
 
-function buildCodigoFromRowIndex(perfil, rowIndex) {
-  const lineNumber = Number(rowIndex);
-  if (!Number.isInteger(lineNumber) || lineNumber < 2) {
-    throw new Error("Não foi possível determinar a linha da inscrição.");
-  }
-
-  const prefix = PROFILE_PREFIX[perfil] || "";
-  const sequence = String(lineNumber - 1).padStart(3, "0");
-  return prefix + sequence;
-}
-
 function matchQuery(rowObj, q) {
   if (!q) return true;
   const term = String(q).trim().toLowerCase();
@@ -219,6 +202,22 @@ function mapRow(headers, row) {
     out[key] = row[j] ?? "";
   });
   return out;
+}
+
+function rowBelongsToPerfil(rowObj, perfil, sheetName) {
+  if (sheetName !== "Apoiadores") return true;
+  return String(rowObj.identificacao || "").trim() === String(perfil || "").trim();
+}
+
+function getUsedCodesForPerfil(headers, rows, perfil, sheetName) {
+  const usedCodes = [];
+  rows.forEach((row) => {
+    const obj = mapRow(headers, row);
+    if (!rowBelongsToPerfil(obj, perfil, sheetName)) return;
+    const codigo = String(obj.numerodeinscricao || "").trim();
+    if (codigo) usedCodes.push(codigo);
+  });
+  return usedCodes;
 }
 
 function validarDados(formData) {
@@ -338,7 +337,7 @@ export async function confirmarInscricao(formData, perfil) {
     const sheetName = sheetForPerfil(perfil);
     const idx = Number(formData._rowIndex);
     if (!idx || idx < 2) throw new Error("Linha inválida.");
-    const { headers } = await readAll(sheetName);
+    const { headers, rows } = await readAll(sheetName);
     const colCode = headerIndex(headers, "numerodeinscricao");
     if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
 
@@ -350,7 +349,12 @@ export async function confirmarInscricao(formData, perfil) {
     });
     const cur = (cellResp.data.values || [])[0]?.[0];
     if (cur) return cur;
-    const codigo = buildCodigoFromRowIndex(perfil, idx);
+    const usedCodes = getUsedCodesForPerfil(headers, rows, perfil, sheetName);
+    const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
+    if (!nextSequence) {
+      throw new Error(`Limite de ${DEFAULT_MAX_INSCRICOES_POR_PERFIL} inscrições atingido para o perfil ${perfil}.`);
+    }
+    const codigo = buildCodigoFromSequence(perfil, nextSequence);
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!${codeColLetter}${idx}`,
