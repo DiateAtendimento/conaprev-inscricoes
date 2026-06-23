@@ -180,6 +180,35 @@ function parseRowIndexFromUpdatedRange(updatedRange) {
   return Number(match[1] || match[2] || NaN);
 }
 
+function dedupeItems(items, keyBuilder) {
+  const seen = new Set();
+  const out = [];
+  for (const item of items || []) {
+    const key = String(keyBuilder(item) || "").trim();
+    if (!key) {
+      out.push(item);
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function buildDisplayDedupKey(item) {
+  const cpf = normalizeCpfValue(item?.cpf);
+  if (cpf) return `cpf:${cpf}`;
+
+  const codigo = String(item?.numerodeinscricao || "").trim().toUpperCase();
+  if (codigo) return `codigo:${codigo}`;
+
+  const nome = normalizeKey(item?.nome || "");
+  const sigla = normalizeKey(item?.sigladaentidade || item?.ufsigla || "");
+  if (nome) return `nome:${nome}|sigla:${sigla}`;
+  return "";
+}
+
 function matchQuery(rowObj, q) {
   if (!q) return true;
   const term = String(q).trim().toLowerCase();
@@ -507,7 +536,7 @@ export async function listStaffGallery() {
     });
   });
   out.sort((a, b) => protoKey(a.numerodeinscricao) - protoKey(b.numerodeinscricao));
-  return out;
+  return dedupeItems(out, buildDisplayDedupKey);
 }
 
 export async function listPalestrantesGallery() {
@@ -531,7 +560,7 @@ export async function listPalestrantesGallery() {
     });
   });
   out.sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" }));
-  return out;
+  return dedupeItems(out, buildDisplayDedupKey);
 }
 
 export async function listInscricoesGallery(perfil) {
@@ -554,6 +583,7 @@ export async function listInscricoesGallery(perfil) {
     out.push({
       numerodeinscricao: code,
       nome: name,
+      cpf: normHdrs.indexOf("cpf") >= 0 ? normalizeCpfValue(r[normHdrs.indexOf("cpf")]) : "",
       sigladaentidade: idxSigla >= 0 ? r[idxSigla] : "",
       ufsigla: idxUfSigla >= 0 ? r[idxUfSigla] : "",
       perfil: String(perfil || ""),
@@ -561,7 +591,7 @@ export async function listInscricoesGallery(perfil) {
   });
 
   out.sort((a, b) => protoKey(a.numerodeinscricao) - protoKey(b.numerodeinscricao));
-  return out;
+  return dedupeItems(out, buildDisplayDedupKey);
 }
 
 
@@ -596,15 +626,17 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
     out.push(item);
   }
 
+  const deduped = dedupeItems(out, buildDisplayDedupKey);
+
   // OrdenAção server-side para FINALIZADOS: MAIOR ? MENOR por Número do protocolo
   if (String(status).toLowerCase() === "finalizados") {
-    out.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
+    deduped.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
   }
 
   // paginAção
   const start = Math.max(0, offset);
-  const end = Math.min(out.length, start + Math.max(1, limit));
-  return out.slice(start, end);
+  const end = Math.min(deduped.length, start + Math.max(1, limit));
+  return deduped.slice(start, end);
 }
 
 export async function marcarConferido({ _rowIndex, perfil, conferido, conferidoPor }) {
