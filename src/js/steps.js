@@ -59,6 +59,7 @@
     found: false
   });
   let state = initialState();
+  let isSubmitting = false;
 
   // "Nome no prisma" automático
   let prismaManual = false;
@@ -204,9 +205,22 @@
     }
     const allowAdvanceStep1 = state.searched && (!state.found || !!state.data?.numerodeinscricao);
     avancar.classList.toggle('d-none', state.step === 1 && !allowAdvanceStep1);
-    avancar.disabled = (state.step === 1 && !allowAdvanceStep1);
+    avancar.disabled = isSubmitting || (state.step === 1 && !allowAdvanceStep1);
 
     updateFinalStepLabel();
+  }
+
+  function setSubmitting(nextValue) {
+    isSubmitting = !!nextValue;
+    const avancar = $('#miBtnAvancar');
+    const voltar = $('#miBtnVoltar');
+    const allowAdvanceStep1 = state.searched && (!state.found || !!state.data?.numerodeinscricao);
+    if (avancar) {
+      avancar.disabled = isSubmitting || (state.step === 1 && !allowAdvanceStep1);
+    }
+    if (voltar) {
+      voltar.disabled = isSubmitting;
+    }
   }
 
   /* ===============================
@@ -916,6 +930,7 @@
    * =============================== */
   function resetModal() {
     state = initialState();
+    setSubmitting(false);
     const form = document.getElementById('miForm');
     form.reset();
     $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
@@ -934,6 +949,8 @@
    * Eventos principais
    * =============================== */
   $('#miBtnAvancar').addEventListener('click', async () => {
+    if (isSubmitting) return;
+
     // Passo 6: concluir ? fecha modal
     if (state.step === 6) { modal.hide(); return; }
 
@@ -941,6 +958,7 @@
     if (state.step === 4 && state.data?.numerodeinscricao) {
       if (!validateStep()) return;
       saveDraft();
+      setSubmitting(true);
       try {
         const payload = { ...state.data, ...readForm() };
         openLottie('saving', 'Salvando alterações…');
@@ -951,6 +969,8 @@
       } catch (e) {
         openLottie('error', e.message || 'Erro ao salvar.');
         setTimeout(closeLottie, 1600);
+      } finally {
+        setSubmitting(false);
       }
       return;
     }
@@ -961,6 +981,7 @@
 
     // envio final (gerar Número de Inscrição)
     if (state.step === 5) {
+      setSubmitting(true);
       try {
         const payload   = { ...state.data, ...readForm() };
         const isNew     = !state.found || !payload._rowIndex;       // Não veio da planilha ? novo
@@ -995,6 +1016,8 @@
         openLottie('error', e.message || 'Erro ao concluir a Inscrição.');
         setTimeout(closeLottie, 1600);
         return;
+      } finally {
+        setSubmitting(false);
       }
     }
 
@@ -1115,6 +1138,7 @@
     if (!card) return;
     const perfil = card?.dataset.profile || 'Conselheiro';
     state = initialState();
+    setSubmitting(false);
     state.perfil = perfil;
 
     $('#miPerfil').textContent = perfil;

@@ -220,9 +220,93 @@ function getUsedCodesForPerfil(headers, rows, perfil, sheetName) {
   return usedCodes;
 }
 
+function normalizeCpfValue(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function findRowsByCpfInRows(headers, rows, cpf, perfil, sheetName) {
+  const cleanCpf = normalizeCpfValue(cpf);
+  const idxCpf = headers.map(normalizeKey).indexOf("cpf");
+  if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado.');
+
+  const matches = [];
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = rows[i];
+    const rowCpf = normalizeCpfValue(row[idxCpf]);
+    if (rowCpf !== cleanCpf) continue;
+
+    const obj = mapRow(headers, row);
+    if (!rowBelongsToPerfil(obj, perfil, sheetName)) continue;
+    obj._rowIndex = i + 2;
+    matches.push({
+      rowIndex: i + 2,
+      row,
+      obj,
+    });
+  }
+  return matches.sort((a, b) => a.rowIndex - b.rowIndex);
+}
+
+async function clearRow(sheetName, headers, rowIndex) {
+  const sheets = await getSheets();
+  const lastColLetter = columnLetterFromIndex(headers.length - 1);
+  const range = `${sheetName}!A${rowIndex}:${lastColLetter}${rowIndex}`;
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range,
+    valueInputOption: "RAW",
+    requestBody: { values: [Array(headers.length).fill("")] }
+  });
+}
+
+async function ensureCodigoForRow(sheetName, headers, rows, rowIndex, perfil) {
+  const colCode = headerIndex(headers, "numerodeinscricao");
+  if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
+
+  const row = rows[rowIndex - 2] || [];
+  const currentCode = String(row[colCode] || "").trim();
+  if (currentCode) return currentCode;
+
+  const usedCodes = getUsedCodesForPerfil(headers, rows, perfil, sheetName);
+  const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
+  if (!nextSequence) {
+    throw new Error(`Limite de ${DEFAULT_MAX_INSCRICOES_POR_PERFIL} inscrições atingido para o perfil ${perfil}.`);
+  }
+
+  const codigo = buildCodigoFromSequence(perfil, nextSequence);
+  const sheets = await getSheets();
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${sheetName}!${columnLetterFromIndex(colCode)}${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[codigo]] }
+  });
+  return codigo;
+}
+
+async function reconcileCpfRows({ cpf, perfil, sheetName }) {
+  const { headers, rows } = await readAll(sheetName);
+  const matches = findRowsByCpfInRows(headers, rows, cpf, perfil, sheetName);
+  if (!matches.length) return null;
+
+  const keeper = matches[0];
+  const duplicates = matches.slice(1);
+  const codigo = await ensureCodigoForRow(sheetName, headers, rows, keeper.rowIndex, perfil);
+
+  for (const duplicate of duplicates) {
+    await clearRow(sheetName, headers, duplicate.rowIndex);
+  }
+
+  invalidateSheetCache(sheetName);
+  return {
+    codigo,
+    rowIndex: keeper.rowIndex,
+  };
+}
+
 function validarDados(formData) {
   if (!formData?.cpf || !String(formData.cpf).trim()) throw new Error("Campo obrigat�rio: cpf");
-  const clean = String(formData.cpf).replace(/\D/g, "");
+  const clean = normalizeCpfValue(formData.cpf);
   if (!/^\d{11}$/.test(clean)) throw new Error("CPF deve conter apenas Números e ter 11 dígitos.");
   if (!formData?.nome || !String(formData.nome).trim()) throw new Error("Campo obrigat�rio: nome");
 }
@@ -242,20 +326,11 @@ function createRowFromFormData(formData, perfil, headers) {
 }
 
 export async function buscarPorCpf(cpf, perfil) {
-  const clean = String(cpf||"").replace(/\D/g, "");
+  const clean = normalizeCpfValue(cpf);
   const sheetName = sheetForPerfil(perfil);
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_SEARCH_MS);
-  const idxCpf = headers.map(normalizeKey).indexOf("cpf");
-  if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado.');
-  for (let i = 0; i < rows.length; i++) {
-    const cell = String(rows[i][idxCpf] || "").replace(/\D/g, "");
-    if (cell === clean) {
-      const out = mapRow(headers, rows[i]);
-      out._rowIndex = i + 2; // 1-based + header
-      return out;
-    }
-  }
-  return null;
+  const matches = findRowsByCpfInRows(headers, rows, clean, perfil, sheetName);
+  return matches[0]?.obj || null;
 }
 
 export async function buscarAutorizadoParaVotarPorCpf(cpf) {
@@ -278,13 +353,11 @@ export async function buscarAutorizadoParaVotarPorCpf(cpf) {
 export async function inscreverDados(formData, perfil) {
   return withSequenceLock(perfil, async () => {
     validarDados(formData);
-    const exists = await buscarPorCpf(formData.cpf, perfil);
-    if (exists) throw new Error("CPF já inscrito neste perfil.");
-
     const sheetName = sheetForPerfil(perfil);
+    const existing = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+    if (existing) return existing.codigo;
+
     const { headers } = await readAll(sheetName);
-    const colCode = headerIndex(headers, "numerodeinscricao");
-    if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
 
     formData.numerodeinscricao = "";
     const row = createRowFromFormData(formData, perfil, headers);
@@ -299,20 +372,11 @@ export async function inscreverDados(formData, perfil) {
       requestBody: { values: [row] }
     });
 
-    const updatedRange = appendResp.data?.updates?.updatedRange || "";
-    const rowIndex = parseRowIndexFromUpdatedRange(updatedRange);
-    const codigo = buildCodigoFromRowIndex(perfil, rowIndex);
-    const codeCell = `${sheetName}!${columnLetterFromIndex(colCode)}${rowIndex}`;
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: codeCell,
-      valueInputOption: "RAW",
-      requestBody: { values: [[codigo]] }
-    });
-
-    invalidateSheetCache(sheetName);
-    return codigo;
+    const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+    if (!reconciled?.codigo) {
+      throw new Error("Falha ao consolidar a inscrição após a gravação.");
+    }
+    return reconciled.codigo;
   });
 }
 
@@ -335,33 +399,15 @@ export async function atualizarDados(formData, perfil) {
 export async function confirmarInscricao(formData, perfil) {
   return withSequenceLock(perfil, async () => {
     const sheetName = sheetForPerfil(perfil);
+    if (formData?.cpf) {
+      const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+      if (reconciled?.codigo) return reconciled.codigo;
+    }
+
     const idx = Number(formData._rowIndex);
     if (!idx || idx < 2) throw new Error("Linha inválida.");
     const { headers, rows } = await readAll(sheetName);
-    const colCode = headerIndex(headers, "numerodeinscricao");
-    if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
-
-    const codeColLetter = columnLetterFromIndex(colCode);
-    const sheets = await getSheets();
-    const cellResp = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: `${sheetName}!${codeColLetter}${idx}`
-    });
-    const cur = (cellResp.data.values || [])[0]?.[0];
-    if (cur) return cur;
-    const usedCodes = getUsedCodesForPerfil(headers, rows, perfil, sheetName);
-    const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
-    if (!nextSequence) {
-      throw new Error(`Limite de ${DEFAULT_MAX_INSCRICOES_POR_PERFIL} inscrições atingido para o perfil ${perfil}.`);
-    }
-    const codigo = buildCodigoFromSequence(perfil, nextSequence);
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${sheetName}!${codeColLetter}${idx}`,
-      valueInputOption: "RAW",
-      requestBody: { values: [[codigo]] }
-    });
-
+    const codigo = await ensureCodigoForRow(sheetName, headers, rows, idx, perfil);
     invalidateSheetCache(sheetName);
     return codigo;
   });
