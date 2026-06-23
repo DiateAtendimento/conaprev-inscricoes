@@ -412,9 +412,18 @@ export async function inscreverDados(formData, perfil) {
 export async function atualizarDados(formData, perfil) {
   validarDados(formData);
   const sheetName = sheetForPerfil(perfil);
-  const { headers } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
-  const idx = Number(formData._rowIndex);
+  let idx = Number(formData._rowIndex);
+  let headers;
+
+  if (formData?.cpf) {
+    const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+    if (reconciled?.rowIndex) {
+      idx = reconciled.rowIndex;
+    }
+  }
+
   if (!idx || idx < 2) throw new Error("Linha inválida.");
+  ({ headers } = await readAll(sheetName));
   const row = createRowFromFormData(formData, perfil, headers);
   const range = `${sheetName}!A${idx}:${columnLetterFromIndex(headers.length - 1)}${idx}`;
   const sheets = await getSheets();

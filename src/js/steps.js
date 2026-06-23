@@ -537,6 +537,11 @@
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
+  function clearDraft(cpf = $('#miCpf').value) {
+    try {
+      localStorage.removeItem(draftKey(cpf));
+    } catch {}
+  }
   function filterNonEmpty(obj) {
     const out = {};
     Object.entries(obj || {}).forEach(([k, v]) => {
@@ -963,6 +968,7 @@
         const payload = { ...state.data, ...readForm() };
         openLottie('saving', 'Salvando alterações…');
         await apiAtualizar(payload);  // ? editar = /atualizar
+        clearDraft(payload.cpf);
         closeLottie();
         openLottie('confirming', `${(payload.nome || '').split(' ')[0] || 'OK'}, dados atualizados!`);
         setTimeout(() => { closeLottie(); modal.hide(); }, 1200);
@@ -1004,6 +1010,7 @@
         state.protocolo = resp?.codigo || null;
         state.pdfUrl    = resp?.pdfUrl || null;
         $('#miProtocolo').textContent = state.protocolo || '-';
+        clearDraft(payload.cpf);
 
         state.step = 6;
         renderStep();
