@@ -46,7 +46,7 @@
     );
   }
 
-  // Clique no bot�o de emitir certificado
+  // Clique no botão de emitir certificado
   btnAbrir.addEventListener("click", (e) => {
     e.preventDefault();
 
@@ -55,9 +55,8 @@
       return;
     }
 
-    // Se j� estiver liberado ou em modo dev, redireciona para o Apps Script
+    // Se já estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
-      "https://script.google.com/macros/s/AKfycbyadfGID9li6Hk5-M0_GOnuAPapCApYBLEa7LXdRnk-frEha1BOc087O-TJztKh7Peq7w/exec";
+      "https://script.google.com/macros/s/AKfycbw68BQ91HoOwZjPM6y-QnAfm-IZvumkO4JX7xIE6MZ6OncpDOPRWabjsBdl8kn9QDzT2g/exec";
   });
 })();
-
