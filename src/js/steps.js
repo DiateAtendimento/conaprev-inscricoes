@@ -42,6 +42,10 @@
   const modalEl = document.getElementById('modalInscricao');
   if (!modalEl) { console.error('Faltou o HTML do modal #modalInscricao no index.html'); return; }
   const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: true });
+  const inscricoesEncerradasModalEl = document.getElementById('inscricoesEncerradasModal');
+  const inscricoesEncerradasModal = inscricoesEncerradasModalEl
+    ? new bootstrap.Modal(inscricoesEncerradasModalEl)
+    : null;
   const cancelModalEl = document.getElementById('cancelInscricaoModal');
   const cancelModal = cancelModalEl ? new bootstrap.Modal(cancelModalEl, { backdrop: 'static', keyboard: true }) : null;
   const cancelMsgEl = document.getElementById('cancelInscricaoMsg');
@@ -1143,6 +1147,10 @@
    * =============================== */
   const openProfileModal = (card) => {
     if (!card) return;
+    if (window.INSCRICOES_ENCERRADAS) {
+      inscricoesEncerradasModal?.show();
+      return;
+    }
     const perfil = card?.dataset.profile || 'Conselheiro';
     state = initialState();
     setSubmitting(false);

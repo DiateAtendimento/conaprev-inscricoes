@@ -218,6 +218,24 @@
     </main>
   </div>
 
+  <!-- Modal exibido enquanto as inscrições estiverem encerradas -->
+  <div class="modal fade" id="inscricoesEncerradasModal" tabindex="-1" aria-labelledby="inscricoesEncerradasTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="inscricoesEncerradasTitulo">Inscrições encerradas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          As inscrições para a 85ª Reunião Ordinária do CONAPREV foram encerradas.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal de Inscrição (reutiliza o mesmo fluxo/JS) -->
   <div class="modal fade" id="modalInscricao" tabindex="-1" aria-labelledby="miTitle" aria-hidden="true" role="dialog">
     <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
@@ -462,6 +480,7 @@
   <script src="/src/js/certs.js" defer></script>
 
   <!-- Fluxo multi-passos (reutilizado) -->
+  <script>window.INSCRICOES_ENCERRADAS = true;</script>
   <script src="/src/js/steps.js" defer></script>
 
   <!-- Admin -->
@@ -482,4 +501,3 @@
 
 </body>
 </html>
-

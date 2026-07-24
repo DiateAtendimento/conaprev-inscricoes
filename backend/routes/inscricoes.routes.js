@@ -17,6 +17,8 @@ import {
 } from "../services/sheets.service.js";
 
 const r = Router();
+const INSCRICOES_ENCERRADAS = true;
+const INSCRICOES_ENCERRADAS_MSG = "As inscrições foram encerradas.";
 
 // Perfis válidos para todas as operAções
 const PERFIS_OK = new Set([
@@ -147,6 +149,9 @@ r.post("/buscar", async (req, res) => {
  */
 r.post("/criar", async (req, res) => {
   try {
+    if (INSCRICOES_ENCERRADAS) {
+      return res.status(403).json({ error: INSCRICOES_ENCERRADAS_MSG });
+    }
     const { formData, perfil } = req.body || {};
     if (!formData || !perfil) {
       return res.status(400).json({ error: "Dados incompletos" });
@@ -218,6 +223,9 @@ r.post("/conferir", adminGuard, async (req, res) => {
  */
 r.post("/confirmar", async (req, res) => {
   try {
+    if (INSCRICOES_ENCERRADAS) {
+      return res.status(403).json({ error: INSCRICOES_ENCERRADAS_MSG });
+    }
     const { formData = {}, perfil } = req.body || {};
     if (!perfil) return res.status(400).json({ error: "Dados incompletos" });
     if (!PERFIS_OK.has(String(perfil))) {
@@ -343,4 +351,3 @@ r.get("/:id/comprovante.pdf", async (req, res) => {
 });
 
 export default r;
-
