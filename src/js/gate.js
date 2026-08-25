@@ -8,7 +8,7 @@ const EVENTO = window.EVENTO || { INICIO: '2026-09-01T08:00:00-03:00' };
  *  ============================= */
 const MAINTENANCE_MODE = false;         // liberar automaticamente quando a data chegar
 const RELEASE_AT       = EVENTO.INICIO; // data/hora de liberAção
-const PREVIEW_TOKEN    = 'CONAPREV86_DEV'; // ?preview=CONAPREV86_DEV (salva cookie)
+const PREVIEW_TOKEN    = 'CONAPREV86_DEV'; // ?preview=CONAPREV86_DEV
 
 /* Helpers cookie/query */
 function setCookie(name, value, days = 7) {
@@ -16,30 +16,18 @@ function setCookie(name, value, days = 7) {
   d.setTime(d.getTime() + (days * 86400000));
   document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
 }
-function getCookie(name) {
-  return document.cookie.split('; ').reduce((acc, c) => {
-    const [k, v] = c.split('=');
-    if (k === name) acc = decodeURIComponent(v || '');
-    return acc;
-  }, '');
-}
 function parseQuery() {
   return Object.fromEntries(new URLSearchParams(location.search).entries());
 }
 
-/* Query para liberar/limpar preview (sem exibir mensagem na UI) */
+/* O preview só vale enquanto o token estiver presente na URL. */
 const q = parseQuery();
-if (q.preview) {
-  if (q.preview === 'clear') {
-    setCookie('conaprev_preview', '', -1);
-    history.replaceState({}, '', location.pathname);
-  } else if (q.preview === PREVIEW_TOKEN) {
-    setCookie('conaprev_preview', PREVIEW_TOKEN, 7);
-    history.replaceState({}, '', location.pathname);
-  }
+if (q.preview === 'clear') {
+  setCookie('conaprev_preview', '', -1);
+  history.replaceState({}, '', location.pathname);
 }
 
-const hasBypass  = getCookie('conaprev_preview') === PREVIEW_TOKEN;
+const hasBypass  = q.preview === PREVIEW_TOKEN;
 const releaseTs  = new Date(RELEASE_AT).getTime();
 const shouldGate = (MAINTENANCE_MODE || Date.now() < releaseTs) && !hasBypass;
 
