@@ -1,7 +1,7 @@
 ﻿// gate.js � cron�metro/bloqueio de abertura
 
 // lá a data de liberAção do objeto global definido em config.js
-const EVENTO = window.EVENTO || { INICIO: '2025-09-22T08:00:00-03:00' };
+const EVENTO = window.EVENTO || { INICIO: '2026-09-01T08:00:00-03:00' };
 
 /** =============================
  *  Config do �port�o� (gate)
