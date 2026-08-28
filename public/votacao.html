@@ -15,8 +15,16 @@
   <link rel="icon" type="image/svg+xml" href="/imagens/logos/logo-conaprev.svg">
   <link href="/src/css/main.css" rel="stylesheet">
   <link href="/src/css/components.css" rel="stylesheet">
+  <link href="/src/css/institutional.css" rel="stylesheet">
 </head>
 <body class="vote-login-page">
+  <header class="vote-site-header" aria-label="Realização do evento">
+    <img src="/imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+    <img src="/imagens/logo-mps.svg" alt="Ministério da Previdência Social">
+    <img src="/imagens/logos/logo-govbr.svg" alt="Governo Federal">
+    <img src="/imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul">
+    <img src="/imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
+  </header>
   <main id="votePublicContainer" class="vote-login-shell">
     <div id="voteUserMenu" class="vote-user-menu d-none">
       <div class="vote-user-info">
@@ -61,6 +69,20 @@
       </div>
     </section>
 
+    <section class="vote-explainer" aria-label="Informações sobre a votação">
+      <div class="vote-status-card">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <div><strong>Votação disponível</strong><span>Acompanhe nesta página as votações abertas pela organização.</span></div>
+      </div>
+      <h2>Como funciona</h2>
+      <div class="vote-how-grid">
+        <article><i class="bi bi-person-vcard"></i><strong>1. Faça login com seu CPF</strong><span>Acesse com o CPF cadastrado.</span></article>
+        <article><i class="bi bi-ui-checks-grid"></i><strong>2. Escolha sua opção</strong><span>Selecione sua resposta em cada votação.</span></article>
+        <article><i class="bi bi-shield-check"></i><strong>3. Confirme seu voto</strong><span>Confira sua seleção antes de enviar.</span></article>
+      </div>
+      <div class="vote-security-note"><i class="bi bi-lock-fill"></i><span>Sua participação é individual e segura. Não compartilhe seus dados de acesso.</span></div>
+    </section>
+
     <section id="voteModules" class="vote-public-section d-none">
       <div id="voteModuleGrid" class="row g-3 mt-2"></div>
     </section>
@@ -87,6 +109,8 @@
       <div class="vote-footer-logos">
         <img src="/imagens/logos/logo-conaprev.svg" alt="CONAPREV" class="vote-logo-conaprev">
         <img src="/imagens/logos/logo-govbr.svg" alt="Ministério da Previdência" class="vote-logo-govbr">
+        <img src="/imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul">
+        <img src="/imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
       </div>
     </div>
   </footer>
@@ -109,7 +133,5 @@
   <script src="/src/js/votacao.js" defer></script>
 </body>
 </html>
-
-
 
 

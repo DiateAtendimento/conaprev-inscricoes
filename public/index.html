@@ -27,8 +27,9 @@
   <!-- Estilos do projeto -->
   <link href="/src/css/main.css" rel="stylesheet">
   <link href="/src/css/components.css" rel="stylesheet">
+  <link href="/src/css/institutional.css" rel="stylesheet">
 </head>
-<body>
+<body class="home-page">
   <noscript>
     <div class="alert alert-warning m-0 text-center">
       Este site requer JavaScript habilitado para funcionar corretamente.
@@ -43,9 +44,10 @@
     <!-- Topbar -->
     <header class="topbar">
       <div class="wrap container">
-        <div class="brand-strip brand-strip--three-logos">
+        <div class="brand-strip">
           <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
-          <!-- <img class="logo logo-amprev"   src="imagens/logos/logo-amprev.svg"   alt="AMPREV"> -->
+          <img class="logo logo-mps" src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
+          <img class="logo logo-govbr" src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
           <img class="logo logo-state-seal"  src="imagens/logos/brasao_RS.png"         alt="Brasão do Rio Grande do Sul">
           <img class="logo logo-host-brand"  src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
         </div>
@@ -101,11 +103,11 @@
           </div>
           <div class="info-line">
             <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>Terça-feira, 4 de agosto de 2026, das 08h30 às 18h</span>
+            <span>4 e 5 de agosto de 2026</span>
           </div>
           <div class="info-line">
-            <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>Quarta-feira, 5 de agosto de 2026, das 09h às 13h</span>
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span>Gramado/RS</span>
           </div>
 
           <div class="chips reveal d3" role="navigation" aria-label="Atalhos">
@@ -125,6 +127,9 @@
 
     <!-- HOME -->
     <main class="container container--narrow py-5">
+      <header class="profile-section-heading reveal d4">
+        <h2>Escolha seu perfil para acessar a inscrição</h2>
+      </header>
       <section id="home" class="mb-5 cards-wrapper reveal d4" aria-label="Selecione seu perfil">
         <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-5">
           <div class="col">
@@ -135,6 +140,7 @@
               <div class="divider" aria-hidden="true"></div>
               <div class="card-bottom">
                 <h5 class="card-title">Conselheiro</h5>
+                <p class="card-description">Inscrição para membros conselheiros</p>
                 <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
@@ -148,6 +154,7 @@
               <div class="divider" aria-hidden="true"></div>
               <div class="card-bottom">
                 <h5 class="card-title">CNRPPS</h5>
+                <p class="card-description">Inscrição para membros do CNRPPS</p>
                 <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
@@ -161,6 +168,7 @@
               <div class="divider" aria-hidden="true"></div>
               <div class="card-bottom">
                 <h5 class="card-title">Palestrante</h5>
+                <p class="card-description">Inscrição para palestrantes</p>
                 <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
@@ -175,6 +183,7 @@
               <div class="divider" aria-hidden="true"></div>
               <div class="card-bottom">
                 <h5 class="card-title">COPAJURE</h5>
+                <p class="card-description">Inscrição para membros do COPAJURE</p>
                 <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
@@ -188,6 +197,7 @@
               <div class="divider" aria-hidden="true"></div>
               <div class="card-bottom">
                 <h5 class="card-title">Staff</h5>
+                <p class="card-description">Inscrição para equipe e organização</p>
                 <button class="btn-select select-profile">Selecionar</button>
               </div>
             </div>
