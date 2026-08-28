@@ -557,6 +557,14 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .official-reference { display: block; margin-top: 18px; color: rgba(255,255,255,.72); font-size: 12px; }
 
 /* Hospedagem */
+.hospitality-header.internal-site-header { color: var(--text); background: var(--white); }
+.hospitality-header .event-lockup-light .event-lockup-divider { background: #777; }
+.hospitality-header .event-lockup-light .event-edition { color: var(--gov-blue-dark); }
+.hospitality-header .hospitality-nav { background: linear-gradient(115deg, #063c75, #0055ad); }
+.contact-page .internal-site-header { color: var(--text); background: var(--white); }
+.contact-page .event-lockup-light .event-lockup-divider { background: #777; }
+.contact-page .event-lockup-light .event-edition { color: var(--gov-blue-dark); }
+.contact-page .hospitality-nav { background: linear-gradient(115deg, #063c75, #0055ad); }
 .hospitality-page .hospitality-header-top { min-height: 118px; }
 .hospitality-page .hospitality-nav .container { justify-content: flex-end; }
 .hospitality-page .hospitality-hero-inner { min-height: 390px; }
