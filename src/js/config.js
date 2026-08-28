@@ -3,8 +3,8 @@
   // Janela de liberAção das Inscrições (usado pelo gate)
   window.EVENTO = {
     INICIO: '2026-09-01T08:00:00-03:00',
-    FIM:    '2026-07-17T23:59:59-03:00',
-    LOCAL:  'Gramado/RS',
+    FIM:    '2026-10-23T23:59:59-03:00',
+    LOCAL:  'Vitória/ES',
   };
 
   // Base da API (Render em produ��o; localhost no dev)

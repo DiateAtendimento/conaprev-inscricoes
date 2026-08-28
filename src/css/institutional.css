@@ -45,6 +45,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .event-edition small { margin-top: 2px; font-size: 14px; line-height: 1.05; letter-spacing: .02em; }
 .institutional-logos { flex: 1; display: grid; grid-template-columns: 1.1fr 1.2fr 1.2fr .75fr; align-items: center; gap: 30px; }
 .institutional-logos img { width: 100%; max-height: 76px; object-fit: contain; }
+.institutional-logos.current-event-logos { max-width: 560px; grid-template-columns: 1fr 1.2fr; }
 .contact-strip { height: 48px; color: var(--white); background: linear-gradient(90deg, var(--gov-blue-dark), #005ebd); }
 .contact-strip-inner { height: 48px; display: flex; justify-content: flex-end; align-items: center; gap: 42px; }
 .contact-strip a { display: inline-flex; align-items: center; gap: 9px; color: var(--white); font-size: 14px; text-decoration: none; }
@@ -76,7 +77,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .landing-main { max-width: var(--container); padding: 28px 0 72px; }
 .profile-section-heading { margin: 0 0 30px; text-align: center; }
 .profile-section-heading h2 { margin: 0; font-size: 25px; font-weight: 700; }
-.profile-section, #home.profile-section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.profile-section, #inscricoes.profile-section { margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
 .profile-grid { max-width: 1060px; margin-inline: auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; }
 .profile-item { grid-column: span 2; }
 .profile-item:nth-child(4) { grid-column: 2 / span 2; }
@@ -312,8 +313,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Votação ao vivo */
 .vote-login-page { min-height: 100vh; background: var(--white); }
-.vote-site-header { min-height: 142px; padding: 20px max(24px, calc((100vw - var(--container)) / 2)); display: grid; grid-template-columns: 1.35fr 1fr 1.15fr 1fr .7fr; align-items: center; gap: 36px; border-top: 8px solid var(--gov-blue); border-bottom: 8px solid var(--gov-blue); background: var(--white); }
+.vote-site-header { min-height: 142px; padding: 20px max(24px, calc((100vw - var(--container)) / 2)); display: grid; grid-template-columns: 1.5fr 1fr 1.15fr; align-items: center; gap: 50px; border-top: 8px solid var(--gov-blue); border-bottom: 8px solid var(--gov-blue); background: var(--white); }
 .vote-site-header img { width: 100%; max-height: 82px; object-fit: contain; }
+.vote-brand-home { display: flex; align-items: center; gap: 15px; }
+.vote-brand-home > img { width: min(180px, 62%); }
+.vote-brand-home > span { padding-left: 15px; display: flex; flex-direction: column; color: var(--gov-blue-dark); border-left: 1px solid #7f8b9b; line-height: 1; }
+.vote-brand-home strong { color: #c88a00; font-family: Georgia, serif; font-size: 40px; font-weight: 400; }
+.vote-brand-home small { font-size: 10px; }
+.vote-builder-header { color: var(--white); background: linear-gradient(110deg, var(--gov-blue-dark), #0058b9); }
+.vote-builder-header .container { min-height: 105px; display: flex; align-items: center; }
+.vote-builder-header .vote-brand-home > img { width: 150px; filter: brightness(0) invert(1); }
+.vote-builder-header .vote-brand-home > span { color: var(--white); border-color: rgba(255,255,255,.5); }
 .vote-login-shell { width: 100%; max-width: none; padding: 60px max(24px, calc((100vw - var(--container)) / 2)) 72px; background: radial-gradient(circle at 85% 18%, #eef6ff, transparent 28%), var(--white); }
 .vote-login-card { min-height: 560px; display: grid; grid-template-columns: 1fr 1fr; overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .vote-login-left { padding: 30px 70px 30px 0; }
@@ -358,7 +368,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .vote-help a { color: var(--text); text-decoration: none; }
 .vote-public-footer { min-height: 185px; padding: 40px max(24px, calc((100vw - var(--container)) / 2)); background: linear-gradient(120deg, var(--gov-blue-dark), #0059bd); }
 .vote-public-footer-inner { max-width: var(--container); margin: auto; }
-.vote-footer-logos { display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; gap: 42px; }
+.vote-footer-logos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: center; gap: 42px; }
 .vote-footer-logos img { width: 100%; max-height: 82px; object-fit: contain; }
 body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 
@@ -475,8 +485,9 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .guest-hero-copy > p { margin: 0 0 24px; font-size: 25px; line-height: 1.45; }
 .guest-hero-copy > div:last-child { display: flex; flex-direction: column; gap: 14px; color: var(--gov-blue); font-size: 19px; font-weight: 600; }
 .guest-hero-copy > div:last-child i { width: 30px; margin-right: 8px; font-size: 25px; }
-.guest-hero-image { position: relative; width: calc(100% + max(20px, (100vw - var(--container)) / 2)); background: url("/imagens/bg/bg-desktop.png") 68% center / cover no-repeat; }
+.guest-hero-image { position: relative; width: calc(100% + max(20px, (100vw - var(--container)) / 2)); overflow: hidden; background: radial-gradient(circle at 56% 34%, rgba(255,205,7,.25), transparent 15%), radial-gradient(circle at 62% 54%, rgba(104,192,239,.42), transparent 25%), linear-gradient(145deg, #e9f4ff, #0a5ba9); }
 .guest-hero-image::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--white), transparent 35%); }
+.guest-hero-image::after { content: ""; position: absolute; width: 290px; aspect-ratio: 1; right: 14%; top: 22%; border: 1px solid rgba(255,255,255,.35); border-radius: 50%; box-shadow: 0 0 0 45px rgba(255,255,255,.07), 0 0 0 95px rgba(255,255,255,.04); }
 .guest-main { padding: 58px 0 70px; }
 .guest-welcome { margin-bottom: 38px; text-align: center; }
 .guest-welcome h2 { margin: 0; color: var(--gov-blue-dark); font-size: 38px; }
@@ -512,3 +523,184 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .guest-profile-grid .profile-card { height: 400px; }
   .guest-important { align-items: flex-start; padding: 22px 18px; }
 }
+
+/* Navegação institucional e páginas informativas da 86ª reunião */
+.brand-home-link { color: inherit; text-decoration: none; cursor: pointer; }
+.brand-home-link:hover { color: inherit; }
+.brand-home-link:focus-visible { border-radius: 8px; }
+.hero.landing-hero { background: radial-gradient(circle at 82% 30%, rgba(73,159,229,.34), transparent 22%), radial-gradient(circle at 74% 74%, rgba(255,205,7,.16), transparent 18%), linear-gradient(115deg, #053369 0%, #0754a5 58%, #0c74bd 100%); }
+.hero.landing-hero::after { content: ""; position: absolute; right: 6%; top: 15%; width: 360px; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; box-shadow: 0 0 0 50px rgba(255,255,255,.035), 0 0 0 110px rgba(255,255,255,.025); }
+.about-city-visual { width: 100%; height: 190px; align-self: center; display: grid; place-items: center; border-radius: 12px; color: var(--white); background: radial-gradient(circle at 70% 25%, rgba(255,205,7,.32), transparent 18%), linear-gradient(145deg, #0b4f9d, #0574bd); }
+.about-city-visual i { font-size: 72px; opacity: .9; }
+.footer-logos { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); }
+
+.internal-page { min-height: 100vh; background: #f5f7fa; }
+.internal-site-header { color: var(--white); background: linear-gradient(115deg, #063c75, #0055ad); }
+.institutional-logos-light { max-width: 430px; grid-template-columns: 1fr 1.15fr; }
+.institutional-logos-light img { max-height: 64px; }
+.internal-hero, .hospitality-hero.internal-hero { position: relative; min-height: 390px; overflow: hidden; display: flex; align-items: center; color: var(--white); background: radial-gradient(circle at 82% 28%, rgba(99,182,238,.3), transparent 22%), radial-gradient(circle at 75% 88%, rgba(255,205,7,.15), transparent 22%), linear-gradient(120deg, #073568, #0756a7 62%, #0879bd); }
+.internal-hero::after { content: ""; position: absolute; right: 7%; top: 20%; width: 300px; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; box-shadow: 0 0 0 45px rgba(255,255,255,.035), 0 0 0 95px rgba(255,255,255,.025); }
+.internal-hero > .container, .internal-hero-inner { position: relative; z-index: 1; width: 100%; }
+.internal-eyebrow, .section-kicker { display: block; color: #f2bd00; font-size: 13px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.internal-hero h1, .hospitality-hero.internal-hero h1 { max-width: 850px; margin: 12px 0 16px; font-size: clamp(40px, 5vw, 64px); line-height: 1.08; }
+.internal-hero p { max-width: 720px; margin: 0; color: #e7f1ff; font-size: 20px; line-height: 1.6; }
+.internal-hero-meta { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 16px 30px; color: var(--white); font-weight: 600; }
+.internal-hero-meta span { display: inline-flex; align-items: center; gap: 9px; }
+.official-reference { display: block; margin-top: 18px; color: rgba(255,255,255,.72); font-size: 12px; }
+
+/* Hospedagem */
+.hospitality-page .hospitality-header-top { min-height: 118px; }
+.hospitality-page .hospitality-nav .container { justify-content: flex-end; }
+.hospitality-page .hospitality-hero-inner { min-height: 390px; }
+.hospitality-page .hospitality-hero .hero-subtitle { max-width: 650px; font-size: 22px; }
+.lodging-content { padding-block: 46px 80px; }
+.lodging-notice, .tariff-legend { padding: 22px 26px; display: flex; align-items: center; gap: 18px; border: 1px solid #bdd5f4; border-radius: 12px; background: #eef6ff; }
+.lodging-notice > i, .tariff-legend > i { flex: 0 0 auto; color: var(--gov-blue); font-size: 30px; }
+.lodging-notice strong, .tariff-legend strong { color: var(--gov-blue-dark); font-size: 17px; }
+.lodging-notice p, .tariff-legend p { margin: 5px 0 0; color: #475569; line-height: 1.55; }
+.event-venue-card { margin: 28px 0 48px; padding: 30px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; border: 1px solid #c8ddf5; border-left: 6px solid var(--gov-blue); border-radius: 14px; background: var(--white); box-shadow: var(--shadow); }
+.venue-icon { width: 72px; height: 72px; display: grid; place-items: center; color: var(--white); border-radius: 14px; background: linear-gradient(145deg, var(--gov-blue), #0876ca); font-size: 34px; }
+.event-venue-card h2 { margin: 5px 0 7px; color: var(--gov-blue-dark); font-size: 28px; }
+.event-venue-card p { margin: 0; color: var(--text-soft); }
+.venue-rate { min-width: 205px; padding-left: 26px; display: flex; flex-direction: column; border-left: 1px solid var(--border); }
+.venue-rate > span, .venue-rate > small { color: var(--text-soft); font-size: 12px; }
+.venue-rate > strong { color: var(--gov-blue); font-size: 27px; }
+.venue-rate a { margin-top: 9px; color: var(--gov-blue); font-weight: 700; text-decoration: none; }
+.venue-rate em { margin-top: 8px; color: var(--gov-green); font-size: 12px; font-style: normal; font-weight: 700; }
+.lodging-section { margin-top: 48px; }
+.section-heading { margin-bottom: 24px; display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.section-heading h2 { margin: 6px 0 0; color: var(--gov-blue-dark); font-size: 31px; }
+.section-heading > p { max-width: 490px; margin: 0; color: var(--text-soft); text-align: right; }
+.lodging-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.lodging-card { position: relative; min-height: 325px; padding: 25px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 13px; background: var(--white); box-shadow: 0 5px 18px rgba(12,50,111,.07); }
+.lodging-card-icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--gov-blue); border-radius: 50%; background: #eaf3ff; font-size: 22px; }
+.lodging-card h3 { min-height: 50px; margin: 17px 0 8px; color: var(--gov-blue-dark); font-size: 19px; }
+.lodging-distance { min-height: 44px; margin: 0; color: var(--text-soft); font-size: 14px; }
+.lodging-distance i { color: var(--gov-blue); }
+.lodging-price { margin: auto 0 13px; display: grid; }
+.lodging-price span, .lodging-price small { color: var(--text-soft); font-size: 12px; }
+.lodging-price strong { color: var(--gov-blue); font-size: 23px; }
+.lodging-card > a { color: var(--gov-blue-dark); font-weight: 700; text-decoration: none; }
+.exclusive-badge { position: absolute; top: 22px; right: 20px; padding: 5px 8px; color: #087329; border-radius: 999px; background: #e3f6e9; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.apart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.apart-grid article { min-height: 145px; padding: 22px; display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--white); }
+.apart-grid article > i { grid-row: 1 / span 2; color: var(--gov-blue); font-size: 31px; }
+.apart-grid h3 { margin: 0 0 5px; color: var(--gov-blue-dark); font-size: 17px; }
+.apart-grid p { margin: 0; color: var(--text-soft); font-size: 13px; }
+.apart-grid strong { grid-column: 2; color: var(--gov-blue); font-size: 16px; }
+.tariff-legend { margin-top: 42px; }
+.tariff-legend > div { margin-right: auto; }
+.tariff-legend > a { flex: 0 0 auto; padding: 11px 17px; color: var(--gov-blue); border: 1px solid var(--gov-blue); border-radius: 7px; font-weight: 700; text-decoration: none; }
+
+/* Sobre o evento */
+.event-info-content { padding-block: 46px 80px; }
+.event-summary-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 18px; }
+.event-summary-card { min-height: 175px; padding: 24px; display: flex; gap: 18px; border: 1px solid var(--border); border-radius: 13px; background: var(--white); box-shadow: var(--shadow); }
+.event-summary-card > i { color: var(--gov-blue); font-size: 32px; }
+.event-summary-card span { color: var(--text-soft); font-size: 13px; }
+.event-summary-card h2 { margin: 8px 0; color: var(--gov-blue-dark); font-size: 21px; }
+.event-summary-card p { margin: 0; color: var(--text-soft); line-height: 1.55; }
+.event-section { margin-top: 28px; padding: 32px; border: 1px solid var(--border); border-radius: 14px; background: var(--white); box-shadow: 0 4px 15px rgba(12,50,111,.06); }
+.organizer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.organizer-grid article { min-height: 145px; padding: 20px; display: flex; flex-direction: column; gap: 13px; border-radius: 10px; background: #f2f7fd; color: var(--gov-blue-dark); font-weight: 650; line-height: 1.45; }
+.organizer-grid i { color: var(--gov-blue); font-size: 29px; }
+.participation-layout { display: grid; grid-template-columns: 1.4fr .8fr; gap: 28px; }
+.check-list { margin: 0; padding: 0; display: grid; gap: 15px; list-style: none; }
+.check-list li { display: flex; gap: 11px; color: #354052; }
+.check-list i { color: var(--gov-green); }
+.restriction-note { padding: 23px; border-left: 5px solid #d8a400; border-radius: 8px; background: #fff9e5; }
+.restriction-note i { color: #9a7200; font-size: 25px; }
+.restriction-note p { margin: 10px 0 0; color: #554a28; line-height: 1.55; }
+.travel-section { display: flex; align-items: center; gap: 35px; background: linear-gradient(110deg, #eef6ff, var(--white)); }
+.travel-copy { flex: 1; }
+.travel-section h2 { margin: 8px 0 12px; color: var(--gov-blue-dark); }
+.travel-section p { color: var(--text-soft); line-height: 1.65; }
+.travel-icon { color: #cfe3fb; font-size: 95px; }
+.primary-link, .secondary-link { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 20px; border-radius: 7px; font-weight: 700; text-decoration: none; }
+.primary-link { color: var(--white); background: var(--gov-blue); }
+.primary-link:hover { color: var(--white); background: var(--gov-blue-dark); }
+.secondary-link { color: var(--gov-blue); border: 1px solid var(--gov-blue); }
+.event-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.compact-section { display: flex; gap: 18px; }
+.compact-section > i { color: var(--gov-blue); font-size: 31px; }
+.compact-section h2 { margin: 0 0 9px; color: var(--gov-blue-dark); font-size: 20px; }
+.compact-section p { margin: 0; color: var(--text-soft); line-height: 1.55; }
+.registration-period { margin-top: 28px; padding: 31px; display: flex; align-items: center; justify-content: space-between; gap: 25px; color: var(--white); border-radius: 14px; background: linear-gradient(110deg, var(--gov-blue-dark), #075fb6); }
+.registration-period .section-kicker { color: var(--gov-yellow); }
+.registration-period h2 { margin: 7px 0; font-size: 27px; }
+.registration-period p { margin: 0; color: #deecff; }
+.registration-period .primary-link { color: var(--gov-blue-dark); background: var(--white); }
+.flight-alert { margin-top: 28px; padding: 24px 28px; display: flex; gap: 18px; border: 1px solid #f1d47d; border-radius: 12px; background: #fff9e5; }
+.flight-alert > i { color: #a57800; font-size: 30px; }
+.flight-alert strong { color: #604800; }
+.flight-alert p { margin: 5px 0 0; color: #5e573f; }
+.event-contact-band { margin-top: 28px; padding: 31px; display: flex; align-items: center; justify-content: space-between; gap: 28px; border: 1px solid var(--border); border-radius: 14px; background: var(--white); }
+.event-contact-band h2 { margin: 7px 0 11px; color: var(--gov-blue-dark); }
+.event-contact-band p { margin: 0; display: flex; flex-wrap: wrap; gap: 18px; }
+.event-contact-band p a { color: var(--text-soft); text-decoration: none; }
+.event-contact-actions { display: flex; flex-direction: column; gap: 10px; }
+
+/* Contato */
+.contact-content { padding-block: 52px 80px; }
+.contact-intro { max-width: 720px; margin-bottom: 28px; }
+.contact-intro h2 { margin: 8px 0 11px; color: var(--gov-blue-dark); font-size: 32px; }
+.contact-intro p { color: var(--text-soft); }
+.contact-channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.contact-channel-card { min-height: 180px; padding: 28px; display: flex; align-items: center; gap: 22px; color: var(--text); border: 1px solid var(--border); border-radius: 14px; background: var(--white); box-shadow: var(--shadow); text-decoration: none; transition: transform .2s, border-color .2s; }
+.contact-channel-card:hover { color: var(--text); border-color: #9fbfe8; transform: translateY(-3px); }
+.contact-channel-icon { width: 68px; height: 68px; flex: 0 0 auto; display: grid; place-items: center; color: var(--white); border-radius: 50%; background: linear-gradient(145deg, var(--gov-blue), #0874c6); font-size: 29px; }
+.contact-channel-card div { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.contact-channel-card small { color: var(--text-soft); }
+.contact-channel-card strong { color: var(--gov-blue-dark); font-size: 20px; overflow-wrap: anywhere; }
+.contact-channel-card div > span { color: var(--gov-blue); font-weight: 700; }
+.contact-event-card { margin-top: 28px; padding: 32px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 35px; border: 1px solid var(--border); border-radius: 14px; background: var(--white); }
+.contact-event-card h2 { margin: 8px 0 18px; color: var(--gov-blue-dark); }
+.contact-event-card > div:first-child p { color: var(--text-soft); }
+.contact-event-card > div:first-child i { margin-right: 8px; color: var(--gov-blue); }
+.contact-venue { padding: 25px; display: flex; gap: 17px; border-radius: 11px; background: #eef6ff; }
+.contact-venue > i { color: var(--gov-blue); font-size: 31px; }
+.contact-venue strong { color: var(--gov-blue-dark); }
+.contact-venue p { margin: 8px 0 0; color: var(--text-soft); line-height: 1.55; }
+.contact-back { margin-top: 28px; }
+
+@media (max-width: 900px) {
+  .hospitality-nav .container { justify-content: center !important; gap: 25px; }
+  .hospitality-nav a { display: block !important; }
+  .event-summary-grid { grid-template-columns: 1fr 1fr; }
+  .event-location { grid-column: 1 / -1; }
+  .organizer-grid { grid-template-columns: 1fr 1fr; }
+  .lodging-grid { grid-template-columns: 1fr 1fr; }
+  .apart-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 680px) {
+  .hospitality-header-top { min-height: 94px !important; }
+  .institutional-logos-light { display: none; }
+  .hospitality-nav .container { min-height: 58px; gap: 18px; overflow-x: auto; justify-content: flex-start !important; }
+  .hospitality-nav a { flex: 0 0 auto; font-size: 12px; }
+  .internal-hero, .hospitality-hero.internal-hero, .hospitality-page .hospitality-hero-inner { min-height: 350px; }
+  .internal-hero::after { right: -35%; }
+  .internal-hero p { font-size: 17px; }
+  .event-venue-card { grid-template-columns: auto 1fr; padding: 22px; }
+  .venue-rate { grid-column: 1 / -1; padding: 20px 0 0; border-top: 1px solid var(--border); border-left: 0; }
+  .lodging-grid, .event-summary-grid, .participation-layout, .event-detail-grid, .contact-channel-grid, .contact-event-card { grid-template-columns: 1fr; }
+  .event-location { grid-column: auto; }
+  .organizer-grid { grid-template-columns: 1fr; }
+  .section-heading, .registration-period, .event-contact-band { align-items: flex-start; flex-direction: column; }
+  .section-heading > p { text-align: left; }
+  .travel-icon { display: none; }
+  .tariff-legend { align-items: flex-start; flex-wrap: wrap; }
+  .tariff-legend > a { width: 100%; }
+  .event-section { padding: 23px 20px; }
+  .event-contact-band p { flex-direction: column; }
+  .contact-channel-card { min-height: 150px; padding: 22px; }
+  .contact-channel-icon { width: 55px; height: 55px; }
+  .contact-channel-card strong { font-size: 16px; }
+}
+
+/* Imagem territorial da edição em Vitória */
+.hero.landing-hero { background: url("/imagens/bg/bg-espirito-santo.jpeg") 58% center / cover no-repeat; }
+.hero.landing-hero::after { content: none; }
+.guest-hero-image { background: url("/imagens/bg/bg-espirito-santo.jpeg") 60% center / cover no-repeat; }
+.guest-hero-image::after { content: none; }
+.hospitality-hero.internal-hero { background: linear-gradient(90deg, rgba(5,48,101,.98) 0%, rgba(5,69,139,.88) 46%, rgba(4,61,119,.28) 100%), url("/imagens/bg/bg-espirito-santo.jpeg") 58% center / cover no-repeat; }
