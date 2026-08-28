@@ -2,23 +2,32 @@
 :root {
   --gov-blue: #1351b4;
   --gov-blue-dark: #0c326f;
+  --gov-blue-mid: #0f438e;
   --gov-blue-deep: #003b78;
   --gov-green: #168821;
   --gov-yellow: #ffcd07;
   --gov-red: #e52207;
-  --text: #1b1b1b;
-  --text-soft: #555;
-  --border: #e5e5e5;
-  --surface: #f7f7f7;
-  --white: #fff;
+  --page-bg: #f6f7f9;
+  --card-bg: #fff;
+  --text-primary: #1b1b1b;
+  --text-secondary: #555;
+  --border-color: #e2e6ea;
+  --success: #168821;
+  --warning: #ffcd07;
+  --danger: #e52207;
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --border: var(--border-color);
+  --surface: var(--page-bg);
+  --white: var(--card-bg);
   --container: 1240px;
-  --shadow: 0 6px 20px rgba(12, 50, 111, .09);
+  --shadow: 0 6px 20px rgba(0, 0, 0, .05);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { min-width: 320px; scroll-behavior: smooth; }
-body, body::before, body::after { background: var(--surface); }
+body, body::before, body::after { background: var(--page-bg); }
 body { margin: 0; color: var(--text); font-family: var(--font); font-size: 16px; }
 body::before, body::after { content: none; }
 img { max-width: 100%; }
@@ -128,7 +137,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .registration-brandbar { min-height: 122px; display: flex; align-items: center; justify-content: space-between; gap: 28px; }
 .event-lockup-light .event-lockup-divider { background: rgba(255,255,255,.6); }
 .event-lockup-light .event-edition { color: var(--white); }
-.event-lockup-light > img { filter: brightness(0) invert(1); }
 .registration-accessibility { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 13px; }
 .registration-accessibility button { width: 34px; height: 34px; color: var(--white); border: 1px solid rgba(255,255,255,.65); border-radius: 5px; background: transparent; }
 .registration-header .btn-close { margin-left: 22px; }
@@ -322,7 +330,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .vote-brand-home small { font-size: 10px; }
 .vote-builder-header { color: var(--white); background: linear-gradient(110deg, var(--gov-blue-dark), #0058b9); }
 .vote-builder-header .container { min-height: 105px; display: flex; align-items: center; }
-.vote-builder-header .vote-brand-home > img { width: 150px; filter: brightness(0) invert(1); }
+.vote-builder-header .vote-brand-home > img { width: 150px; }
 .vote-builder-header .vote-brand-home > span { color: var(--white); border-color: rgba(255,255,255,.5); }
 .vote-login-shell { width: 100%; max-width: none; padding: 60px max(24px, calc((100vw - var(--container)) / 2)) 72px; background: radial-gradient(circle at 85% 18%, #eef6ff, transparent 28%), var(--white); }
 .vote-login-card { min-height: 560px; display: grid; grid-template-columns: 1fr 1fr; overflow: visible; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
@@ -399,7 +407,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .admin-dashboard { height: 100vh; display: grid; grid-template-columns: 275px 1fr; }
 .admin-sidebar { padding: 30px 18px; display: flex; flex-direction: column; color: var(--white); background: linear-gradient(180deg, #073c76, #004486); }
 .admin-sidebar-brand { padding: 0 8px 28px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.22); }
-.admin-sidebar-brand img { width: 175px; height: 92px; object-fit: contain; filter: brightness(0) invert(1); }
+.admin-sidebar-brand img { width: 175px; height: 92px; object-fit: contain; }
 .admin-sidebar-brand span { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .admin-sidebar-brand strong { color: var(--gov-yellow); font-family: Georgia, serif; font-size: 34px; }
 .admin-sidebar nav { margin-top: 25px; display: grid; gap: 7px; }
@@ -565,14 +573,14 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .venue-rate { min-width: 205px; padding-left: 26px; display: flex; flex-direction: column; border-left: 1px solid var(--border); }
 .venue-rate > span, .venue-rate > small { color: var(--text-soft); font-size: 12px; }
 .venue-rate > strong { color: var(--gov-blue); font-size: 27px; }
-.venue-rate a { margin-top: 9px; color: var(--gov-blue); font-weight: 700; text-decoration: none; }
+.venue-rate > .venue-phone { margin-top: 9px; color: var(--gov-blue); font-weight: 700; }
 .venue-rate em { margin-top: 8px; color: var(--gov-green); font-size: 12px; font-style: normal; font-weight: 700; }
 .lodging-section { margin-top: 48px; }
 .section-heading { margin-bottom: 24px; display: flex; align-items: end; justify-content: space-between; gap: 24px; }
 .section-heading h2 { margin: 6px 0 0; color: var(--gov-blue-dark); font-size: 31px; }
 .section-heading > p { max-width: 490px; margin: 0; color: var(--text-soft); text-align: right; }
 .lodging-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.lodging-card { position: relative; min-height: 325px; padding: 25px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 13px; background: var(--white); box-shadow: 0 5px 18px rgba(12,50,111,.07); }
+.lodging-card { position: relative; min-height: 325px; padding: 25px; display: flex; flex-direction: column; color: inherit; border: 1px solid var(--border); border-radius: 13px; background: var(--white); box-shadow: 0 5px 18px rgba(12,50,111,.07); text-decoration: none; }
 .lodging-card-icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--gov-blue); border-radius: 50%; background: #eaf3ff; font-size: 22px; }
 .lodging-card h3 { min-height: 50px; margin: 17px 0 8px; color: var(--gov-blue-dark); font-size: 19px; }
 .lodging-distance { min-height: 44px; margin: 0; color: var(--text-soft); font-size: 14px; }
@@ -580,14 +588,21 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .lodging-price { margin: auto 0 13px; display: grid; }
 .lodging-price span, .lodging-price small { color: var(--text-soft); font-size: 12px; }
 .lodging-price strong { color: var(--gov-blue); font-size: 23px; }
-.lodging-card > a { color: var(--gov-blue-dark); font-weight: 700; text-decoration: none; }
+.lodging-phone { color: var(--gov-blue-dark); font-weight: 700; }
 .exclusive-badge { position: absolute; top: 22px; right: 20px; padding: 5px 8px; color: #087329; border-radius: 999px; background: #e3f6e9; font-size: 10px; font-weight: 800; text-transform: uppercase; }
 .apart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.apart-grid article { min-height: 145px; padding: 22px; display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--white); }
-.apart-grid article > i { grid-row: 1 / span 2; color: var(--gov-blue); font-size: 31px; }
+.apart-grid article, .apart-grid > a { min-height: 145px; padding: 22px; display: grid; grid-template-columns: auto 1fr; gap: 8px 15px; color: inherit; border: 1px solid var(--border); border-radius: 12px; background: var(--white); text-decoration: none; }
+.apart-grid article > i, .apart-grid > a > i { grid-row: 1 / span 2; color: var(--gov-blue); font-size: 31px; }
 .apart-grid h3 { margin: 0 0 5px; color: var(--gov-blue-dark); font-size: 17px; }
 .apart-grid p { margin: 0; color: var(--text-soft); font-size: 13px; }
 .apart-grid strong { grid-column: 2; color: var(--gov-blue); font-size: 16px; }
+.lodging-link-card { cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.event-venue-card.lodging-link-card { color: inherit; text-decoration: none; }
+.lodging-link-card:hover { transform: translateY(-2px); border-color: #1351b4; box-shadow: 0 10px 28px rgba(0,0,0,.08); }
+.lodging-link-card:focus-visible { outline: 3px solid rgba(19,81,180,.35); outline-offset: 3px; border-color: #1351b4; }
+.external-link-label { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; color: #1351b4; font-size: 12px; font-weight: 700; }
+.lodging-card .external-link-label { margin-top: 8px; }
+.apart-grid .external-link-label { grid-column: 2; margin-top: 0; }
 .tariff-legend { margin-top: 42px; }
 .tariff-legend > div { margin-right: auto; }
 .tariff-legend > a { flex: 0 0 auto; padding: 11px 17px; color: var(--gov-blue); border: 1px solid var(--gov-blue); border-radius: 7px; font-weight: 700; text-decoration: none; }
@@ -704,3 +719,160 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .guest-hero-image { background: url("/imagens/bg/bg-espirito-santo.jpeg") 60% center / cover no-repeat; }
 .guest-hero-image::after { content: none; }
 .hospitality-hero.internal-hero { background: linear-gradient(90deg, rgba(5,48,101,.98) 0%, rgba(5,69,139,.88) 46%, rgba(4,61,119,.28) 100%), url("/imagens/bg/bg-espirito-santo.jpeg") 58% center / cover no-repeat; }
+
+/* Ajuste visual do cabeçalho e do fundo geral */
+.topbar.landing-header {
+  min-height: 160px;
+  color: var(--white);
+  background: linear-gradient(90deg, var(--gov-blue-dark) 0%, var(--gov-blue-mid) 55%, var(--gov-blue) 100%);
+}
+
+.institutional-header {
+  min-height: 112px;
+  height: auto;
+  padding-block: 16px;
+}
+
+.landing-header .event-lockup-divider { background: rgba(255,255,255,.58); }
+.landing-header .event-edition { color: var(--white); }
+.landing-header .event-edition strong { color: var(--gov-yellow); }
+
+.institutional-logos,
+.institutional-logos.current-event-logos {
+  max-width: 580px;
+  flex: 0 1 580px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(22px, 3vw, 42px);
+}
+
+.institutional-logos img,
+.institutional-logos.current-event-logos img {
+  width: auto;
+  height: 62px;
+  max-width: 250px;
+  max-height: 62px;
+  object-fit: contain;
+}
+
+/* O SVG do GOV.BR possui área transparente interna maior; a ampliação é uniforme. */
+.institutional-logos.current-event-logos img:nth-child(2) {
+  transform: scale(1.7);
+  transform-origin: center;
+}
+
+.landing-header .event-lockup > img,
+.event-lockup-light > img,
+.vote-builder-header .vote-brand-home > img,
+.vote-site-header img,
+.guest-top-logos img,
+.footer-logos img {
+  object-fit: contain;
+}
+
+.contact-strip { background: rgba(0, 34, 76, .42); }
+.shortcut-section,
+.landing-main,
+.hospitality-page,
+.guest-page,
+.guest-hero,
+.guest-hero-copy,
+.vote-login-page,
+.vote-login-shell,
+.internal-page {
+  background-color: var(--page-bg);
+}
+
+.guest-hero-image::before { background: linear-gradient(90deg, var(--page-bg), transparent 35%); }
+
+.shortcut-card,
+.profile-card,
+.about-event,
+.hospitality-card,
+.lodging-card,
+.event-venue-card,
+.event-section,
+.event-summary-card,
+.contact-channel-card,
+.contact-event-card,
+.protocol-success-card,
+.protocol-info-card,
+.admin-welcome,
+.admin-metrics article,
+.admin-registrations,
+.vote-login-form,
+.vote-how-grid article,
+.vote-bottom-grid article {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.vote-site-header {
+  color: var(--white);
+  border-color: var(--gov-blue-dark);
+  background: linear-gradient(90deg, var(--gov-blue-dark) 0%, var(--gov-blue-mid) 55%, var(--gov-blue) 100%);
+}
+
+.vote-site-header .vote-brand-home > span {
+  color: var(--white);
+  border-color: rgba(255,255,255,.55);
+}
+
+.vote-site-header .vote-brand-home strong { color: var(--gov-yellow); }
+
+@media (max-width: 900px) {
+  .institutional-header { gap: 24px; }
+  .institutional-logos,
+  .institutional-logos.current-event-logos {
+    max-width: 390px;
+    flex-basis: 390px;
+    gap: 20px;
+  }
+  .institutional-logos img,
+  .institutional-logos.current-event-logos img {
+    display: block !important;
+    height: 48px;
+    max-width: 180px;
+    max-height: 48px;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar.landing-header { min-height: 0; }
+  .institutional-header {
+    min-height: 154px;
+    padding-block: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+  }
+  .landing-header .event-lockup { width: 100%; }
+  .institutional-logos,
+  .institutional-logos.current-event-logos {
+    width: 100%;
+    max-width: none;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    gap: 22px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,.2);
+  }
+  .institutional-logos img,
+  .institutional-logos.current-event-logos img {
+    height: 38px;
+    max-width: calc(50% - 11px);
+    max-height: 38px;
+  }
+}
+
+@media (max-width: 390px) {
+  .institutional-header { min-height: 148px; }
+  .landing-header .event-lockup > img { width: 82px; height: 58px; }
+  .landing-header .event-edition strong { font-size: 34px; }
+  .landing-header .event-edition small { font-size: 9px; }
+  .institutional-logos img,
+  .institutional-logos.current-event-logos img { height: 34px; max-height: 34px; }
+}
