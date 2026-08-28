@@ -721,6 +721,11 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .contact-channel-card strong { font-size: 16px; }
 }
 
+@media (max-width: 780px) {
+  .internal-site-header .contact-strip-inner { justify-content: flex-start; gap: 24px; overflow-x: auto; }
+  .internal-site-header .contact-strip a { flex: 0 0 auto; display: inline-flex; font-size: 12px; }
+}
+
 /* Imagem territorial da edição em Vitória */
 .hero.landing-hero { background: url("/imagens/bg/bg-espirito-santo.jpeg") 58% center / cover no-repeat; }
 .hero.landing-hero::after { content: none; }
@@ -779,7 +784,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   object-fit: contain;
 }
 
-.contact-strip { background: rgba(0, 34, 76, .42); }
+.contact-strip { background: linear-gradient(90deg, var(--gov-blue-dark), #005ebd); }
 .shortcut-section,
 .landing-main,
 .hospitality-page,
