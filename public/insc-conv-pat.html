@@ -489,7 +489,10 @@
   <script src="/src/js/certs.js" defer></script>
 
   <!-- Fluxo multi-passos (reutilizado) -->
-  <script>window.INSCRICOES_ENCERRADAS = true;</script>
+  <script>
+    window.INSCRICOES_ENCERRADAS =
+      new URLSearchParams(window.location.search).get('preview') !== 'CONAPREV86_DEV';
+  </script>
   <script src="/src/js/steps.js" defer></script>
 
   <!-- Admin -->
