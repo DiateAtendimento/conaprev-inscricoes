@@ -557,14 +557,6 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .official-reference { display: block; margin-top: 18px; color: rgba(255,255,255,.72); font-size: 12px; }
 
 /* Hospedagem */
-.hospitality-header.internal-site-header { color: var(--text); background: var(--white); }
-.hospitality-header .event-lockup-light .event-lockup-divider { background: #777; }
-.hospitality-header .event-lockup-light .event-edition { color: var(--gov-blue-dark); }
-.hospitality-header .hospitality-nav { background: linear-gradient(115deg, #063c75, #0055ad); }
-.contact-page .internal-site-header { color: var(--text); background: var(--white); }
-.contact-page .event-lockup-light .event-lockup-divider { background: #777; }
-.contact-page .event-lockup-light .event-edition { color: var(--gov-blue-dark); }
-.contact-page .hospitality-nav { background: linear-gradient(115deg, #063c75, #0055ad); }
 .hospitality-page .hospitality-header-top { min-height: 118px; }
 .hospitality-page .hospitality-nav .container { justify-content: flex-end; }
 .hospitality-page .hospitality-hero-inner { min-height: 390px; }
@@ -719,11 +711,6 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .contact-channel-card { min-height: 150px; padding: 22px; }
   .contact-channel-icon { width: 55px; height: 55px; }
   .contact-channel-card strong { font-size: 16px; }
-}
-
-@media (max-width: 780px) {
-  .internal-site-header .contact-strip-inner { justify-content: flex-start; gap: 24px; overflow-x: auto; }
-  .internal-site-header .contact-strip a { flex: 0 0 auto; display: inline-flex; font-size: 12px; }
 }
 
 /* Imagem territorial da edição em Vitória */
@@ -888,4 +875,110 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .landing-header .event-edition small { font-size: 9px; }
   .institutional-logos img,
   .institutional-logos.current-event-logos img { height: 34px; max-height: 34px; }
+}
+
+/* Cabeçalho público compartilhado */
+.public-header {
+  color: var(--text);
+  background: var(--white);
+}
+
+.public-header .public-header__inner {
+  min-height: 118px;
+  height: auto;
+  padding-block: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.public-header .public-header__brand { min-width: 330px; }
+.public-header .event-lockup-divider { background: #777; }
+.public-header .event-edition { color: var(--gov-blue-dark); }
+.public-header .event-edition strong { color: #c88a00; }
+
+.public-header .public-header__institutional {
+  width: auto;
+  max-width: 580px;
+  flex: 0 1 580px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: clamp(22px, 3vw, 42px);
+}
+
+.public-header .public-header__institutional img {
+  display: block !important;
+  width: auto;
+  height: 62px;
+  max-width: 250px;
+  max-height: 62px;
+  object-fit: contain;
+}
+
+.public-nav {
+  border-top: 0;
+  background: var(--gov-blue-dark);
+}
+
+.public-nav a { transition: opacity .2s ease; }
+.public-nav a:hover { color: var(--white); opacity: .82; }
+.public-nav a.active { opacity: 1; }
+
+@media (max-width: 780px) {
+  .public-header .public-header__inner {
+    min-height: auto !important;
+    padding-block: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .public-header .public-header__brand {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .public-header .public-header__institutional {
+    width: 100%;
+    max-width: 320px;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    gap: 22px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .public-header .public-header__institutional img {
+    display: block !important;
+    height: 38px;
+    max-width: calc(50% - 11px);
+    max-height: 38px;
+  }
+
+  .public-header:not(.landing-header) .contact-strip-inner {
+    justify-content: flex-start;
+    gap: 24px;
+    overflow-x: auto;
+  }
+
+  .public-header:not(.landing-header) .contact-strip a {
+    flex: 0 0 auto;
+    display: inline-flex;
+    font-size: 12px;
+  }
+
+  .public-nav .container {
+    min-height: 58px;
+    justify-content: flex-start !important;
+    gap: 24px;
+    overflow-x: auto;
+  }
+
+  .public-nav a {
+    flex: 0 0 auto;
+    display: block !important;
+    font-size: 12px;
+  }
 }
