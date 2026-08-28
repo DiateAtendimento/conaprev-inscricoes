@@ -17,7 +17,7 @@ import {
 } from "../services/sheets.service.js";
 
 const r = Router();
-const INSCRICOES_ENCERRADAS = true;
+const INSCRICOES_ENCERRADAS = false;
 const INSCRICOES_ENCERRADAS_MSG = "As inscrições foram encerradas.";
 
 // Perfis válidos para todas as operAções
