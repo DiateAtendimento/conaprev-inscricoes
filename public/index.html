@@ -41,30 +41,26 @@
 
   <!-- ============== APP ============== -->
   <div id="app" class="d-none">
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="wrap container">
-        <div class="brand-strip">
-          <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
-          <img class="logo logo-mps" src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
-          <img class="logo logo-govbr" src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
-          <img class="logo logo-state-seal"  src="imagens/logos/brasao_RS.png"         alt="Brasão do Rio Grande do Sul">
-          <img class="logo logo-host-brand"  src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
+    <header class="topbar landing-header">
+      <div class="institutional-header container">
+        <div class="event-lockup" aria-label="CONAPREV — 85ª Reunião Ordinária">
+          <img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+          <span class="event-lockup-divider" aria-hidden="true"></span>
+          <span class="event-edition"><strong>85ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span>
         </div>
-
-        <nav class="links" aria-label="Contatos e administração">
-          <a href="mailto:conaprev@previdencia.gov.br">
-            <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
-            conaprev@previdencia.gov.br
-          </a>
-          <a href="tel:+556120215347">
-            <img class="icon icon-phone" src="imagens/icones/phone.svg" alt="">
-            (61) 2021-5347
-          </a>
-          <button class="menu-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Abrir menu">
-            <i class="bi bi-list" aria-hidden="true"></i>
-          </button>
-        </nav>
+        <div class="institutional-logos" aria-label="Instituições realizadoras">
+          <img src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
+          <img src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
+          <img src="imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul">
+          <img src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
+        </div>
+      </div>
+      <div class="contact-strip">
+        <div class="container contact-strip-inner">
+          <a href="mailto:conaprev@previdencia.gov.br"><i class="bi bi-envelope" aria-hidden="true"></i> conaprev@previdencia.gov.br</a>
+          <a href="tel:+556120215347"><i class="bi bi-telephone" aria-hidden="true"></i> (61) 2021-5347</a>
+          <button class="menu-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Abrir menu"><i class="bi bi-list" aria-hidden="true"></i></button>
+        </div>
       </div>
     </header>
 
@@ -89,50 +85,43 @@
       </div>
     </div>
 
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero-grid container container--narrow">
-        <img class="amapa-badge reveal d1" src="imagens/logos/rio-grande-do-sul-badge.svg" alt="Rio Grande do Sul">
-        <div class="inner reveal d2">
-          <h1>85ª Reunião Ordinária do</h1>
-          <div class="brand-title">CONAPREV</div>
-
-          <div class="info-line">
-            <!-- <i class="bi bi-geo-alt" aria-hidden="true"></i> -->
-            <!-- <span>Serrazul Hotel - Rua Garibaldi, 152 - Centro, Gramado - RS, 95670-094</span> -->
-          </div>
-          <div class="info-line">
-            <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>4 e 5 de agosto de 2026</span>
-          </div>
-          <div class="info-line">
-            <i class="bi bi-geo-alt" aria-hidden="true"></i>
-            <span>Gramado/RS</span>
-          </div>
-
-          <div class="chips reveal d3" role="navigation" aria-label="Atalhos">
-            <a class="chip" href="#" aria-disabled="true" tabindex="-1" id="btnEmitirCert">
-              <img class="icon-20" src="imagens/icones/certificado.svg" alt=""> Emitir certificado
-            </a>
-            <a class="chip" href="/oficios/sugestao-hospedagem.pdf" target="_blank" rel="noopener" id="btnHospedagem">
-              <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
-            </a>
-            <a class="chip" href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener">
-              <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
-            </a>
-          </div>
+    <section class="hero landing-hero">
+      <div class="container hero-content">
+        <div class="hero-copy reveal d2">
+          <span class="hero-kicker">85ª REUNIÃO ORDINÁRIA DO</span>
+          <h1>CONAPREV</h1>
+          <p class="hero-description">Conselho Nacional dos Dirigentes de<br>Regimes Próprios de Previdência Social</p>
+          <div class="hero-meta"><i class="bi bi-calendar3" aria-hidden="true"></i><span>4 e 5 de agosto de 2026</span></div>
+          <div class="hero-meta"><i class="bi bi-geo-alt" aria-hidden="true"></i><span>Gramado/RS</span></div>
         </div>
       </div>
     </section>
 
+    <section class="shortcut-section" aria-label="Atalhos">
+      <div class="container shortcut-grid">
+        <a class="shortcut-card" href="#" aria-disabled="true" tabindex="-1" id="btnEmitirCert">
+          <img src="imagens/icones/certificado.svg" alt="">
+          <span><strong>Emitir certificado</strong><small>Acesse seu certificado de participação</small></span>
+        </a>
+        <a class="shortcut-card" href="/hospedagem.html" id="btnHospedagem">
+          <img src="imagens/icones/hospedagem.svg" alt="">
+          <span><strong>Sugestões de hospedagem</strong><small>Veja as informações disponíveis</small></span>
+        </a>
+        <a class="shortcut-card" href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener">
+          <img src="imagens/icones/oficio.svg" alt="">
+          <span><strong>Ofício de convocação</strong><small>Faça o download do documento</small></span>
+        </a>
+      </div>
+    </section>
+
     <!-- HOME -->
-    <main class="container container--narrow py-5">
+    <main class="landing-main container">
       <header class="profile-section-heading reveal d4">
         <h2>Escolha seu perfil para acessar a inscrição</h2>
       </header>
-      <section id="home" class="mb-5 cards-wrapper reveal d4" aria-label="Selecione seu perfil">
-        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-5">
-          <div class="col">
+      <section id="home" class="profile-section reveal d4" aria-label="Selecione seu perfil">
+        <div class="profile-grid">
+          <div class="profile-item">
             <div class="card profile-card" data-profile="Conselheiro">
               <div class="card-top">
                 <img src="imagens/cards/conselheiro.svg" class="card-icon" alt="Conselheiro">
@@ -141,12 +130,12 @@
               <div class="card-bottom">
                 <h5 class="card-title">Conselheiro</h5>
                 <p class="card-description">Inscrição para membros conselheiros</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile" aria-label="Acessar inscrição de Conselheiro">Acessar inscrição</button>
               </div>
             </div>
           </div>
 
-          <div class="col">
+          <div class="profile-item">
             <div class="card profile-card" data-profile="CNRPPS">
               <div class="card-top">
                 <img src="imagens/cards/cnrpps.svg" class="card-icon" alt="CNRPPS">
@@ -155,12 +144,12 @@
               <div class="card-bottom">
                 <h5 class="card-title">CNRPPS</h5>
                 <p class="card-description">Inscrição para membros do CNRPPS</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile" aria-label="Acessar inscrição do CNRPPS">Acessar inscrição</button>
               </div>
             </div>
           </div>
 
-          <div class="col">
+          <div class="profile-item">
             <div class="card profile-card" data-profile="Palestrante">
               <div class="card-top">
                 <img src="imagens/cards/palestrante.svg" class="card-icon" alt="Palestrante">
@@ -169,13 +158,13 @@
               <div class="card-bottom">
                 <h5 class="card-title">Palestrante</h5>
                 <p class="card-description">Inscrição para palestrantes</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile" aria-label="Acessar inscrição de Palestrante">Acessar inscrição</button>
               </div>
             </div>
           </div>
 
           <!-- COPAJURE: corrigido data-profile -->
-          <div class="col">
+          <div class="profile-item">
             <div class="card profile-card" data-profile="COPAJURE">
               <div class="card-top">
                 <img src="imagens/cards/copajure.svg" class="card-icon" alt="COPAJURE">
@@ -184,12 +173,12 @@
               <div class="card-bottom">
                 <h5 class="card-title">COPAJURE</h5>
                 <p class="card-description">Inscrição para membros do COPAJURE</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile" aria-label="Acessar inscrição do COPAJURE">Acessar inscrição</button>
               </div>
             </div>
           </div>
 
-          <div class="col">
+          <div class="profile-item">
             <div class="card profile-card" data-profile="Staff">
               <div class="card-top">
                 <img src="imagens/cards/staff.svg" class="card-icon" alt="Staff">
@@ -198,7 +187,7 @@
               <div class="card-bottom">
                 <h5 class="card-title">Staff</h5>
                 <p class="card-description">Inscrição para equipe e organização</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile" aria-label="Acessar inscrição de Staff">Acessar inscrição</button>
               </div>
             </div>
           </div>
@@ -206,60 +195,19 @@
         </div>
       </section>
 
-      <section class="event-map reveal d5" aria-label="Localização da Reunião">
-        <div class="event-map__header">
-          <div class="event-map__title">
-            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
-            <div>
-              <h2>Localização da Reunião</h2>
-              <p>Gramado, Rio Grande do Sul</p>
-            </div>
+      <section class="about-event reveal d5" aria-label="Sobre o evento e Gramado">
+        <article class="about-event-copy">
+          <h2>Sobre o evento</h2>
+          <p>A 85ª Reunião Ordinária do CONAPREV reunirá dirigentes de Regimes Próprios de Previdência Social de todo o país para debater temas estratégicos, compartilhar experiências e fortalecer a gestão previdenciária.</p>
+          <a href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener" class="outline-link">Saiba mais <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        </article>
+        <article class="about-city">
+          <div class="about-city-copy">
+            <h2><i class="bi bi-geo-alt" aria-hidden="true"></i> Gramado – RS</h2>
+            <p>Uma das cidades mais charmosas do Brasil, com excelente estrutura para receber o CONAPREV.</p>
           </div>
-          <div class="event-map__cta">
-            <a href="https://www.google.com/maps/search/?api=1&query=Serrazul%20Hotel%20Gramado" target="_blank" rel="noopener">Ver mapa ampliado</a>
-          </div>
-        </div>
-
-        <div class="event-map__frame">
-          <!-- <iframe
-            title="Mapa do Serrazul Hotel"
-            src="https://www.google.com/maps?q=Serrazul%20Hotel%20Gramado&output=embed"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen>
-          </iframe> -->
-        </div>
-
-        <div class="event-map__info">
-          <div class="event-map__item">
-            <i class="bi bi-building" aria-hidden="true"></i>
-            <div>
-              <strong>Hotel</strong>
-              <span>Serrazul Hotel</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-geo" aria-hidden="true"></i>
-            <div>
-              <strong>Endereço</strong>
-              <span>Rua Garibaldi, 152</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-map" aria-hidden="true"></i>
-            <div>
-              <strong>Bairro</strong>
-              <span>Centro</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-envelope-open" aria-hidden="true"></i>
-            <div>
-              <strong>CEP</strong>
-              <span>95670-094</span>
-            </div>
-          </div>
-        </div>
+          <img src="imagens/bg/bg-desktop.png" alt="Paisagens de Gramado, Rio Grande do Sul">
+        </article>
       </section>
     </main>
   </div>
@@ -284,12 +232,25 @@
 
   <!-- Modal de Inscrição -->
   <div class="modal fade" id="modalInscricao" tabindex="-1" aria-labelledby="miTitle" aria-hidden="true" role="dialog">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+    <div class="modal-dialog modal-fullscreen" role="document">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 id="miTitle" class="modal-title">Inscrição <span id="miPerfil">Perfil</span></h5>
-          <span id="miStepLabel" class="ms-3 text-secondary small"></span>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <header class="registration-header">
+          <div class="container registration-brandbar">
+            <div class="event-lockup event-lockup-light" aria-label="CONAPREV — 85ª Reunião Ordinária">
+              <img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+              <span class="event-lockup-divider" aria-hidden="true"></span>
+              <span class="event-edition"><strong>85ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span>
+            </div>
+            <div class="registration-accessibility"><span>Acessibilidade</span><button type="button" aria-label="Diminuir fonte">A−</button><button type="button" aria-label="Fonte padrão">A</button><button type="button" aria-label="Aumentar fonte">A+</button></div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+        </header>
+        <div class="registration-intro container">
+          <div>
+            <h1>Etapas da Inscrição</h1>
+            <p>Siga o passo a passo para concluir sua inscrição na<br>85ª Reunião Ordinária do CONAPREV.</p>
+          </div>
+          <div class="registration-profile"><span id="miStepLabel"></span><strong id="miTitle">Inscrição <span id="miPerfil">Perfil</span></strong></div>
         </div>
 
         <div class="modal-body">
@@ -330,9 +291,16 @@
             </div>
 
             <div class="mi-pane" data-step="6">
-              <div class="alert alert-success">
-                <div class="fw-bold">Inscrição confirmada!</div>
-                Protocolo: <span id="miProtocolo">—</span>
+              <div class="protocol-layout">
+                <section class="protocol-success-card">
+                  <i class="bi bi-check-lg" aria-hidden="true"></i>
+                  <h2>Inscrição realizada com sucesso!</h2>
+                  <p>Obrigado por se inscrever na <strong>85ª Reunião Ordinária do CONAPREV.</strong></p>
+                  <div class="protocol-number"><span>Protocolo da inscrição</span><strong id="miProtocolo">—</strong></div>
+                </section>
+                <section class="protocol-info-card"><h3>Próximos passos</h3><p><i class="bi bi-check-circle-fill"></i> Você receberá um e-mail de confirmação.</p><p><i class="bi bi-check-circle-fill"></i> Acompanhe o status da sua inscrição.</p><p><i class="bi bi-envelope-check-fill"></i> Emita seu certificado após o evento.</p></section>
+                <section class="protocol-info-card"><h3>Certificado</h3><p>Disponível após o evento.</p><button type="button" class="btn btn-primary" onclick="document.getElementById('btnEmitirCert')?.click()"><i class="bi bi-award"></i> Emitir certificado</button></section>
+                <section class="protocol-info-card protocol-event"><h3>Informações do evento</h3><p><i class="bi bi-calendar3"></i> 4 e 5 de agosto de 2026</p><p><i class="bi bi-geo-alt"></i> Gramado – Rio Grande do Sul</p></section>
               </div>
             </div>
           </form>
@@ -400,8 +368,15 @@
 
   <!-- ========== MODAL: Acompanhar Inscrições ========== -->
   <div class="modal fade" id="adminMonitorModal" tabindex="-1" aria-hidden="true" aria-labelledby="adminMonitorTitle">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-dialog modal-fullscreen">
       <div class="modal-content">
+        <div class="admin-dashboard">
+          <aside class="admin-sidebar">
+            <div class="admin-sidebar-brand"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span><strong>85ª</strong> Reunião Ordinária</span></div>
+            <nav aria-label="Navegação administrativa"><a class="active" href="#adminOverview"><i class="bi bi-house"></i> Visão geral</a><a href="#adminRegistrations"><i class="bi bi-people"></i> Inscrições</a><a href="#adminRegistrations"><i class="bi bi-check2-square"></i> Conferências</a><a href="#adminRegistrations"><i class="bi bi-file-earmark-arrow-down"></i> Relatórios</a></nav>
+            <div class="admin-sidebar-help"><i class="bi bi-headset"></i><strong>Precisa de ajuda?</strong><span>conaprev@previdencia.gov.br</span></div>
+          </aside>
+          <div class="admin-workspace">
         <div class="modal-header">
           <h5 id="adminMonitorTitle" class="modal-title d-flex align-items-center gap-2">
             <i class="bi bi-people" aria-hidden="true"></i>
@@ -419,7 +394,10 @@
           </div>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body" id="adminOverview">
+          <section class="admin-welcome"><div><span>Visão geral</span><h2>Olá, Administrador</h2><p>Acompanhe as inscrições da 85ª Reunião do CONAPREV.</p></div><i class="bi bi-bar-chart"></i></section>
+          <section class="admin-metrics" aria-label="Indicadores"><article><span>Inscrições ativas</span><strong id="adminActiveCount">—</strong><i class="bi bi-people"></i></article><article><span>Finalizadas</span><strong id="adminFinalCount">—</strong><i class="bi bi-check-circle"></i></article><article><span>Total carregado</span><strong id="adminTotalCount">—</strong><i class="bi bi-clipboard-data"></i></article><article><span>Perfil atual</span><strong id="adminCurrentProfile">—</strong><i class="bi bi-person-badge"></i></article></section>
+          <section class="admin-registrations" id="adminRegistrations">
           <!-- Toolbar -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <div class="d-flex align-items-center gap-2">
@@ -494,6 +472,9 @@
           <div class="mt-3 small text-muted">
             <i class="bi bi-hand-index-thumb" aria-hidden="true"></i>
             Clique na mão para marcar <strong>Conferido</strong> (fica verde) e mover o registro para <em>Finalizados</em>.
+          </div>
+          </section>
+        </div>
           </div>
         </div>
       </div>
@@ -680,17 +661,25 @@
     </div>
   </div>
 
-  <footer class="site-footer">
-    <div class="footer-links">
-      <a class="footer-link" href="mailto:conaprev@previdencia.gov.br">
-        <img class="icon" src="imagens/icones/mail.svg" alt="">
-        <span>conaprev@previdencia.gov.br</span>
-      </a>
-      <a class="footer-link" href="tel:+556120215347">
-        <img class="icon" src="imagens/icones/phone.svg" alt="">
-        <span>(61) 2021-5347</span>
-      </a>
+  <footer class="site-footer institutional-footer">
+    <div class="container footer-main">
+      <div class="footer-contact">
+        <strong>Fale conosco</strong>
+        <a href="mailto:conaprev@previdencia.gov.br"><i class="bi bi-envelope" aria-hidden="true"></i> conaprev@previdencia.gov.br</a>
+        <a href="tel:+556120215347"><i class="bi bi-telephone" aria-hidden="true"></i> (61) 2021-5347</a>
+      </div>
+      <div class="footer-realization">
+        <strong>Realização</strong>
+        <div class="footer-logos">
+          <img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
+          <img src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
+          <img src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
+          <img src="imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul">
+          <img src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
+        </div>
+      </div>
     </div>
+    <div class="footer-copyright">© 2026 CONAPREV. Todos os direitos reservados.</div>
   </footer>
 
   <!-- Scripts base -->

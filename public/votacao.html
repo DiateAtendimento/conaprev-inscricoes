@@ -54,18 +54,20 @@
       <div class="vote-login-left">
         <div class="vote-login-brand">CONAPREV 2026</div>
         <h1 class="vote-login-title">Votação ao vivo</h1>
-        <p class="vote-login-subtitle">Acesse com seu CPF para votar.</p>
+        <p class="vote-login-subtitle">Participe das votações em tempo real durante a <strong>85ª Reunião do CONAPREV.</strong></p>
 
         <form id="voteLoginForm" class="vote-login-form">
+          <h2>Acesse para votar</h2>
+          <p>Informe seu CPF para participar.</p>
           <label for="voteCpf" class="form-label">CPF</label>
           <input id="voteCpf" class="form-control vote-login-input" inputmode="numeric" autocomplete="off" placeholder="Digite seu CPF">
           <span id="voteLoginMsg" class="vote-login-msg d-none"></span>
-          <button id="voteLoginBtn" type="submit" class="btn btn-success vote-login-btn">Entrar</button>
+          <button id="voteLoginBtn" type="submit" class="btn btn-primary vote-login-btn">Acessar votação <i class="bi bi-arrow-right"></i></button>
         </form>
       </div>
 
       <div class="vote-login-right">
-        <img src="/imagens/logos/tela-login-CONAPREV84.svg" alt="CONAPREV 2026" />
+        <div class="vote-security-visual"><img src="/imagens/logos/logo-conaprev.svg" alt="" aria-hidden="true"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i><strong>Sua participação é individual e segura.</strong><span>Seus dados estão protegidos.</span></div>
       </div>
     </section>
 
@@ -79,8 +81,13 @@
         <article><i class="bi bi-person-vcard"></i><strong>1. Faça login com seu CPF</strong><span>Acesse com o CPF cadastrado.</span></article>
         <article><i class="bi bi-ui-checks-grid"></i><strong>2. Escolha sua opção</strong><span>Selecione sua resposta em cada votação.</span></article>
         <article><i class="bi bi-shield-check"></i><strong>3. Confirme seu voto</strong><span>Confira sua seleção antes de enviar.</span></article>
+        <article><i class="bi bi-shield-lock"></i><strong>4. Autenticação e segurança</strong><span>Sua identidade é verificada e o voto registrado com segurança.</span></article>
+        <article><i class="bi bi-clock"></i><strong>5. Resultado em tempo real</strong><span>Acompanhe os resultados durante o período disponível.</span></article>
+        <article><i class="bi bi-bar-chart"></i><strong>6. Transparência total</strong><span>Resultados disponíveis para consulta após a votação.</span></article>
       </div>
       <div class="vote-security-note"><i class="bi bi-lock-fill"></i><span>Sua participação é individual e segura. Não compartilhe seus dados de acesso.</span></div>
+      <div class="vote-bottom-grid"><article><h3>Votações em andamento</h3><p>Consulte os módulos disponíveis após acessar com seu CPF.</p><span><i class="bi bi-geo-alt"></i> Gramado – Rio Grande do Sul</span></article><article><h3><i class="bi bi-info-circle-fill"></i> Importante</h3><p>• Cada CPF tem direito a um único voto.</p><p>• Não compartilhe seus dados de acesso.</p><p>• Em caso de dúvidas, entre em contato com a organização.</p></article></div>
+      <div class="vote-help"><i class="bi bi-headset"></i><div><strong>Precisa de ajuda?</strong><span>Entre em contato com a equipe de suporte.</span></div><a href="tel:+556120215347">(61) 2021-5347</a><a href="mailto:conaprev@previdencia.gov.br">conaprev@previdencia.gov.br</a></div>
     </section>
 
     <section id="voteModules" class="vote-public-section d-none">
@@ -133,5 +140,3 @@
   <script src="/src/js/votacao.js" defer></script>
 </body>
 </html>
-
-

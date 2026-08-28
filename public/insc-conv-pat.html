@@ -41,36 +41,10 @@
   <!-- ============== APP ============== -->
   <div id="app" class="d-none">
 
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="wrap container">
-        <div class="brand-strip">
-          <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
-          <img class="logo logo-mps" src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
-          <img class="logo logo-govbr" src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
-          <img class="logo logo-state-seal"  src="imagens/logos/brasao_RS.png"         alt="Brasão do Rio Grande do Sul">
-          <img class="logo logo-host-brand"  src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
-        </div>
-
-        <nav class="links" aria-label="administração">
-          <a href="mailto:conaprev@previdencia.gov.br">
-            <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
-            conaprev@previdencia.gov.br
-          </a>
-
-          <a href="tel:+556120215347">
-            <img class="icon icon-phone" src="imagens/icones/phone.svg" alt="">
-            (61) 2021-5347
-          </a>
-          <!-- Apenas o hambúrguer na topbar móvel; links vão no footer mobile -->
-          <button class="menu-icon"
-                  type="button"
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#menuOffcanvas"
-                  aria-label="Abrir menu">
-            <i class="bi bi-list" aria-hidden="true"></i>
-          </button>
-        </nav>
+    <header class="guest-topbar">
+      <div class="container guest-topbar-inner">
+        <div><a href="mailto:conaprev@previdencia.gov.br"><i class="bi bi-envelope"></i> conaprev@previdencia.gov.br</a><a href="tel:+556120215347"><i class="bi bi-telephone"></i> (61) 2021-5347</a></div>
+        <div class="guest-top-logos"><img src="imagens/logo-mps.svg" alt="Ministério da Previdência Social"><img src="imagens/logos/logo-govbr.svg" alt="Governo Federal"><img src="imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul"></div>
       </div>
     </header>
 
@@ -92,53 +66,29 @@
       </div>
     </div>
 
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero-grid container container--narrow">
-        <img class="amapa-badge reveal d1" src="imagens/logos/rio-grande-do-sul-badge.svg" alt="Rio Grande do Sul">
-        <div class="inner reveal d2">
-          <h1>85ª Reunião Ordinária do</h1>
-          <div class="brand-title">CONAPREV</div>
-
-                    <div class="info-line">
-            <!-- <i class="bi bi-geo-alt" aria-hidden="true"></i> -->
-            <!-- <span>Serrazul Hotel - Rua Garibaldi, 152 - Centro, Gramado - RS, 95670-094</span> -->
-          </div>
-          <div class="info-line">
-            <i class="bi bi-calendar-event" aria-hidden="true"></i>
-            <span>4 e 5 de agosto de 2026</span>
-          </div>
-          <div class="info-line">
-            <i class="bi bi-geo-alt" aria-hidden="true"></i>
-            <span>Gramado/RS</span>
-          </div>
-
-          <div class="chips reveal d3" role="navigation" aria-label="Atalhos">
-            <a class="chip" href="#" aria-disabled="true" tabindex="-1" id="btnEmitirCert">
-              <img class="icon-20" src="imagens/icones/certificado.svg" alt=""> Emitir certificado
-            </a>
-          <a class="chip" href="/oficios/sugestao-hospedagem.pdf" target="_blank" rel="noopener" id="btnHospedagem">
-            <img class="icon-20" src="imagens/icones/hospedagem.svg" alt=""> Sugestões de hospedagem
-          </a>
-            <a class="chip" href="/oficios/oficio-convocacao.pdf" target="_blank" rel="noopener">
-              <img class="icon-20" src="imagens/icones/oficio.svg" alt=""> Ofício de convocação
-            </a>
-          </div>
+    <section class="guest-hero">
+      <div class="container guest-hero-inner">
+        <div class="guest-hero-copy">
+          <div class="event-lockup"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span class="event-lockup-divider"></span><span class="event-edition"><strong>85ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span></div>
+          <span class="guest-kicker">85ª REUNIÃO ORDINÁRIA DO</span><h1>CONAPREV</h1>
+          <p>Conselho Nacional dos Dirigentes de<br>Regimes Próprios de Previdência Social</p>
+          <div><span><i class="bi bi-calendar3"></i> 4 e 5 de agosto de 2026</span><span><i class="bi bi-geo-alt"></i> Gramado/RS</span></div>
         </div>
+        <div class="guest-hero-image" role="img" aria-label="Paisagem de Gramado"></div>
       </div>
     </section>
 
     <!-- HOME -->
-        <main class="container container--narrow py-5">
+    <main class="guest-main container">
       <header class="guest-welcome reveal d4">
         <h2>Bem-vindo!</h2>
         <p>Escolha uma das opções abaixo para acessar as inscrições.</p>
       </header>
-      <section id="home" class="mb-5 cards-wrapper reveal d4" aria-label="Selecione seu perfil">
+      <section id="home" class="guest-profile-section reveal d4" aria-label="Selecione seu perfil">
         <!-- Aqui mostramos APENAS Convidado e Apoiadores -->
-        <div class="row g-4 row-cols-1 row-cols-sm-2 row-cols-lg-2">
+        <div class="guest-profile-grid">
 
-          <div class="col">
+          <div>
             <div class="card profile-card" data-profile="Convidado">
               <div class="card-top">
                 <img src="imagens/cards/convidado.svg" class="card-icon" alt="Convidado">
@@ -147,12 +97,12 @@
               <div class="card-bottom">
                 <h5 class="card-title">Convidado</h5>
                 <p class="card-description">Inscrição para convidados da 85ª Reunião</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile">Acessar inscrição <i class="bi bi-arrow-right"></i></button>
               </div>
             </div>
           </div>
 
-          <div class="col">
+          <div>
             <div class="card profile-card" data-profile="Apoiador">
               <div class="card-top">
                 <img src="imagens/cards/patrocinador.svg" class="card-icon" alt="Apoiador">
@@ -161,7 +111,7 @@
               <div class="card-bottom">
                 <h5 class="card-title">Apoiador</h5>
                 <p class="card-description">Inscrição para instituições apoiadoras</p>
-                <button class="btn-select select-profile">Selecionar</button>
+                <button class="btn-select select-profile">Acessar inscrição <i class="bi bi-arrow-right"></i></button>
               </div>
             </div>
           </div>
@@ -169,60 +119,7 @@
         </div>
       </section>
 
-      <section class="event-map reveal d5" aria-label="Localização do evento">
-        <div class="event-map__header">
-          <div class="event-map__title">
-            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i>
-            <div>
-              <h2>Localização da Reunião</h2>
-              <p>Gramado, Rio Grande do Sul</p>
-            </div>
-          </div>
-          <div class="event-map__cta">
-            <a href="https://www.google.com/maps/search/?api=1&query=Serrazul%20Hotel%20Gramado" target="_blank" rel="noopener">Ver mapa ampliado</a>
-          </div>
-        </div>
-
-        <div class="event-map__frame">
-          <!-- <iframe
-            title="Mapa do Serrazul Hotel"
-            src="https://www.google.com/maps?q=Serrazul%20Hotel%20Gramado&output=embed"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            allowfullscreen>
-          </iframe> -->
-        </div>
-
-        <div class="event-map__info">
-          <div class="event-map__item">
-            <i class="bi bi-building" aria-hidden="true"></i>
-            <div>
-              <strong>Hotel</strong>
-              <span>Serrazul Hotel</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-geo" aria-hidden="true"></i>
-            <div>
-              <strong>Endereço</strong>
-              <span>Rua Garibaldi, 152</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-map" aria-hidden="true"></i>
-            <div>
-              <strong>Bairro</strong>
-              <span>Centro</span>
-            </div>
-          </div>
-          <div class="event-map__item">
-            <i class="bi bi-envelope-open" aria-hidden="true"></i>
-            <div>
-              <strong>CEP</strong>
-              <span>95670-094</span>
-            </div>
-          </div>
-        </div>
+      <section class="guest-important"><i class="bi bi-info-circle-fill"></i><div><h2>Informações importantes</h2><p>As inscrições estão disponíveis exclusivamente pelos acessos acima.</p><p>Dúvidas? Entre em contato conosco.</p></div>
       </section>
     </main>
   </div>
@@ -444,18 +341,12 @@
   <div id="adminToastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>
   
 
-  <!-- Footer (mobile) -->
-  <footer class="site-footer">
-    <div class="footer-links">
-      <a class="footer-link" href="mailto:conaprev@previdencia.gov.br">
-        <img class="icon" src="imagens/icones/mail.svg" alt="">
-        <span>conaprev@previdencia.gov.br</span>
-      </a>
-      <a class="footer-link" href="tel:+556120215347">
-        <img class="icon" src="imagens/icones/phone.svg" alt="">
-        <span>(61) 2021-5347</span>
-      </a>
+  <footer class="site-footer institutional-footer">
+    <div class="container footer-main">
+      <div class="footer-contact"><strong>Fale conosco</strong><a href="mailto:conaprev@previdencia.gov.br"><i class="bi bi-envelope"></i> conaprev@previdencia.gov.br</a><a href="tel:+556120215347"><i class="bi bi-telephone"></i> (61) 2021-5347</a></div>
+      <div class="footer-realization"><strong>Realização</strong><div class="footer-logos"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><img src="imagens/logo-mps.svg" alt="Ministério da Previdência Social"><img src="imagens/logos/logo-govbr.svg" alt="Governo Federal"><img src="imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul"><img src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev"></div></div>
     </div>
+    <div class="footer-copyright">© 2026 CONAPREV. Todos os direitos reservados.</div>
   </footer>
 
   <!-- Scripts base -->

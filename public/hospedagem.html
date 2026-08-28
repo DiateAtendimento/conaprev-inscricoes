@@ -22,30 +22,9 @@
 </head>
 <body class="hospitality-page">
   <div id="app">
-    <header class="topbar">
-      <div class="wrap container">
-        <div class="brand-strip">
-          <img class="logo logo-conaprev" src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
-          <img class="logo logo-mps" src="imagens/logo-mps.svg" alt="Ministério da Previdência Social">
-          <img class="logo logo-govbr" src="imagens/logos/logo-govbr.svg" alt="Governo Federal">
-          <img class="logo logo-state-seal" src="imagens/logos/brasao_RS.png" alt="Brasão do Rio Grande do Sul">
-          <img class="logo logo-host-brand" src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev">
-        </div>
-
-        <nav class="links" aria-label="Contatos e administração">
-          <a href="mailto:conaprev@previdencia.gov.br">
-            <img class="icon icon-mail" src="imagens/icones/mail.svg" alt="">
-            conaprev@previdencia.gov.br
-          </a>
-          <a href="tel:+556120215347">
-            <img class="icon icon-phone" src="imagens/icones/phone.svg" alt="">
-            (61) 2021-5347
-          </a>
-          <button class="menu-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Abrir menu">
-            <i class="bi bi-list" aria-hidden="true"></i>
-          </button>
-        </nav>
-      </div>
+    <header class="hospitality-header">
+      <div class="container hospitality-header-top"><div class="event-lockup event-lockup-light"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span class="event-lockup-divider"></span><span class="event-edition"><strong>85ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span></div><div class="hospitality-contact"><i class="bi bi-envelope"></i> conaprev@previdencia.gov.br <i class="bi bi-telephone"></i> (61) 2021-5347</div></div>
+      <nav class="hospitality-nav" aria-label="Navegação principal"><div class="container"><a href="/index.html">Início</a><a href="/index.html#home">Inscrições</a><a href="#">Programação</a><a href="#">Informações</a><a class="active" href="/hospedagem.html">Hospedagem</a><a href="mailto:conaprev@previdencia.gov.br">Contato</a><a class="hospitality-cta" href="/index.html#home"><i class="bi bi-person"></i> Acessar inscrição</a></div></nav>
     </header>
 
     <div class="offcanvas offcanvas-end" tabindex="-1" id="menuOffcanvas" aria-labelledby="menuOffcanvasLabel">
@@ -63,36 +42,33 @@
       </div>
     </div>
 
-    <section class="hero">
-      <div class="hero-grid container container--narrow">
-        <img class="amapa-badge reveal d1" src="imagens/logos/rio-grande-do-sul-badge.svg" alt="Rio Grande do Sul">
-        <div class="inner reveal d2">
+    <section class="hospitality-hero">
+      <div class="container hospitality-hero-inner">
+        <div class="hospitality-hero-copy reveal d2">
           <h1>Hospedagem</h1>
           <p class="hero-subtitle">Informações e sugestões para sua estadia em Gramado/RS.</p>
         </div>
       </div>
     </section>
 
-    <main class="hospe-wrap container container--narrow">
-      <section id="home" class="cards-wrapper">
+    <main class="hospe-wrap container">
+      <section id="home" class="hospitality-card">
         <header class="hospe-header">
           <div class="hospe-title">
             <img class="hospe-pin" src="imagens/logos/hospedagem-pin.svg" alt="">
             <div>
-              <h1 class="hospe-h1">Hospedagem e Deslocamento</h1>
+              <h1 class="hospe-h1">Hospedagem</h1>
             </div>
           </div>
           <p class="hospe-intro">
             A 85ª Reunião Ordinária do CONAPREV será realizada no <strong>Serrazul Hotel</strong>,
             localizado na <strong>Rua Garibaldi, 152, Centro, Gramado/RS, CEP 95670-094</strong>.
-            Conforme o ofício de convocação, a reserva de hospedagem e os custos de deslocamento
-            são de responsabilidade do participante.
           </p>
           <h2 class="hospe-section">Informações atuais</h2>
         </header>
 
-        <section class="row g-4">
-          <div class="col-12">
+        <section class="hospitality-content-grid">
+          <div class="hospitality-details">
             <div class="hotel-card">
               <h3 class="hotel-name">Referência oficial do evento</h3>
               <dl class="hotel-info">
@@ -104,20 +80,7 @@
             </div>
           </div>
 
-          <div class="col-12">
-            <div class="hotel-card">
-              <h3 class="hotel-name">Orientações do ofício</h3>
-              <p class="mb-2">
-                A organização informará possibilidades de traslado do aeroporto de Porto Alegre para Gramado.
-              </p>
-              <p class="mb-2">
-                O percurso entre Porto Alegre e Gramado é de aproximadamente duas horas.
-              </p>
-              <p class="mb-0">
-                As sugestões de hospedagem desta página estão em atualização para a edição de Gramado/RS.
-              </p>
-            </div>
-          </div>
+          <div class="hospitality-gallery"><img class="hospitality-gallery-main" src="imagens/bg/bg-desktop.png" alt="Paisagens de Gramado"><img src="imagens/bg/bg-desktop.png" alt="Centro de Gramado"><img src="imagens/bg/bg-desktop.png" alt="Jardins de Gramado"></div>
         </section>
 
         <footer class="hospe-foot">
@@ -127,18 +90,7 @@
     </main>
   </div>
 
-  <footer class="site-footer">
-    <div class="footer-links">
-      <a class="footer-link" href="mailto:conaprev@previdencia.gov.br">
-        <img class="icon" src="imagens/icones/mail.svg" alt="">
-        <span>conaprev@previdencia.gov.br</span>
-      </a>
-      <a class="footer-link" href="tel:+556120215347">
-        <img class="icon" src="imagens/icones/phone.svg" alt="">
-        <span>(61) 2021-5347</span>
-      </a>
-    </div>
-  </footer>
+  <footer class="site-footer institutional-footer"><div class="container footer-main"><div class="footer-contact"><strong>Dúvidas</strong><a href="mailto:conaprev@previdencia.gov.br"><i class="bi bi-envelope"></i> conaprev@previdencia.gov.br</a><a href="tel:+556120215347"><i class="bi bi-telephone"></i> (61) 2021-5347</a></div><div class="footer-realization"><strong>Realização</strong><div class="footer-logos"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><img src="imagens/logo-mps.svg" alt="Ministério da Previdência Social"><img src="imagens/logos/logo-govbr.svg" alt="Governo Federal"><img src="imagens/logos/brasao_RS.png" alt="Governo do Estado do Rio Grande do Sul"><img src="imagens/logos/IPE PREV SEM FUNDO.png" alt="IPE Prev"></div></div></div><div class="footer-copyright">© 2026 CONAPREV. Todos os direitos reservados.</div></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 </body>

@@ -43,6 +43,10 @@
 
   const elBadgeTop         = document.getElementById('adminNotifBadge');
   const elBadgeModal       = document.getElementById('adminNotifCount');
+  const elActiveCount      = document.getElementById('adminActiveCount');
+  const elFinalCount       = document.getElementById('adminFinalCount');
+  const elTotalCount       = document.getElementById('adminTotalCount');
+  const elCurrentProfile   = document.getElementById('adminCurrentProfile');
   const elCancelModal      = document.getElementById('cancelInscricaoModal');
   const elCancelMsg        = document.getElementById('cancelInscricaoMsg');
   const elCancelYes        = document.getElementById('cancelInscricaoYes');
@@ -651,6 +655,7 @@
     const data = await fetchList('ativos');
     state.ativosCache = data;
     renderList(elAtivosList, elAtivosPager, data, 'ativos');
+    updateDashboardMetrics();
     state.loading = false;
   }
 
@@ -660,7 +665,17 @@
     const data = await fetchList('finalizados');
     state.finalCache = data;
     renderList(elFinalList, elFinalPager, data, 'finalizados');
+    updateDashboardMetrics();
     state.loading = false;
+  }
+
+  function updateDashboardMetrics() {
+    const ativos = (state.ativosCache || []).filter(item => String(item?.numerodeinscricao || '').trim()).length;
+    const finalizados = (state.finalCache || []).length;
+    if (elActiveCount) elActiveCount.textContent = String(ativos);
+    if (elFinalCount) elFinalCount.textContent = String(finalizados);
+    if (elTotalCount) elTotalCount.textContent = String(ativos + finalizados);
+    if (elCurrentProfile) elCurrentProfile.textContent = state.perfil || '—';
   }
 
   async function refreshActiveTab(){
@@ -943,5 +958,4 @@
   }, 15000);
 
 })();
-
 
