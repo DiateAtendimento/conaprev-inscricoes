@@ -724,7 +724,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .topbar.landing-header {
   min-height: 160px;
   color: var(--white);
-  background: linear-gradient(90deg, var(--gov-blue-dark) 0%, var(--gov-blue-mid) 55%, var(--gov-blue) 100%);
+  background: #fff;
 }
 
 .institutional-header {
