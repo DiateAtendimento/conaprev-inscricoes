@@ -77,6 +77,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .shortcut-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
 .shortcut-card { min-height: 132px; display: flex; align-items: center; gap: 22px; padding: 24px 30px; color: var(--text); border: 1px solid var(--border); border-radius: 12px; background: var(--white); box-shadow: var(--shadow); text-decoration: none; transition: transform .2s, border-color .2s, box-shadow .2s; }
 .shortcut-card:hover { color: var(--text); border-color: #b3caec; box-shadow: 0 10px 26px rgba(12,50,111,.13); transform: translateY(-3px); }
+.shortcut-card-disabled,
+.shortcut-card-disabled:hover {
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+  opacity: .55;
+  cursor: not-allowed;
+  font: inherit;
+  text-align: left;
+  transform: none;
+}
 .shortcut-card img { flex: 0 0 58px; width: 58px; height: 58px; object-fit: contain; }
 .shortcut-card span { display: flex; flex-direction: column; gap: 7px; }
 .shortcut-card strong { font-size: 19px; line-height: 1.2; }
@@ -484,6 +495,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .guest-topbar a i { margin-right: 8px; }
 .guest-top-logos { display: flex; align-items: center; gap: 25px; }
 .guest-top-logos img { width: auto; max-width: 150px; height: 54px; object-fit: contain; }
+.guest-mobile-header { display: none; }
 .guest-hero { min-height: 560px; overflow: hidden; background: var(--white); }
 .guest-hero-inner { min-height: 560px; display: grid; grid-template-columns: 55% 45%; padding: 0; }
 .guest-hero-copy { position: relative; z-index: 1; padding: 45px 10px 45px 0; display: flex; flex-direction: column; justify-content: center; }
@@ -514,8 +526,14 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .guest-important p { margin: 3px 0; color: #414a59; }
 
 @media (max-width: 780px) {
-  .guest-top-logos img:first-child, .guest-top-logos img:last-child { display: none; }
-  .guest-topbar-inner > div:first-child a:first-child { display: none; }
+  .guest-topbar { min-height: 0; background: transparent; }
+  .guest-desktop-header { display: none; }
+  .guest-mobile-header { display: block; }
+  .guest-mobile-header .contact-strip-inner { justify-content: flex-end; }
+  .guest-mobile-header .event-lockup-divider { display: block; flex: 0 0 1px; }
+  .guest-mobile-header .menu-icon-bars { width: 25px; display: grid; gap: 5px; }
+  .guest-mobile-header .menu-icon-bars span { height: 2px; border-radius: 2px; background: currentColor; }
+  .guest-hero-copy .event-lockup { display: none; }
   .guest-hero-inner { grid-template-columns: 1fr; }
   .guest-hero-image { display: none; }
   .guest-hero-copy { padding-inline: 0; }

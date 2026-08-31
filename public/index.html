@@ -97,10 +97,10 @@
 
     <section class="shortcut-section" aria-label="Atalhos">
       <div class="container shortcut-grid">
-        <a class="shortcut-card" href="#" aria-disabled="true" tabindex="-1" id="btnEmitirCert">
+        <button class="shortcut-card shortcut-card-disabled" type="button" disabled aria-disabled="true" id="btnEmitirCert">
           <img src="imagens/icones/certificado.svg" alt="">
           <span><strong>Emitir certificado</strong><small>Acesse seu certificado de participação</small></span>
-        </a>
+        </button>
         <a class="shortcut-card" href="/hospedagem.html" id="btnHospedagem">
           <img src="imagens/icones/hospedagem.svg" alt="">
           <span><strong>Sugestões de hospedagem</strong><small>Veja as informações disponíveis</small></span>
@@ -297,7 +297,7 @@
                   <div class="protocol-number"><span>Protocolo da inscrição</span><strong id="miProtocolo">—</strong></div>
                 </section>
                 <section class="protocol-info-card"><h3>Próximos passos</h3><p><i class="bi bi-check-circle-fill"></i> Você receberá um e-mail de confirmação.</p><p><i class="bi bi-check-circle-fill"></i> Acompanhe o status da sua inscrição.</p><p><i class="bi bi-envelope-check-fill"></i> Emita seu certificado após o evento.</p></section>
-                <section class="protocol-info-card"><h3>Certificado</h3><p>Disponível após o evento.</p><button type="button" class="btn btn-primary" onclick="document.getElementById('btnEmitirCert')?.click()"><i class="bi bi-award"></i> Emitir certificado</button></section>
+                <section class="protocol-info-card"><h3>Certificado</h3><p>Disponível após o evento.</p><button type="button" class="btn btn-primary" disabled aria-disabled="true"><i class="bi bi-award"></i> Emitir certificado</button></section>
                 <section class="protocol-info-card protocol-event"><h3>Informações do evento</h3><p><i class="bi bi-calendar3"></i> 5 e 6 de novembro de 2026</p><p><i class="bi bi-geo-alt"></i> Vitória – Espírito Santo</p></section>
               </div>
             </div>
