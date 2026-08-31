@@ -28,14 +28,16 @@
   const elAuthMsg          = document.getElementById('adminAuthMsg');
 
   const elMonitorModal     = document.getElementById('adminMonitorModal');
+  const elAdminWorkspace   = elMonitorModal?.querySelector('.admin-workspace');
   const elPerfilSelect     = document.getElementById('adminPerfilSelect');
-  const elSearch           = document.getElementById('adminSearch');
-  const elRefresh          = document.getElementById('adminRefreshBtn');
   const elDownload         = document.getElementById('adminDownloadBtn');
   const elLogout           = document.getElementById('adminLogoutBtn'); // botão de logout (se existir no HTML)
 
-  const elTabAtivosBtn     = document.getElementById('tabAdminAtivos');
-  const elTabFinalBtn      = document.getElementById('tabAdminFinalizados');
+  const adminViews         = [...(elMonitorModal?.querySelectorAll('.admin-view') || [])];
+  const adminNavLinks      = [...(elMonitorModal?.querySelectorAll('[data-admin-view]') || [])];
+  const profileControls    = [...(elMonitorModal?.querySelectorAll('[data-admin-profile]') || [])];
+  const searchControls     = [...(elMonitorModal?.querySelectorAll('[data-admin-search]') || [])];
+  const refreshControls    = [...(elMonitorModal?.querySelectorAll('[data-admin-refresh]') || [])];
   const elAtivosList       = document.getElementById('adminAtivosList');
   const elFinalList        = document.getElementById('adminFinalizadosList');
   const elAtivosPager      = document.getElementById('adminAtivosPager');
@@ -43,10 +45,6 @@
 
   const elBadgeTop         = document.getElementById('adminNotifBadge');
   const elBadgeModal       = document.getElementById('adminNotifCount');
-  const elActiveCount      = document.getElementById('adminActiveCount');
-  const elFinalCount       = document.getElementById('adminFinalCount');
-  const elTotalCount       = document.getElementById('adminTotalCount');
-  const elCurrentProfile   = document.getElementById('adminCurrentProfile');
   const elCancelModal      = document.getElementById('cancelInscricaoModal');
   const elCancelMsg        = document.getElementById('cancelInscricaoMsg');
   const elCancelYes        = document.getElementById('cancelInscricaoYes');
@@ -146,7 +144,7 @@
     finalOffset: 0,
     ativosCache: [],
     finalCache: [],
-    activeTab: 'ativos', // 'ativos' | 'finalizados'
+    currentView: 'adminOverview',
     loading: false,
     pollTimer: null,     // intervalo de polling quando modal aberto
     lastAtivosIds: new Set(), // snapshot da aba atual (para toasts)
@@ -211,6 +209,28 @@
       t = setTimeout(() => fn(...args), ms);
     };
   };
+
+  function setAdminView(viewId, { scroll = true } = {}) {
+    const requested = adminViews.some(view => view.id === viewId) ? viewId : 'adminOverview';
+    state.currentView = requested;
+
+    adminViews.forEach((view) => {
+      const active = view.id === requested;
+      view.hidden = !active;
+      view.classList.toggle('d-none', !active);
+    });
+    adminNavLinks.forEach((link) => {
+      const active = link.dataset.adminView === requested;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+
+    if (scroll && elAdminWorkspace) {
+      const behavior = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      elAdminWorkspace.scrollTo({ top: 0, behavior });
+    }
+  }
 
   // Data/hora pt-BR com America/Sao_Paulo
   function fmtDateBR(x) {
@@ -523,7 +543,7 @@
         const card = e.currentTarget.closest('[data-rowindex]');
         const idx = Number(card?.dataset?.rowindex || 0);
         if (!idx) return;
-        const isFinal = (state.activeTab === 'finalizados');
+        const isFinal = (status === 'finalizados');
         await toggleConferido(idx, !isFinal);
       }, { passive: true });
     });
@@ -568,12 +588,14 @@
     pagerEl.querySelector('.pg-prev')?.addEventListener('click', () => {
       if (isAtivos) state.ativosOffset = Math.max(0, state.ativosOffset - state.limit);
       else          state.finalOffset  = Math.max(0, state.finalOffset  - state.limit);
-      refreshActiveTab();
+      if (isAtivos) refreshAtivos();
+      else refreshFinalizados();
     });
     pagerEl.querySelector('.pg-next')?.addEventListener('click', () => {
       if (isAtivos) state.ativosOffset += state.limit;
       else          state.finalOffset  += state.limit;
-      refreshActiveTab();
+      if (isAtivos) refreshAtivos();
+      else refreshFinalizados();
     });
   }
 
@@ -672,17 +694,12 @@
   function updateDashboardMetrics() {
     const ativos = (state.ativosCache || []).filter(item => String(item?.numerodeinscricao || '').trim()).length;
     const finalizados = (state.finalCache || []).length;
-    if (elActiveCount) elActiveCount.textContent = String(ativos);
-    if (elFinalCount) elFinalCount.textContent = String(finalizados);
-    if (elTotalCount) elTotalCount.textContent = String(ativos + finalizados);
-    if (elCurrentProfile) elCurrentProfile.textContent = state.perfil || '—';
-  }
-
-  async function refreshActiveTab(){
-    if (state.activeTab === 'ativos') await refreshAtivos();
-    else await refreshFinalizados();
-    // badge � GLOBAL ? atualiza separado
-    refreshGlobalBadge();
+    const values = { active: ativos, final: finalizados, total: ativos + finalizados, profile: state.perfil || '—' };
+    Object.entries(values).forEach(([metric, value]) => {
+      elMonitorModal?.querySelectorAll(`[data-admin-metric="${metric}"]`).forEach((el) => {
+        el.textContent = String(value);
+      });
+    });
   }
 
   async function refreshBoth(){
@@ -848,28 +865,44 @@
     setNotif(0);
   });
 
-  elPerfilSelect?.addEventListener('change', async () => {
-    state.perfil = elPerfilSelect.value;
-    state.ativosOffset = 0;
-    state.finalOffset  = 0;
-    await refreshBoth();
-    snapshotActiveProtocols();
+  adminNavLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      setAdminView(link.dataset.adminView);
+    });
+  });
+  setAdminView(state.currentView, { scroll: false });
+
+  profileControls.forEach((control) => {
+    control.addEventListener('change', async () => {
+      state.perfil = control.value;
+      profileControls.forEach((other) => { other.value = state.perfil; });
+      state.ativosOffset = 0;
+      state.finalOffset = 0;
+      await refreshBoth();
+      snapshotActiveProtocols();
+    });
   });
 
-  elSearch?.addEventListener('input', debounce(async () => {
-    state.q = (elSearch.value || '').trim();
-    state.ativosOffset = 0;
-    state.finalOffset  = 0;
-    await refreshActiveTab();
-    if (state.activeTab === 'ativos') snapshotActiveProtocols();
-  }, 300));
+  searchControls.forEach((control) => {
+    control.addEventListener('input', debounce(async () => {
+      state.q = (control.value || '').trim();
+      searchControls.forEach((other) => {
+        if (other !== control) other.value = control.value;
+      });
+      state.ativosOffset = 0;
+      state.finalOffset = 0;
+      await refreshBoth();
+      snapshotActiveProtocols();
+    }, 300));
+  });
 
-  elRefresh?.addEventListener('click', async () => {
+  const refreshDashboard = async () => {
     const show = window.miLottieShow || ((k, m) => window.openLottie?.(k, m));
     const hide = window.miLottieHide || window.closeLottie;
 
     try {
-      elRefresh.disabled = true;                 // evita cliques repetidos
+      refreshControls.forEach((button) => { button.disabled = true; });
       show && show('timeout', 'Atualizando…');   // usa lottie_timeout_hourglass.json
       await refreshBoth();                       // recarrega Ativos + Finalizados
       snapshotActiveProtocols();                 // atualiza snapshot p/ toasts
@@ -878,33 +911,26 @@
       alert('Falha ao atualizar. Tente novamente.');
     } finally {
       hide && hide();                            // fecha o overlay
-      elRefresh.disabled = false;
+      refreshControls.forEach((button) => { button.disabled = false; });
     }
-  });
+  };
+  refreshControls.forEach((button) => button.addEventListener('click', refreshDashboard));
 
   elDownload?.addEventListener('click', () => {
     downloadWorkbookXLSX();
   });
 
-  // Abas
-  elTabAtivosBtn?.addEventListener('shown.bs.tab', async () => {
-    state.activeTab = 'ativos';
-    await refreshAtivos();
-    snapshotActiveProtocols();
-  });
-  elTabFinalBtn?.addEventListener('shown.bs.tab', async () => {
-    state.activeTab = 'finalizados';
-    await refreshFinalizados();
-    state.lastAtivosIds = new Set(); // reset snapshot quando Não estamos em "Ativos"
-  });
-
   // Ao abrir o modal Admin: refresh e polling focado em novos protocolos (do perfil escolhido)
   elMonitorModal?.addEventListener('shown.bs.modal', () => {
+    setAdminView(state.currentView, { scroll: false });
     refreshBoth().then(() => snapshotActiveProtocols());
     if (state.pollTimer) clearInterval(state.pollTimer);
     state.pollTimer = setInterval(async () => {
-      // busca apenas ATIVOS do perfil selecionado para detectar novos protocolos (toasts)
-      const data = await fetchList('ativos');
+      // Mantém as duas views e seus indicadores atualizados sem trocar a tela atual.
+      const [data, finalizados] = await Promise.all([
+        fetchList('ativos'),
+        fetchList('finalizados')
+      ]);
 
       // detecta novos protocolos (apenas com Número)
       const currentSet = new Set();
@@ -921,7 +947,10 @@
       });
 
       state.ativosCache = data;
+      state.finalCache = finalizados;
       renderList(elAtivosList, elAtivosPager, data, 'ativos');
+      renderList(elFinalList, elFinalPager, finalizados, 'finalizados');
+      updateDashboardMetrics();
 
       // Badge global (soma de todos os perfis)
       refreshGlobalBadge();
@@ -958,4 +987,3 @@
   }, 15000);
 
 })();
-

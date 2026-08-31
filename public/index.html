@@ -241,7 +241,7 @@
               <span class="event-lockup-divider" aria-hidden="true"></span>
               <span class="event-edition"><strong>86ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span>
             </a>
-            <div class="registration-accessibility"><span>Acessibilidade</span><button type="button" aria-label="Diminuir fonte">A−</button><button type="button" aria-label="Fonte padrão">A</button><button type="button" aria-label="Aumentar fonte">A+</button></div>
+            <div class="registration-accessibility" role="group" aria-label="Tamanho da fonte"><span>Acessibilidade</span><button id="registrationFontDecrease" type="button" aria-label="Diminuir fonte">A−</button><button id="registrationFontReset" type="button" aria-label="Fonte padrão">A</button><button id="registrationFontIncrease" type="button" aria-label="Aumentar fonte">A+</button></div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
           </div>
         </header>
@@ -373,7 +373,7 @@
         <div class="admin-dashboard">
           <aside class="admin-sidebar">
             <div class="admin-sidebar-brand"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span><strong>86ª</strong> Reunião Ordinária</span></div>
-            <nav aria-label="Navegação administrativa"><a class="active" href="#adminOverview"><i class="bi bi-house"></i> Visão geral</a><a href="#adminRegistrations"><i class="bi bi-people"></i> Inscrições</a><a href="#adminRegistrations"><i class="bi bi-check2-square"></i> Conferências</a><a href="#adminRegistrations"><i class="bi bi-file-earmark-arrow-down"></i> Relatórios</a></nav>
+            <nav class="admin-primary-nav" aria-label="Navegação administrativa"><a href="#adminOverview" data-admin-view="adminOverview" aria-label="Visão geral" title="Visão geral"><i class="bi bi-house"></i> Visão geral</a><a href="#adminRegistrations" data-admin-view="adminRegistrations" aria-label="Inscrições" title="Inscrições"><i class="bi bi-people"></i> Inscrições</a><a href="#adminConferences" data-admin-view="adminConferences" aria-label="Conferências" title="Conferências"><i class="bi bi-check2-square"></i> Conferências</a><a href="#adminReports" data-admin-view="adminReports" aria-label="Relatórios" title="Relatórios"><i class="bi bi-file-earmark-arrow-down"></i> Relatórios</a></nav>
             <div class="admin-sidebar-help"><i class="bi bi-headset"></i><strong>Precisa de ajuda?</strong><span>conaprev@previdencia.gov.br</span></div>
           </aside>
           <div class="admin-workspace">
@@ -394,85 +394,40 @@
           </div>
         </div>
 
-        <div class="modal-body" id="adminOverview">
-          <section class="admin-welcome"><div><span>Visão geral</span><h2>Olá, Administrador</h2><p>Acompanhe as inscrições da 86ª Reunião do CONAPREV.</p></div><i class="bi bi-bar-chart"></i></section>
-          <section class="admin-metrics" aria-label="Indicadores"><article><span>Inscrições ativas</span><strong id="adminActiveCount">—</strong><i class="bi bi-people"></i></article><article><span>Finalizadas</span><strong id="adminFinalCount">—</strong><i class="bi bi-check-circle"></i></article><article><span>Total carregado</span><strong id="adminTotalCount">—</strong><i class="bi bi-clipboard-data"></i></article><article><span>Perfil atual</span><strong id="adminCurrentProfile">—</strong><i class="bi bi-person-badge"></i></article></section>
-          <section class="admin-registrations" id="adminRegistrations">
-          <!-- Toolbar -->
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <div class="d-flex align-items-center gap-2">
-              <label for="adminPerfilSelect" class="form-label m-0">Perfil:</label>
-              <select id="adminPerfilSelect" class="form-select form-select-sm">
-                <option value="Conselheiro">Conselheiro</option>
-                <option value="CNRPPS">CNRPPS</option>
-                <option value="Palestrante">Palestrante</option>
-                <option value="Staff">Staff</option>
-                <option value="Convidado">Convidado</option>
-                <option value="Patrocinador">Patrocinador</option>
-                <option value="COPAJURE">COPAJURE</option><!-- adicionado -->
-              </select>
+        <nav class="admin-mobile-nav" aria-label="Navegação administrativa mobile"><a href="#adminOverview" data-admin-view="adminOverview">Visão geral</a><a href="#adminRegistrations" data-admin-view="adminRegistrations">Inscrições</a><a href="#adminConferences" data-admin-view="adminConferences">Conferências</a><a href="#adminReports" data-admin-view="adminReports">Relatórios</a></nav>
+
+        <div class="modal-body">
+          <section class="admin-view" id="adminOverview" aria-labelledby="adminOverviewHeading">
+            <section class="admin-welcome"><div><span>Visão geral</span><h2 id="adminOverviewHeading">Olá, Administrador</h2><p>Acompanhe as inscrições da 86ª Reunião do CONAPREV.</p></div><i class="bi bi-bar-chart"></i></section>
+            <section class="admin-metrics" aria-label="Indicadores"><article><span>Inscrições ativas</span><strong id="adminActiveCount" data-admin-metric="active">—</strong><i class="bi bi-people"></i></article><article><span>Finalizadas</span><strong id="adminFinalCount" data-admin-metric="final">—</strong><i class="bi bi-check-circle"></i></article><article><span>Total carregado</span><strong id="adminTotalCount" data-admin-metric="total">—</strong><i class="bi bi-clipboard-data"></i></article><article><span>Perfil atual</span><strong id="adminCurrentProfile" data-admin-metric="profile">—</strong><i class="bi bi-person-badge"></i></article></section>
+          </section>
+
+          <section class="admin-view admin-registrations d-none" id="adminRegistrations" aria-labelledby="adminRegistrationsHeading">
+            <div class="admin-view-heading"><div><span>Inscrições</span><h2 id="adminRegistrationsHeading">Inscrições ativas</h2></div></div>
+            <div class="admin-view-toolbar">
+              <div class="d-flex align-items-center gap-2"><label for="adminPerfilSelect" class="form-label m-0">Perfil:</label><select id="adminPerfilSelect" data-admin-profile class="form-select form-select-sm"><option value="Conselheiro">Conselheiro</option><option value="CNRPPS">CNRPPS</option><option value="Palestrante">Palestrante</option><option value="Staff">Staff</option><option value="Convidado">Convidado</option><option value="Patrocinador">Patrocinador</option><option value="COPAJURE">COPAJURE</option></select></div>
+              <div class="admin-view-actions"><div class="input-group input-group-sm admin-search-control"><span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span><input id="adminSearch" data-admin-search type="search" class="form-control" placeholder="Buscar por CPF ou nome…"></div><button id="adminRefreshBtn" data-admin-refresh type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Atualizar</button></div>
             </div>
+            <div id="adminAtivosList" class="vstack gap-2"></div>
+            <div id="adminAtivosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
+            <div class="mt-3 small text-muted"><i class="bi bi-hand-index-thumb" aria-hidden="true"></i> Clique na mão para marcar como <strong>conferido</strong> e mover o registro para Conferências.</div>
+          </section>
 
-            <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
-              <div class="input-group input-group-sm" style="min-width: 260px">
-                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
-                <input id="adminSearch" type="search" class="form-control" placeholder="Buscar por CPF ou Nome…" />
-              </div>
-              <button id="adminRefreshBtn" type="button" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-repeat" aria-hidden="true"></i> Atualizar
-              </button>
-              <button id="adminDownloadBtn" type="button" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-download" aria-hidden="true"></i> Baixar dashboard
-              </button>
+          <section class="admin-view admin-registrations d-none" id="adminConferences" aria-labelledby="adminConferencesHeading">
+            <div class="admin-view-heading"><div><span>Conferências</span><h2 id="adminConferencesHeading">Inscrições conferidas</h2></div></div>
+            <div class="admin-view-toolbar">
+              <div class="d-flex align-items-center gap-2"><label for="adminConferencesPerfilSelect" class="form-label m-0">Perfil:</label><select id="adminConferencesPerfilSelect" data-admin-profile class="form-select form-select-sm"><option value="Conselheiro">Conselheiro</option><option value="CNRPPS">CNRPPS</option><option value="Palestrante">Palestrante</option><option value="Staff">Staff</option><option value="Convidado">Convidado</option><option value="Patrocinador">Patrocinador</option><option value="COPAJURE">COPAJURE</option></select></div>
+              <div class="admin-view-actions"><div class="input-group input-group-sm admin-search-control"><span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span><input id="adminConferencesSearch" data-admin-search type="search" class="form-control" placeholder="Buscar por CPF ou nome…"></div><button id="adminConferencesRefreshBtn" data-admin-refresh type="button" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Atualizar</button></div>
             </div>
-          </div>
+            <div id="adminFinalizadosList" class="vstack gap-2"></div>
+            <div id="adminFinalizadosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
+            <div class="mt-3 small text-muted"><i class="bi bi-hand-index-thumb-fill text-success" aria-hidden="true"></i> Clique novamente na mão verde para desfazer a conferência e devolver o registro às Inscrições.</div>
+          </section>
 
-          <!-- ABAS: Ativos / Finalizados (INSERIR AQUI, após a toolbar) -->
-          <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link active"
-                id="tabAdminAtivos"
-                data-bs-toggle="tab"
-                data-bs-target="#paneAdminAtivos"
-                type="button"
-                role="tab"
-                aria-controls="paneAdminAtivos"
-                aria-selected="true">
-                Ativos
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link"
-                id="tabAdminFinalizados"
-                data-bs-toggle="tab"
-                data-bs-target="#paneAdminFinalizados"
-                type="button"
-                role="tab"
-                aria-controls="paneAdminFinalizados"
-                aria-selected="false">
-                Finalizados
-              </button>
-            </li>
-          </ul>
-
-
-          <div class="tab-content">
-            <div class="tab-pane fade show active" id="paneAdminAtivos" role="tabpanel" aria-labelledby="tabAdminAtivos" tabindex="0">
-              <div id="adminAtivosList" class="vstack gap-2"></div>
-              <div id="adminAtivosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
-            </div>
-            <div class="tab-pane fade" id="paneAdminFinalizados" role="tabpanel" aria-labelledby="tabAdminFinalizados" tabindex="0">
-              <div id="adminFinalizadosList" class="vstack gap-2"></div>
-              <div id="adminFinalizadosPager" class="d-flex justify-content-between align-items-center mt-3"></div>
-            </div>
-          </div>
-
-          <div class="mt-3 small text-muted">
-            <i class="bi bi-hand-index-thumb" aria-hidden="true"></i>
-            Clique na mão para marcar <strong>Conferido</strong> (fica verde) e mover o registro para <em>Finalizados</em>.
-          </div>
+          <section class="admin-view admin-reports d-none" id="adminReports" aria-labelledby="adminReportsHeading">
+            <div class="admin-view-heading"><div><span>Relatórios</span><h2 id="adminReportsHeading">Exportação das inscrições</h2><p>Baixe a planilha consolidada utilizando os dados já disponíveis no sistema.</p></div></div>
+            <section class="admin-metrics admin-report-metrics" aria-label="Resumo para exportação"><article><span>Inscrições ativas</span><strong data-admin-metric="active">—</strong><i class="bi bi-people"></i></article><article><span>Finalizadas</span><strong data-admin-metric="final">—</strong><i class="bi bi-check-circle"></i></article><article><span>Total carregado</span><strong data-admin-metric="total">—</strong><i class="bi bi-clipboard-data"></i></article><article><span>Perfil atual</span><strong data-admin-metric="profile">—</strong><i class="bi bi-person-badge"></i></article></section>
+            <div class="admin-report-action"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i><div><h3>Exportar inscrições (.xlsx)</h3><p>O arquivo reúne as abas e informações fornecidas pelo exportador administrativo existente.</p></div><button id="adminDownloadBtn" type="button" class="btn btn-primary"><i class="bi bi-download" aria-hidden="true"></i> Baixar dashboard</button></div>
           </section>
         </div>
           </div>
@@ -705,6 +660,7 @@
   <script src="/src/js/ui.js" defer></script>
   <script src="/src/js/cpf.js" defer></script>
   <script src="/src/js/forms.js" defer></script>
+  <script src="/src/js/registration-accessibility.js" defer></script>
 
   <!-- API helper (stub) -->
   <script src="/src/js/api.js" defer></script>

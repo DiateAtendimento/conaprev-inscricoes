@@ -151,6 +151,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .event-lockup-light .event-edition { color: var(--white); }
 .registration-accessibility { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 13px; }
 .registration-accessibility button { width: 34px; height: 34px; color: var(--white); border: 1px solid rgba(255,255,255,.65); border-radius: 5px; background: transparent; }
+.registration-accessibility button:hover:not(:disabled),
+.registration-accessibility button[aria-pressed="true"] { color: var(--gov-blue-dark); background: var(--white); }
+.registration-accessibility button:focus-visible { outline: 3px solid var(--gov-yellow); outline-offset: 2px; }
+.registration-accessibility button:disabled { cursor: not-allowed; opacity: .42; }
 .registration-header .btn-close { margin-left: 22px; }
 .registration-intro { min-height: 170px; padding-block: 35px; display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; }
 .registration-intro h1 { margin: 0 0 10px; color: var(--gov-blue); font-size: 38px; font-weight: 700; }
@@ -238,7 +242,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .footer-main { grid-template-columns: 1fr; }
   .footer-contact { padding-right: 0; padding-bottom: 25px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.35); }
   .registration-brandbar { min-height: 92px; }
-  .registration-accessibility { display: none; }
+  .registration-brandbar { gap: 8px; padding-block: 10px; }
+  .registration-header .event-lockup { width: auto; min-width: 0; }
+  .registration-accessibility { margin-left: auto; display: flex; gap: 5px; }
+  .registration-accessibility > span { display: none; }
+  .registration-accessibility button { width: 40px; height: 40px; flex: 0 0 40px; }
+  .registration-header .btn-close { margin-left: 5px; flex: 0 0 auto; }
   .registration-intro { min-height: 145px; padding-block: 26px; }
   .registration-intro h1 { font-size: 30px; }
   .registration-profile { display: none; }
@@ -254,6 +263,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 520px) {
+  .registration-header .event-lockup > img { width: 78px; height: 54px; }
+  .registration-header .event-lockup-divider,
+  .registration-header .event-edition { display: none; }
   .institutional-header { gap: 10px; }
   .event-lockup { gap: 9px; }
   .event-lockup > img { width: 86px; }
@@ -443,6 +455,20 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .admin-metrics strong { color: var(--gov-blue); font-size: 32px; line-height: 1; overflow-wrap: anywhere; }
 .admin-metrics i { color: #8cb6eb; font-size: 31px; }
 .admin-registrations { padding: 24px; border: 1px solid var(--border); border-radius: 11px; background: var(--white); box-shadow: var(--shadow); }
+.admin-mobile-nav { display: none; }
+.admin-view[hidden] { display: none !important; }
+.admin-view-heading { margin-bottom: 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.admin-view-heading span { color: var(--text-soft); font-size: 14px; }
+.admin-view-heading h2 { margin: 5px 0 0; color: var(--gov-blue); font-size: 25px; }
+.admin-view-heading p { margin: 8px 0 0; color: var(--text-soft); }
+.admin-view-toolbar { margin-bottom: 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.admin-view-actions { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.admin-search-control { min-width: 260px; }
+.admin-reports { padding: 24px; border: 1px solid var(--border); border-radius: 11px; background: var(--white); box-shadow: var(--shadow); }
+.admin-report-action { padding: 28px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 22px; border: 1px solid #c8d9ee; border-radius: 10px; background: #eef6ff; }
+.admin-report-action > i { color: var(--gov-blue); font-size: 48px; }
+.admin-report-action h3 { margin: 0 0 5px; color: var(--gov-blue-dark); font-size: 20px; }
+.admin-report-action p { margin: 0; color: var(--text-soft); }
 #adminMonitorModal .form-control, #adminMonitorModal .form-select { min-height: 42px; border-color: #cbd3df; }
 #adminMonitorModal .nav-tabs { margin-top: 24px; }
 #adminMonitorModal .nav-link { color: var(--text-soft); }
@@ -463,11 +489,22 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 @media (max-width: 580px) {
   .admin-dashboard { display: block; }
   .admin-sidebar { display: none; }
+  .admin-mobile-nav { position: sticky; top: 70px; z-index: 3; display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--white); scrollbar-width: thin; }
+  .admin-mobile-nav a { padding: 13px 16px; flex: 0 0 auto; color: var(--text-soft); border-bottom: 3px solid transparent; text-decoration: none; white-space: nowrap; }
+  .admin-mobile-nav a.active { color: var(--gov-blue); border-bottom-color: var(--gov-blue); font-weight: 700; background: #eef6ff; }
   #adminMonitorModal .modal-header { padding: 14px 16px; }
   #adminMonitorModal .modal-title { font-size: 18px; }
   #adminMonitorModal .modal-body { padding: 18px 14px 50px; }
   .admin-metrics { grid-template-columns: 1fr; }
   .admin-registrations { padding: 16px; }
+  .admin-reports { padding: 16px; }
+  .admin-view-toolbar, .admin-view-actions { width: 100%; align-items: stretch; flex-direction: column; }
+  .admin-view-toolbar > .d-flex { width: 100%; }
+  .admin-view-toolbar > .d-flex .form-select { flex: 1 1 auto; min-width: 0; }
+  .admin-view-actions { margin-left: 0; }
+  .admin-search-control { width: 100%; min-width: 0; }
+  .admin-report-action { padding: 22px 18px; grid-template-columns: auto 1fr; }
+  .admin-report-action .btn { grid-column: 1 / -1; width: 100%; }
   #adminMonitorModal .input-group { min-width: 100% !important; }
 }
 
