@@ -132,8 +132,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .footer-contact strong, .footer-realization > strong { font-size: 15px; }
 .footer-contact a { display: flex; align-items: center; gap: 11px; color: var(--white); font-size: 14px; text-decoration: none; }
 .footer-contact a:hover { text-decoration: underline; }
-.footer-logos { display: grid; grid-template-columns: 1fr 1.25fr 1.15fr .95fr .7fr; align-items: center; gap: 30px; margin-top: 12px; }
-.footer-logos img { width: 100%; max-height: 68px; object-fit: contain; }
+.footer-logos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; gap: 18px; margin-top: 12px; }
+.footer-logo-item { min-width: 0; display: flex; align-items: center; justify-content: center; }
+.footer-logo-item img { width: min(100%, 140px); height: 76px; object-fit: contain; }
 .footer-copyright { padding: 15px 20px; border-top: 1px solid rgba(255,255,255,.18); background: rgba(0,34,76,.38); font-size: 13px; text-align: center; }
 
 #menuOffcanvas { --bs-offcanvas-width: 340px; }
@@ -494,7 +495,8 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .guest-topbar a { color: var(--white); font-size: 14px; text-decoration: none; }
 .guest-topbar a i { margin-right: 8px; }
 .guest-top-logos { display: flex; align-items: center; gap: 25px; }
-.guest-top-logos img { width: auto; max-width: 150px; height: 54px; object-fit: contain; }
+.guest-top-logos .institutional-logo-item { width: 140px; height: 76px; display: flex; align-items: center; justify-content: center; }
+.guest-top-logos img { width: 140px; height: 76px; object-fit: contain; }
 .guest-mobile-header { display: none; }
 .guest-hero { min-height: 560px; overflow: hidden; background: var(--white); }
 .guest-hero-inner { min-height: 560px; display: grid; grid-template-columns: 55% 45%; padding: 0; }
@@ -531,7 +533,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .guest-mobile-header { display: block; }
   .guest-mobile-header .public-header__inner { align-items: center; }
   .guest-mobile-header .public-header__brand { width: auto; justify-content: center; }
-  .guest-mobile-header .public-header__institutional { max-width: 320px; justify-content: center; }
+  .guest-mobile-header .public-header__institutional { max-width: 100%; justify-content: center; }
   .guest-mobile-header .contact-strip-inner { justify-content: flex-end; }
   .guest-mobile-header .event-lockup-divider { display: block; flex: 0 0 1px; }
   .guest-mobile-header .menu-icon-bars { width: 25px; display: grid; gap: 5px; }
@@ -546,8 +548,9 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 18px 12px;
   }
-  .site-footer.institutional-footer .footer-logos > img { grid-column: span 2; }
-  .site-footer.institutional-footer .footer-logos > img:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
+  .site-footer.institutional-footer .footer-logo-item { grid-column: span 2; }
+  .site-footer.institutional-footer .footer-logo-item:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
+  .site-footer.institutional-footer .footer-logo-item img { width: min(100%, 90px); height: 58px; }
 }
 
 @media (max-width: 520px) {
@@ -568,7 +571,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .hero.landing-hero::after { content: ""; position: absolute; right: 6%; top: 15%; width: 360px; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; box-shadow: 0 0 0 50px rgba(255,255,255,.035), 0 0 0 110px rgba(255,255,255,.025); }
 .about-city-visual { width: 100%; height: 190px; align-self: center; display: grid; place-items: center; border-radius: 12px; color: var(--white); background: radial-gradient(circle at 70% 25%, rgba(255,205,7,.32), transparent 18%), linear-gradient(145deg, #0b4f9d, #0574bd); }
 .about-city-visual i { font-size: 72px; opacity: .9; }
-.footer-logos { grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); }
+.footer-logos { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 .internal-page { min-height: 100vh; background: #f5f7fa; }
 .internal-site-header { color: var(--white); background: linear-gradient(115deg, #063c75, #0055ad); }
@@ -928,20 +931,29 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 
 .public-header .public-header__institutional {
   width: auto;
-  max-width: 580px;
-  flex: 0 1 580px;
+  max-width: 620px;
+  flex: 0 1 620px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+  justify-content: end;
+  gap: 12px;
+}
+
+.public-header .public-header__institutional .institutional-logo-item {
+  width: 100%;
+  height: 76px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: clamp(22px, 3vw, 42px);
+  justify-content: center;
 }
 
 .public-header .public-header__institutional img {
   display: block !important;
-  width: auto;
-  height: 62px;
-  max-width: 250px;
-  max-height: 62px;
+  width: min(100%, 140px);
+  height: 76px;
+  max-width: 140px;
+  max-height: 76px;
   object-fit: contain;
 }
 
@@ -970,19 +982,25 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 
   .public-header .public-header__institutional {
     width: 100%;
-    max-width: 320px;
+    max-width: 100%;
     flex: 0 0 auto;
-    justify-content: flex-start;
-    gap: 22px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    justify-content: center;
+    gap: 6px;
     padding-top: 10px;
     border-top: 1px solid var(--border);
   }
 
+  .public-header .public-header__institutional .institutional-logo-item {
+    height: 58px;
+  }
+
   .public-header .public-header__institutional img {
     display: block !important;
-    height: 38px;
-    max-width: calc(50% - 11px);
-    max-height: 38px;
+    width: min(100%, 90px);
+    height: 58px;
+    max-width: 90px;
+    max-height: 58px;
   }
 
   .public-header:not(.landing-header) .contact-strip-inner {
