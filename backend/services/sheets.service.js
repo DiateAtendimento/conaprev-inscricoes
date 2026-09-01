@@ -1,7 +1,7 @@
 ﻿// backend/services/sheets.service.js
 import cfg from "../config/env.js";
 import { getSheets } from "./google.service.js";
-import { normalizeKey, titleCase } from "./normalize.service.js";
+import { normalizeKey, normalizeText, titleCase } from "./normalize.service.js";
 import {
   DEFAULT_MAX_INSCRICOES_POR_PERFIL,
   buildCodigoFromSequence,
@@ -348,6 +348,7 @@ function createRowFromFormData(formData, perfil, headers) {
     if (norm === "cpf") return "'" + String(formData.cpf).replace(/\D/g, "");
     if (norm === "identificacao") return perfil;
     let val = formData[norm] || "";
+    if (typeof val === "string") val = normalizeText(val);
     if (camposTitle.includes(norm) && val) val = titleCase(val);
     return val;
   });
