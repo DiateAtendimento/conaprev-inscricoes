@@ -348,6 +348,27 @@
     return labels[String(perfil || '').trim()] || 'Inscritos';
   }
 
+  function renderGalleryTitle(titleEl, perfil, count = null) {
+    if (!titleEl) return;
+    const label = getGalleryTitle(perfil);
+    titleEl.replaceChildren();
+
+    const labelEl = document.createElement('span');
+    labelEl.textContent = label;
+    titleEl.appendChild(labelEl);
+
+    if (!Number.isFinite(count)) return;
+    const notification = document.createElement('span');
+    notification.className = 'mi-gallery-notification';
+    notification.setAttribute('role', 'status');
+    notification.setAttribute('aria-label', `${count} ${count === 1 ? 'inscrito' : 'inscritos'}`);
+    notification.innerHTML = `
+      <i class="bi bi-bell-fill" aria-hidden="true"></i>
+      <span class="mi-gallery-notification-count" aria-hidden="true">${count}</span>
+    `;
+    titleEl.appendChild(notification);
+  }
+
   function getDefaultGalleryPhoto(perfil) {
     if (perfil === 'Staff') return DEFAULT_STAFF_PHOTO_URL;
     if (perfil === 'Palestrante') return DEFAULT_SPEAKER_PHOTO_URL;
@@ -445,7 +466,7 @@
     }
 
     wrap.classList.remove('d-none');
-    title.textContent = getGalleryTitle(state.perfil);
+    renderGalleryTitle(title, state.perfil);
     grid.innerHTML = '';
     gridWrap.classList.remove('is-scrollable');
 
@@ -456,6 +477,7 @@
       const res = await fetch(url, { method: 'GET' });
       const data = res.ok ? await res.json() : [];
       const list = Array.isArray(data) ? data : [];
+      renderGalleryTitle(title, state.perfil, list.length);
 
       if (!list.length) {
         setGalleryMsg('Nenhuma inscrição encontrada até o momento.', 'text-muted');

@@ -177,7 +177,42 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .mi-cpf-wrap { align-items: flex-end !important; gap: 12px !important; }
 .mi-cpf-wrap .form-control { min-width: 260px; }
 #miGalleryWrap { margin-top: 36px !important; }
-#miGalleryTitle { margin-bottom: 18px !important; font-size: 18px; }
+#miGalleryTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 18px !important;
+  font-size: 18px;
+}
+.mi-gallery-notification {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #1351b4;
+  font-size: 16px;
+}
+.mi-gallery-notification-count {
+  position: absolute;
+  top: -8px;
+  left: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  background: #e83b4d;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 5px rgba(12, 50, 111, .18);
+}
 .mi-gallery-grid-wrap {
   min-height: 300px;
   max-height: 440px;
