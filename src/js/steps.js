@@ -327,6 +327,18 @@
     return sigla || ufSigla;
   }
 
+  const STAFF_INFORMATION_TECHNOLOGY = new Set([
+    'hugo mesquisa goes',
+    'hugo mesquita goes',
+    'ricardo andre ximenes dos santos',
+  ]);
+
+  function getStaffBadgeLabel(nome) {
+    if (state.perfil !== 'Staff') return '';
+    const key = normalizeNameKeyGlobal(nome);
+    return STAFF_INFORMATION_TECHNOLOGY.has(key) ? 'Tecnologia da informação' : '';
+  }
+
   async function renderProfileGallery(list = []) {
     const grid = $('#miGalleryGrid');
     const gridWrap = $('#miGalleryGridWrap');
@@ -339,6 +351,7 @@
       const nome = String(item?.nome || '').trim();
       const codigo = String(item?.numerodeinscricao || '').trim();
       const meta = buildGalleryMeta(item);
+      const badge = getStaffBadgeLabel(nome);
       const gender = guessGenderByName(nome);
       const card = document.createElement('div');
       card.className = `mi-staff-card ${gender === 'female' ? 'is-female' : 'is-male'}`;
@@ -349,6 +362,7 @@
         <div class="mi-staff-name">${escapeHtml(nome || 'Inscrito')}</div>
         ${meta ? `<div class="mi-staff-entity">${escapeHtml(meta)}</div>` : ''}
         ${codigo ? `<div class="mi-staff-code">${escapeHtml(codigo)}</div>` : ''}
+        ${badge ? `<div class="mi-staff-badge">${escapeHtml(badge)}</div>` : ''}
       `;
       grid.appendChild(card);
 
