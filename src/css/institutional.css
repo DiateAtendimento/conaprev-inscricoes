@@ -188,10 +188,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .mi-gallery-grid-wrap::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .mi-staff-grid { display: grid; grid-template-columns: repeat(6, minmax(125px, 1fr)); gap: 28px 20px; }
 .mi-staff-card { min-width: 0; }
+.mi-staff-card.is-staff-profile {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 .mi-staff-card img, .mi-gallery-photo { width: 84px !important; height: 84px !important; }
+.mi-staff-badge-slot {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+}
 .mi-staff-badge {
   max-width: 100%;
-  margin-top: 10px;
   padding: 6px 11px;
   display: inline-flex;
   align-items: center;

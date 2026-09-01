@@ -64,6 +64,53 @@
   });
   let state = initialState();
   let isSubmitting = false;
+  const REGISTRATION_SESSION_KEY = 'conaprev.registration.current';
+
+  function registrationUrl() {
+    return new URL(window.location.href);
+  }
+
+  function syncRegistrationRoute() {
+    if (!state.perfil) return;
+    const url = registrationUrl();
+    url.searchParams.set('tela', 'inscricao');
+    url.searchParams.set('perfil', state.perfil);
+    url.searchParams.set('etapa', String(state.step));
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function persistRegistrationState() {
+    if (!state.perfil) return;
+    try {
+      sessionStorage.setItem(REGISTRATION_SESSION_KEY, JSON.stringify(state));
+    } catch {}
+  }
+
+  function clearRegistrationRoute() {
+    try { sessionStorage.removeItem(REGISTRATION_SESSION_KEY); } catch {}
+    const url = registrationUrl();
+    if (url.searchParams.get('tela') !== 'inscricao') return;
+    url.searchParams.delete('tela');
+    url.searchParams.delete('perfil');
+    url.searchParams.delete('etapa');
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }
+
+  function readRegistrationStateFromSession(perfil) {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(REGISTRATION_SESSION_KEY) || 'null');
+      if (!saved || saved.perfil !== perfil) return null;
+      return {
+        ...initialState(),
+        ...saved,
+        perfil,
+        step: Math.min(STEP_MAX, Math.max(STEP_MIN, Number(saved.step) || STEP_MIN)),
+        data: saved.data && typeof saved.data === 'object' ? saved.data : {}
+      };
+    } catch {
+      return null;
+    }
+  }
 
   // "Nome no prisma" automático
   let prismaManual = false;
@@ -190,6 +237,11 @@
 
   function renderStep() {
     $('#miStepLabel').textContent = `Passo ${state.step} de ${STEP_MAX}`;
+
+    const formFooter = $('#miFormFooter');
+    const showFormFooter = state.searched || state.step > STEP_MIN;
+    formFooter?.classList.toggle('d-none', !showFormFooter);
+
     $all('.mi-stepper .mi-step').forEach(s => {
       const n = Number(s.dataset.step);
       s.classList.toggle('is-active', n === state.step);
@@ -212,6 +264,8 @@
     avancar.disabled = isSubmitting || (state.step === 1 && !allowAdvanceStep1);
 
     updateFinalStepLabel();
+    syncRegistrationRoute();
+    persistRegistrationState();
   }
 
   function setSubmitting(nextValue) {
@@ -355,7 +409,8 @@
       const badge = getStaffBadgeLabel(nome);
       const gender = guessGenderByName(nome);
       const card = document.createElement('div');
-      card.className = `mi-staff-card ${gender === 'female' ? 'is-female' : 'is-male'}`;
+      const staffProfileClass = state.perfil === 'Staff' ? 'is-staff-profile' : '';
+      card.className = `mi-staff-card ${staffProfileClass} ${gender === 'female' ? 'is-female' : 'is-male'}`;
       card.innerHTML = `
         <div class="mi-staff-photo">
           <img alt="Foto de ${escapeHtml(nome || 'Inscrito')}" src="${escapeHtml(getDefaultGalleryPhoto(state.perfil))}">
@@ -363,7 +418,7 @@
         <div class="mi-staff-name">${escapeHtml(nome || 'Inscrito')}</div>
         ${meta ? `<div class="mi-staff-entity">${escapeHtml(meta)}</div>` : ''}
         ${codigo ? `<div class="mi-staff-code">${escapeHtml(codigo)}</div>` : ''}
-        ${badge ? `<div class="mi-staff-badge">${escapeHtml(badge)}</div>` : ''}
+        ${badge ? `<div class="mi-staff-badge-slot"><div class="mi-staff-badge">${escapeHtml(badge)}</div></div>` : ''}
       `;
       grid.appendChild(card);
 
@@ -967,7 +1022,10 @@
     updateFinalStepLabel();
     renderStep();
   }
-  modalEl.addEventListener('hidden.bs.modal', resetModal);
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    clearRegistrationRoute();
+    resetModal();
+  });
 
   /* ===============================
    * Eventos principais
@@ -1078,6 +1136,8 @@
 
   // Atualiza Revisão ao vivo no passo 4
   document.getElementById('miForm').addEventListener('input', () => {
+    state.data = { ...state.data, ...readForm() };
+    persistRegistrationState();
     if (state.step === 4) renderReview();
   });
 
@@ -1160,14 +1220,14 @@
   /* ===============================
    * Abrir modal a partir dos cards
    * =============================== */
-  const openProfileModal = (card) => {
+  const openProfileModal = (card, restoredState = null) => {
     if (!card) return;
     if (window.INSCRICOES_ENCERRADAS) {
       inscricoesEncerradasModal?.show();
       return;
     }
     const perfil = card?.dataset.profile || 'Conselheiro';
-    state = initialState();
+    state = restoredState || initialState();
     setSubmitting(false);
     state.perfil = perfil;
 
@@ -1184,6 +1244,18 @@
     if (step2) step2.innerHTML = '<div class="text-muted">Faça a pesquisa do CPF para carregar ou iniciar o cadastro.</div>';
     const step3 = document.querySelector('.mi-pane[data-step="3"]');
     if (step3) step3.innerHTML = '<div class="text-muted">Os campos do perfil aparecerão aqui após a pesquisa do CPF.</div>';
+
+    if (restoredState) {
+      const restoredData = state.data || {};
+      const cpfField = $('#miCpf');
+      if (cpfField) cpfField.value = restoredData.cpf || '';
+      if (state.searched || state.step > STEP_MIN) {
+        buildStep2Form(perfil, restoredData);
+        buildStep3Perfil(perfil, restoredData);
+      }
+      if (state.step === 4) renderReview();
+      if (state.step === 6) $('#miProtocolo').textContent = state.protocolo || '-';
+    }
 
     updateFinalStepLabel();
     renderStep();
@@ -1203,5 +1275,21 @@
       openProfileModal(btn.closest('.profile-card'));
     });
   });
+
+  const routeParams = new URLSearchParams(window.location.search);
+  if (routeParams.get('tela') === 'inscricao') {
+    const routeProfile = routeParams.get('perfil') || '';
+    const routeCard = $all('.profile-card').find(card => card.dataset.profile === routeProfile);
+    if (routeCard) {
+      const restoredState = readRegistrationStateFromSession(routeProfile) || {
+        ...initialState(),
+        perfil: routeProfile,
+        step: STEP_MIN
+      };
+      openProfileModal(routeCard, restoredState);
+    } else {
+      clearRegistrationRoute();
+    }
+  }
 
 })();
