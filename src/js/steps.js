@@ -330,6 +330,7 @@
   const STAFF_INFORMATION_TECHNOLOGY = new Set([
     'hugo mesquisa goes',
     'hugo mesquita goes',
+    'hugo vinicius mesquita gois',
     'ricardo andre ximenes dos santos',
   ]);
 
