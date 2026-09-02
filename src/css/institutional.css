@@ -214,30 +214,53 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: 0 2px 5px rgba(12, 50, 111, .18);
 }
 .mi-gallery-grid-wrap {
+  position: relative;
   min-height: 300px;
   max-height: 440px;
-  overflow-y: auto;
-  padding: 24px 22px 28px;
+  padding: 18px 0 22px;
   border: 1px solid #d7e2f0;
   border-radius: 16px;
-  background: #f1f5fb;
+  background: transparent;
+}
+.mi-gallery-viewport {
+  width: 100%;
+  min-height: 258px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.mi-gallery-grid-wrap::-webkit-scrollbar { width: 0; height: 0; display: none; }
-.mi-staff-grid { display: grid; grid-template-columns: repeat(6, minmax(125px, 1fr)); gap: 28px 20px; }
-.mi-staff-card {
-  min-width: 0;
-  padding: 12px 10px 14px;
-  border: 1px solid transparent;
-  border-radius: 16px;
-  transition: transform .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+.mi-gallery-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.mi-staff-grid {
+  --carousel-card-width: 150px;
+  display: flex;
+  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  min-height: 258px;
+  gap: 22px;
+  padding-inline: calc(50% - (var(--carousel-card-width) / 2));
 }
-.mi-staff-card.is-staff-profile {
-  height: 100%;
+.mi-staff-card {
+  flex: 0 0 var(--carousel-card-width);
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-width: 0;
+  min-height: 218px;
+  padding: 12px 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  opacity: .76;
+  scroll-snap-align: center;
+  transform: scale(.92);
+  transition: transform .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.mi-staff-card.is-staff-profile {
+  height: 218px;
 }
 .mi-staff-photo {
   border: 4px solid #fff;
@@ -259,6 +282,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 @media (hover: hover) and (pointer: fine) {
   .mi-staff-card:hover {
+    opacity: 1;
     transform: translateY(-3px);
     border-color: #9bbce7;
     background: rgba(255, 255, 255, .96);
@@ -269,6 +293,40 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     box-shadow: 0 7px 18px rgba(19, 81, 180, .25);
   }
 }
+.mi-staff-card.is-carousel-active {
+  z-index: 2;
+  opacity: 1;
+  transform: translateY(-3px) scale(1.06);
+  border-color: #9bbce7;
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 10px 24px rgba(12, 50, 111, .14);
+}
+.mi-staff-card.is-carousel-active .mi-staff-photo {
+  border-color: #d7e6f8;
+  box-shadow: 0 7px 18px rgba(19, 81, 180, .25);
+}
+.mi-gallery-carousel-button {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #b9cce5;
+  border-radius: 50%;
+  color: #1351b4;
+  background: #fff;
+  box-shadow: 0 5px 15px rgba(12, 50, 111, .16);
+  transform: translateY(-50%);
+}
+.mi-gallery-grid-wrap.has-multiple-items .mi-gallery-carousel-button { display: inline-flex; }
+.mi-gallery-carousel-button.is-prev { left: 12px; }
+.mi-gallery-carousel-button.is-next { right: 12px; }
+.mi-gallery-carousel-button:hover { color: #fff; border-color: #1351b4; background: #1351b4; }
+.mi-gallery-carousel-button:focus-visible { outline: 3px solid rgba(19, 81, 180, .3); outline-offset: 2px; }
 .mi-staff-badge-slot {
   width: 100%;
   margin-top: auto;
@@ -363,8 +421,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .mi-stepper { overflow-x: auto; padding-bottom: 10px; }
   .mi-stepper .mi-step { min-width: 95px; }
   .mi-pane { min-height: 440px; padding: 26px 10px; }
-  .mi-gallery-grid-wrap { min-height: 270px; padding: 20px 16px 24px; }
-  .mi-staff-grid { grid-template-columns: repeat(3, minmax(110px, 1fr)); }
+  .mi-gallery-grid-wrap { min-height: 270px; padding-block: 12px 18px; }
+  .mi-gallery-viewport, .mi-staff-grid { min-height: 238px; }
+  .mi-staff-grid { --carousel-card-width: 138px; gap: 16px; }
   #modalInscricao .modal-footer { width: calc(100% - 24px); padding-inline: 20px; }
   .protocol-layout { grid-template-columns: 1fr; }
   .protocol-success-card { grid-row: auto; }
@@ -397,8 +456,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .footer-logos { grid-template-columns: repeat(2, 1fr); }
   .registration-brandbar .event-edition { display: none; }
   .mi-stepper::before { display: none; }
-  .mi-gallery-grid-wrap { min-height: 250px; padding: 18px 12px 22px; }
-  .mi-staff-grid { grid-template-columns: repeat(2, minmax(105px, 1fr)); }
+  .mi-gallery-grid-wrap { min-height: 250px; padding-block: 10px 16px; }
+  .mi-gallery-viewport, .mi-staff-grid { min-height: 222px; }
+  .mi-staff-grid { --carousel-card-width: 128px; gap: 12px; }
+  .mi-gallery-carousel-button { width: 34px; height: 34px; }
+  .mi-gallery-carousel-button.is-prev { left: 7px; }
+  .mi-gallery-carousel-button.is-next { right: 7px; }
   .mi-cpf-wrap { align-items: stretch !important; flex-direction: column; }
   .mi-cpf-wrap .form-control { min-width: 0; }
 }

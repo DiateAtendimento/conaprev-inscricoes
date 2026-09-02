@@ -64,6 +64,7 @@
   });
   let state = initialState();
   let isSubmitting = false;
+  let galleryCarouselCleanup = null;
   const REGISTRATION_SESSION_KEY = 'conaprev.registration.current';
 
   function registrationUrl() {
@@ -317,8 +318,16 @@
     galleryWrap.innerHTML = `
       <div id="miGalleryTitle" class="fw-semibold mb-2">Inscritos</div>
       <div id="miGalleryMsg" class="small text-muted"></div>
-      <div id="miGalleryGridWrap" class="mi-gallery-grid-wrap">
-        <div id="miGalleryGrid" class="mi-staff-grid"></div>
+      <div id="miGalleryGridWrap" class="mi-gallery-grid-wrap" role="region" aria-label="Carrossel de inscritos" aria-roledescription="carrossel">
+        <button id="miGalleryPrev" class="mi-gallery-carousel-button is-prev" type="button" aria-label="Inscrição anterior">
+          <i class="bi bi-chevron-left" aria-hidden="true"></i>
+        </button>
+        <div id="miGalleryViewport" class="mi-gallery-viewport" tabindex="0" aria-label="Inscritos">
+          <div id="miGalleryGrid" class="mi-staff-grid"></div>
+        </div>
+        <button id="miGalleryNext" class="mi-gallery-carousel-button is-next" type="button" aria-label="Próxima inscrição">
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </button>
       </div>
     `;
     pane.appendChild(galleryWrap);
@@ -421,7 +430,7 @@
     if (!grid || !gridWrap) return;
 
     grid.innerHTML = '';
-    gridWrap.classList.toggle('is-scrollable', list.length > 14);
+    gridWrap.classList.toggle('has-multiple-items', list.length > 1);
 
     list.forEach((item) => {
       const nome = String(item?.nome || '').trim();
@@ -451,6 +460,125 @@
         attachGalleryFallback(img, state.perfil, nome, safeUrl);
       });
     });
+
+    setupGalleryCarousel();
+  }
+
+  function setupGalleryCarousel() {
+    galleryCarouselCleanup?.();
+    galleryCarouselCleanup = null;
+
+    const shell = $('#miGalleryGridWrap');
+    const viewport = $('#miGalleryViewport');
+    const prevButton = $('#miGalleryPrev');
+    const nextButton = $('#miGalleryNext');
+    const cards = $all('#miGalleryGrid .mi-staff-card');
+    if (!shell || !viewport || !prevButton || !nextButton || !cards.length) return;
+
+    let currentIndex = 0;
+    let autoTimer = null;
+    let scrollTimer = null;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+    const normalizeIndex = index => (index + cards.length) % cards.length;
+    const updateActiveCard = (index) => {
+      currentIndex = normalizeIndex(index);
+      cards.forEach((card, cardIndex) => {
+        const active = cardIndex === currentIndex;
+        card.classList.toggle('is-carousel-active', active);
+        if (active) card.setAttribute('aria-current', 'true');
+        else card.removeAttribute('aria-current');
+      });
+    };
+    const centerCard = (index, smooth = true) => {
+      updateActiveCard(index);
+      const card = cards[currentIndex];
+      const left = card.offsetLeft - ((viewport.clientWidth - card.offsetWidth) / 2);
+      viewport.scrollTo({ left, behavior: smooth && !reducedMotion ? 'smooth' : 'auto' });
+    };
+    const stopAutoPlay = () => {
+      if (autoTimer) window.clearInterval(autoTimer);
+      autoTimer = null;
+    };
+    const startAutoPlay = () => {
+      stopAutoPlay();
+      if (
+        cards.length < 2 ||
+        reducedMotion ||
+        document.hidden ||
+        shell.matches(':hover') ||
+        shell.contains(document.activeElement)
+      ) return;
+      autoTimer = window.setInterval(() => centerCard(currentIndex + 1), 4000);
+    };
+    const restartAutoPlay = () => {
+      stopAutoPlay();
+      startAutoPlay();
+    };
+    const move = direction => {
+      centerCard(currentIndex + direction);
+      restartAutoPlay();
+    };
+    const syncActiveCardFromScroll = () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        const viewportCenter = viewport.scrollLeft + (viewport.clientWidth / 2);
+        let nearestIndex = 0;
+        let nearestDistance = Infinity;
+        cards.forEach((card, index) => {
+          const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
+          const distance = Math.abs(cardCenter - viewportCenter);
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestIndex = index;
+          }
+        });
+        updateActiveCard(nearestIndex);
+      }, 100);
+    };
+    const handleKeyboard = (event) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        move(-1);
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        move(1);
+      }
+    };
+    const handleVisibility = () => document.hidden ? stopAutoPlay() : startAutoPlay();
+    const handleResize = () => centerCard(currentIndex, false);
+
+    prevButton.onclick = () => move(-1);
+    nextButton.onclick = () => move(1);
+    viewport.addEventListener('scroll', syncActiveCardFromScroll, { passive: true });
+    viewport.addEventListener('keydown', handleKeyboard);
+    shell.addEventListener('mouseenter', stopAutoPlay);
+    shell.addEventListener('mouseleave', startAutoPlay);
+    shell.addEventListener('focusin', stopAutoPlay);
+    shell.addEventListener('focusout', startAutoPlay);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('resize', handleResize);
+
+    requestAnimationFrame(() => {
+      centerCard(0, false);
+      startAutoPlay();
+    });
+
+    galleryCarouselCleanup = () => {
+      stopAutoPlay();
+      window.clearTimeout(scrollTimer);
+      viewport.removeEventListener('scroll', syncActiveCardFromScroll);
+      viewport.removeEventListener('keydown', handleKeyboard);
+      shell.removeEventListener('mouseenter', stopAutoPlay);
+      shell.removeEventListener('mouseleave', startAutoPlay);
+      shell.removeEventListener('focusin', stopAutoPlay);
+      shell.removeEventListener('focusout', startAutoPlay);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('resize', handleResize);
+      prevButton.onclick = null;
+      nextButton.onclick = null;
+    };
   }
 
   async function renderSeats() {
@@ -467,8 +595,10 @@
 
     wrap.classList.remove('d-none');
     renderGalleryTitle(title, state.perfil);
+    galleryCarouselCleanup?.();
+    galleryCarouselCleanup = null;
     grid.innerHTML = '';
-    gridWrap.classList.remove('is-scrollable');
+    gridWrap.classList.remove('has-multiple-items');
 
     try {
       setGalleryMsg('Carregando inscritos...', 'text-muted');
@@ -1030,6 +1160,8 @@
    * Reset do modal/estado
    * =============================== */
   function resetModal() {
+    galleryCarouselCleanup?.();
+    galleryCarouselCleanup = null;
     state = initialState();
     setSubmitting(false);
     const form = document.getElementById('miForm');
