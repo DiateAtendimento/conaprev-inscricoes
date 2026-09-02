@@ -475,7 +475,9 @@
     const cards = $all('#miGalleryGrid .mi-staff-card');
     if (!shell || !viewport || !prevButton || !nextButton || !cards.length) return;
 
-    let currentIndex = 0;
+    const initialVisibleCount = Math.min(cards.length, 5);
+    const initialIndex = Math.floor((initialVisibleCount - 1) / 2);
+    let currentIndex = initialIndex;
     let autoTimer = null;
     let scrollTimer = null;
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -561,7 +563,7 @@
     window.addEventListener('resize', handleResize);
 
     requestAnimationFrame(() => {
-      centerCard(0, false);
+      centerCard(initialIndex, false);
       startAutoPlay();
     });
 

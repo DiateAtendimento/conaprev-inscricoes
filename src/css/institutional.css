@@ -215,16 +215,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .mi-gallery-grid-wrap {
   position: relative;
-  min-height: 300px;
+  min-height: 370px;
   max-height: 440px;
   padding: 18px 0 22px;
-  border: 1px solid #d7e2f0;
-  border-radius: 16px;
+  border: 0;
+  border-radius: 0;
   background: transparent;
 }
 .mi-gallery-viewport {
   width: 100%;
-  min-height: 258px;
+  min-height: 330px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
@@ -235,13 +235,13 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .mi-gallery-viewport::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .mi-staff-grid {
-  --carousel-card-width: 150px;
+  --carousel-card-width: 190px;
   display: flex;
   align-items: center;
   width: max-content;
   min-width: 100%;
-  min-height: 258px;
-  gap: 22px;
+  min-height: 330px;
+  gap: 26px;
   padding-inline: calc(50% - (var(--carousel-card-width) / 2));
 }
 .mi-staff-card {
@@ -250,8 +250,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   flex-direction: column;
   align-items: center;
   min-width: 0;
-  min-height: 218px;
-  padding: 12px 10px 14px;
+  min-height: 292px;
+  padding: 18px 16px 16px;
   border: 1px solid transparent;
   border-radius: 16px;
   opacity: .76;
@@ -260,14 +260,28 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   transition: transform .2s ease, border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
 }
 .mi-staff-card.is-staff-profile {
-  height: 218px;
+  height: 292px;
 }
 .mi-staff-photo {
+  flex: 0 0 108px;
+  width: 108px;
+  height: 108px;
+  aspect-ratio: 1 / 1;
   border: 4px solid #fff;
+  border-radius: 50%;
+  overflow: hidden;
   box-shadow: 0 5px 14px rgba(12, 50, 111, .24);
   transition: border-color .2s ease, box-shadow .2s ease;
 }
-.mi-staff-card img, .mi-gallery-photo { width: 84px !important; height: 84px !important; }
+.mi-staff-card .mi-staff-photo img,
+.mi-gallery-photo {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  object-position: center;
+  transform: none !important;
+}
 .mi-staff-name {
   color: #0c326f;
   font-size: .94rem;
@@ -421,9 +435,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .mi-stepper { overflow-x: auto; padding-bottom: 10px; }
   .mi-stepper .mi-step { min-width: 95px; }
   .mi-pane { min-height: 440px; padding: 26px 10px; }
-  .mi-gallery-grid-wrap { min-height: 270px; padding-block: 12px 18px; }
-  .mi-gallery-viewport, .mi-staff-grid { min-height: 238px; }
-  .mi-staff-grid { --carousel-card-width: 138px; gap: 16px; }
+  .mi-gallery-grid-wrap { min-height: 340px; padding-block: 12px 18px; }
+  .mi-gallery-viewport, .mi-staff-grid { min-height: 310px; }
+  .mi-staff-grid { --carousel-card-width: 170px; gap: 18px; }
+  .mi-staff-card { min-height: 274px; padding: 16px 13px 14px; }
+  .mi-staff-card.is-staff-profile { height: 274px; }
+  .mi-staff-photo { flex-basis: 98px; width: 98px; height: 98px; }
   #modalInscricao .modal-footer { width: calc(100% - 24px); padding-inline: 20px; }
   .protocol-layout { grid-template-columns: 1fr; }
   .protocol-success-card { grid-row: auto; }
@@ -456,9 +473,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .footer-logos { grid-template-columns: repeat(2, 1fr); }
   .registration-brandbar .event-edition { display: none; }
   .mi-stepper::before { display: none; }
-  .mi-gallery-grid-wrap { min-height: 250px; padding-block: 10px 16px; }
-  .mi-gallery-viewport, .mi-staff-grid { min-height: 222px; }
-  .mi-staff-grid { --carousel-card-width: 128px; gap: 12px; }
+  .mi-gallery-grid-wrap { min-height: 322px; padding-block: 10px 16px; }
+  .mi-gallery-viewport, .mi-staff-grid { min-height: 294px; }
+  .mi-staff-grid { --carousel-card-width: 156px; gap: 14px; }
+  .mi-staff-card { min-height: 260px; padding: 14px 11px 13px; }
+  .mi-staff-card.is-staff-profile { height: 260px; }
+  .mi-staff-photo { flex-basis: 92px; width: 92px; height: 92px; }
   .mi-gallery-carousel-button { width: 34px; height: 34px; }
   .mi-gallery-carousel-button.is-prev { left: 7px; }
   .mi-gallery-carousel-button.is-next { right: 7px; }
