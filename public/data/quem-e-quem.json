@@ -1,0 +1,580 @@
+{
+   "people" : [
+      {
+         "biography" : "",
+         "name" : "ABELARDO OSNI ROCHA FILHO",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ADILSON CARLOS PEREIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "Licenciado em Matemática (IBILCE/UNESP) e Bacharel em Direito (UNORP), com especialização em",
+         "name" : "ADRIANO ANTÔNIO PAZIANOTO",
+         "role" : "Diretor Executivo do Regime Próprio de Previdência Social de São José do Rio Preto/SP - RIOPRETOPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "ALAN CARDEC SOARES",
+         "role" : ""
+      },
+      {
+         "biography" : "Contador, servidor público aposentado, Presidente da Associação Gaúcha de Instituições de",
+         "name" : "ALDERI ZANATTA",
+         "role" : "Presidente da Associação Gaúcha de Instituições de Previdência Pública - AGIP"
+      },
+      {
+         "biography" : "",
+         "name" : "ALEXANDRE JARSCHEL DE OLIVEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ALEXANDRE MANIR FIGUEIREDO SARQUIS",
+         "role" : ""
+      },
+      {
+         "biography" : "Administrador formado pela Fundação Mineira de Educação e Cultura (FUMEC - Belo Horizonte) Especialista em Gestão Financeira pelo Instituto Brasileiro de Mercado de Capitais (IBMEC - Rio de Janeiro) Mestre em Administração Estratégica com ênfase em Finanças e Contabilidade pela Universidade Federal de Minas Gerais (UFMG - Belo Horizonte). Atuou como Analista de Crédito no Citibank, Sênior de Auditoria na Arthur Andersen, Diretor Administrativo-financeiro da Companhia de Desenvolvimento de Vitória – CDV, Diretor Técnico do Instituto de Previdência dos Servidores do Estado do Espírito Santo – IPAJM, Gestor do Projeto da Previdência Complementar do Estado do Espírito Santo na qualidade de Assessor Especial da Secretaria de Estado de Governo e Diretor Presidente da Fundação de Previdência Complementar do Estado do Espírito Santo - PREVES. Foi Conselheiro do Conselho Regional de Administração – Seccional Espírito Santo – CRA-ES. Foi membro do Grupo de Trabalho de Novas Receitas Previdenciárias do Ministério da Previdência Social, no âmbito do CONAPREV. Ocupa uma cadeira como Conselheiro Titular do Conselho Nacional de Dirigentes de Regime Próprio de Previdência Social – CONAPREV. Atuou como Diretor Executivo do Instituto de Certificação Institucional e dos Profissionais da Seguridade Social – ICSS, no mandato de 2020 a 2022. Atua como Professor Titular da Universidade Federal do Espírito Santo – UFES, na área de Finanças para o curso de Administração. Atua como Conselheiro Fiscal Titular do Sistema ABRAPP, no mandato de 2023 a 2024. É certificado em administração previdenciária e em investimentos pelo ICSS. Atualmente é o Diretor de Seguridade da Fundação de Previdência Complementar do Estado do Espírito Santo - PREVES.",
+         "name" : "ALEXANDRE WERNERSBACH NEVES",
+         "role" : "Diretor de Seguridade da Fundação de Previdência Complementar do Estado do Espírito Santo – PREVES."
+      },
+      {
+         "biography" : "Aline Vilar de Oliveira é advogada, com especialização em Direito Administrativo, Direito Público, Direito Constitucional, Direito do Trabalho, Direito Cível e Empresarial e Regulação. Graduada pela Universidade Potiguar, tem MBA em Direito e Regulação do Setor Elétrico pelo IDP. Atuou como Procuradora Jurídica Adjunta e na Procuradoria Especial da Mulher da Câmara Municipal de Fortaleza (2021–2024). Também trabalhou na ARCE e na ARSBAN, com foco em regulação de serviços públicos.",
+         "name" : "ALINE VILAR DE OLIVEIRA",
+         "role" : "Superintendente do Instituto de Previdência do Município - IPM."
+      },
+      {
+         "biography" : "",
+         "name" : "ALLEX ALBERT RODRIGUES",
+         "role" : ""
+      },
+      {
+         "biography" : "Atua como Procuradora-Chefe do Instituto de Gestão Previdenciária e Proteção Social do Estado do Pará – IGEPPS desde 2020; Procuradora Autárquica e Fundacional do Estado do Pará desde 2005; especialista em Direito Previdenciário.",
+         "name" : "ANA RITA DOPAZO ANTONIO JOSÉ LOURENÇO",
+         "role" : "Procuradora - Chefe do Instituto de Gestão Previdenciária e Proteção Social do Estado do Pará – IGEPPS."
+      },
+      {
+         "biography" : "Formado em Ciências Contábeis, com especialização em Gestão Financeira, Controladoria e Auditoria. Atuante na área de Previdência desde 2017. Diretor Financeiro do Instituto de Previdência dos Servidores Municipais de morada Nova - IPREMN (2017/2020), Presidente do Instituto de Previdência dos Servidores Municipais de morada Nova - IPREMN (2021/2024), Diretor de Previdência do IPM Fortaleza (atualmente). Certificações: CP RPPS CGINV I e CP RPPS DIRIG I.",
+         "name" : "ANDRÉ LUIZ DA CUNHA CHAGAS",
+         "role" : "Diretor de Previdência do Instituto de Previdência do Município - IPM."
+      },
+      {
+         "biography" : "",
+         "name" : "ANTÔNIO MÁRIO RATTES DE OLIVEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ARY RENATO VASCONCELOS DE SOUZA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "BENEDITO ADALBERTO BRUNCA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "BRUNO DE SOUSA ROCHA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "CARLOS ALBERTO DE MIRANDA MEDEIROS",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduado e Pós-graduado em Administração de Empresas pela Furb. Professor aposentado,",
+         "name" : "CARLOS XAVIER SCHRAMM",
+         "role" : "Presidente da Associação dos Institutos de Previdência de Santa Catarina - ASSIMPASC."
+      },
+      {
+         "biography" : "Possui graduação pela Pontifícia Universidade Católica de Goiás (2011). Tem experiência na área de Direito, com ênfase em Direito Público.",
+         "name" : "CAROLINA ALVES LUIZ PEREIRA",
+         "role" : "Presidente do Instituto de Previdência dos Servidores do Município de Goiânia - GOIANIAPREV."
+      },
+      {
+         "biography" : "Advogada, Especialista em RPPS. Servidora Pública há mais de 35 anos. Ex-Secretária da Fazenda e Ex-Procuradora do Município de Montenegro/RS. Atual Gerente de Aposentadorias e Transferência à Inatividade do Instituto de Previdência do Estado do RS – IPE Prev. Diretora de Legislação Previdenciária da Associação Gaúcha de Instituições de Previdência Pública – AGIP. Professora em cursos de atualização. Autora de artigos sobre RPPS.",
+         "name" : "CINARA REGINA FRANCISCO",
+         "role" : "Analista em Previdência do Instituto de Previdência do Estado do Rio Grande do Sul - IPEPREV"
+      },
+      {
+         "biography" : "Advogada. Pós-graduada em Direito do Estado pela Universidade Federal da Bahia. Certificada como Gestor de Regime Próprio de Previdência Social - CGRPPS: 5457. Gerente de Previdência do Município de Salvador. Membro Titular (representando o Município de Salvador-BA) da Comissão Permanente de Acompanhamento de Ações Judiciais Relevantes para os RPPS – COPAJURE. Foi Diretora de Recursos Humanos da Secretaria da Saúde do Estado da Bahia. Foi Gerente de Acompanhamento da Previdência Complementar do Município de Salvador. Foi membro Suplente (representando o Município de Salvador-BA) da Comissão Permanente de Acompanhamento de Ações Judiciais Relevantes para os RPPS – COPAJURE. Foi Assessora Técnica da Superintendência de Recursos Humanos da Secretaria da Saúde do Estado da Bahia. Foi Coordenadora da Coordenação de Contratos e Gestão, da Diretoria de Contratos da Secretaria da Saúde do Estado da Bahia. Foi Coordenadora dos Benefícios dos Dependentes da Diretoria de Administração dos Benefícios da Superintendência de Previdência do Estado da Bahia - SUPREV. Experiência em Direito Público, notadamente na área de Direto Previdenciário, ministrando cursos, aulas e seminários na área de Regime Próprio de Previdência Social.",
+         "name" : "CLARISSA SILVA BARBOZA AQUINO ASSIZ",
+         "role" : "Gerente de Previdência do Fundo Municipal de Previdência de Salvador - FUMPRES"
+      },
+      {
+         "biography" : "",
+         "name" : "CLARISSA SILVA BARBOZA DE AQUINO ASSIZ",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "CYNTHIA BELTRÃO DE SOUZA GUERRA CURADO",
+         "role" : ""
+      },
+      {
+         "biography" : "Cícero Rafael Barros Dias é atuário, mestre em economia e doutor em estatística. Cursou pós-graduação em áreas de Data Science (Machine Learning, Inteligência Artificial e Business Intelligence), bem como é pós-graduando em Neurociência, Marketing e Consumo. Mais de 20 anos de experiência em previdência social, complementar e saúde suplementar, onde atuou como sócio, consultor, perito judicial, gestor e executivo. Tem se dedicado às áreas de Governança Corporativa, Gestão Baseada em Dados, Economia Comportamental e Planejamento Financeiro e Previdenciário. Foi Gerente de Atuária e Benefícios, Diretor de Seguridade e atualmente é Presidente da FunprespExe. É membro do Conselho Nacional dos Dirigentes dos Regimes Próprio de Previdência Social – CONAPREV e foi representante regional do Instituto Brasileiro de Atuária- IBA. É professor da UFPE e de cursos de especialização em atuária, estatística, demografia, previdência complementar e social. Foi pesquisador visitante do IPEA e coautor de livros nas áreas de previdência. Foi ganhador do Prêmio PREVIC de melhor monografia em previdência complementar e é certificado como Conselheiro de Inovação (GoNew) e como Gestor de Previdência (ICSS).",
+         "name" : "CÍCERO RAFAEL BARROS DIAS",
+         "role" : "Diretor Presidente da Fundação de Previdência Complementar do Servidor Público Federal do Poder Executivo – Funpresp-Exe."
+      },
+      {
+         "biography" : "Advogado licenciado. Professor. Possui graduação em Direito pela Universidade Salvador - UNIFACS. Doutor em Ciências Jurídicas e Sociais. Especialista em Direito Tributário pela Universidade Federal da Bahia - UFBA. É Subsecretário Municipal da Fazenda do Município de Salvador/BA e Diretor Geral de Previdência do Município de Salvador. Conselheiro Titular e Vice-presidente de Turma do Conselho Administrativo de Recursos Fiscais - CARF/MF. Presidente do Comitê de Investimentos do Fundo Municipal de Previdência. Conselheiro Titular do Conselho de Assuntos Fiscais e Tributários - CAFT/FIEB. Membro da Comissão de Direito Tributário da OAB/BA. Membro da Comissão de Apoio às Varas da Fazenda Pública da Comarca de Salvador - TJ/BA. Parecerista da Revista de Doutrina e Jurisprudência - RDJ do Tribunal de Justiça do Distrito Federal. Foi Secretário Municipal da Secretaria de Promoção Social, Combate a pobreza, Esportes e Lazer de Salvador - SEMPRE. Foi Presidente do Instituto de Previdência de Salvador. Foi Subsecretário Municipal de Gestão e Diretor de Previdência da Secretaria Municipal de Gestão da Prefeitura de Salvador. Vice-presidente do Conselho Municipal de Previdência do Servidor - COMPRES. Vice-presidente e Conselheiro Titular da Segunda Câmara do Conselho Estadual da Fazenda da Bahia - CONSEF. Conselheiro Titular da Segunda Câmara de Julgamento do Conselho Municipal de Tributos de Salvador - CMT.",
+         "name" : "DANIEL RIBEIRO SILVA",
+         "role" : "2ª Vice-Presidente do CONAPREV e Diretor de Previdência do Fundo Municipal de Previdência de Salvador - FUMPRES"
+      },
+      {
+         "biography" : "Economista e Advogada, certificada no CPA-10 e CP RPPS DIRIG III, pós-graduada em Direito Tributário, em",
+         "name" : "DANIELA CRISTINA DA EIRA CORRÊA BENAYON",
+         "role" : "Diretora - Presidente do Manaus Previdência - MANAUSPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "DEIVIS MARCON ANTUNES",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "DIEGO LUIZ SIMÕES VIEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "DIOGO SOARES LEITE",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "DOMINGOS AUGUSTO TAUFNER",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "EDELVINO DA SILVA GÓES FILHO",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ELLITON OLIVEIRA DE SOUZA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "EPAMINONDAS ANTONIO CASTRO",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduado em Administração, com especialização em Administração Pública e Gerência de Cidades, em Gestão de Recursos Humanos e em Ciência da Decisão: Psicologia, Economia e Consumo. Atuou como Diretor Administrativo-Financeiro do Hospital Presidente Vargas de 2015 a 2017, como Assessor de Licitações de 2017 a 2020, e como Assessor do Secretário de Administração em 2021. Atualmente, exercendo a função de Diretor-Geral do Previmpa.",
+         "name" : "FABIANO PRATES BEHLKE",
+         "role" : "Diretor-Geral do Departamento Municipal de Previdência dos Servidores Públicos do Município de Porto Alegre - PREVIMPA"
+      },
+      {
+         "biography" : "Formada em Tecnólogo em Marketing pelo Centro Universitário UNISEB-Ac, Pós- Graduação em Comércio exterior e negócios internacionais, exerceu os cargos de Gerente de Educação Socio pedagógica no Instituto Socioeducativo – ISE- Acre; Diretora de Articulação Política na Secretaria de Estado e Governo do Acre – SEGOV, e atualmente exerce o Cargo de Diretora de Previdência do ACREPREVIDÊNCIA.",
+         "name" : "FABRICIA SÁ DE FRANÇA OLIVEIRA",
+         "role" : "Diretora de Previdência do Instituto de Previdência do Estado do Acre – ACREPREVIDÊNCIA"
+      },
+      {
+         "biography" : "",
+         "name" : "FELIPE JOSÉ VIDIGAL DOS SANTOS",
+         "role" : ""
+      },
+      {
+         "biography" : "Contadora do Previ-Rio desde 2003, pós-graduada em administração pública e certificada pela ANBIMA CPA-20. Autora e gestora do sistema SICF-sistema integrado de contabilidade e finanças do Previ-Rio. Atuou em diversos cargos de gerência e assessoria desde 2005, tendo sido Diretora de Administração e Finanças por 3 anos devidamente aprovada pela CGM.",
+         "name" : "FERNANDA NUNES LEIROZ",
+         "role" : "Chefe de Gabinete do Instituto de Previdência e Assistência do Rio de Janeiro (PREVI-RIO)"
+      },
+      {
+         "biography" : "",
+         "name" : "FERNANDO ZANELLI",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "FLAVIO CHAIB",
+         "role" : ""
+      },
+      {
+         "biography" : "Advogado, Especialista em Direito Previdenciário, em Direito Público e em Direito Processual Civil, graduado em Direito pela Uninorte e Sistemas de Informações pela UFAC. É militar reformado da Força Aérea Brasileira. Foi Diretor de Administração e Finanças do Instituto de Previdência do Estado do Acre – Acreprevidência de 2006 a 2018.",
+         "name" : "FRANCISCO ALVES DE ASSIS FILHO",
+         "role" : "Presidente do Instituto de Previdência do Estado do Acre – ACREPREVIDÊNCIA"
+      },
+      {
+         "biography" : "Graduado em direito pelo UNIPÊ desde 2012, advogado com especialização em direito previdenciário pela Universidade Anhanguera. Diretor Administrativo e Financeiro da PBPREV (desde 2020); Estagiário da PBPREV (2010 – 2011); Assessor jurídico da PBPREV (2012 – 2014); Chefe de Gabinete da ARPB (Agência de Regulação do Estado da Paraíba) (2014); Chefe de Gabinete da PBPREV (2015 – 2019); Certificações: CPA 10, CPA 20, CGRPPS, TOTUM CP RPPS DIRIG I e TOTUM CP RPPS DIRIG III.",
+         "name" : "FREDERICO AUGUSTO CAVALCANTI BERNARDO",
+         "role" : "Diretor Administrativo e Financeiro da Paraíba Previdência – PBPREV"
+      },
+      {
+         "biography" : "Bacharel em Direito e advogado, possui MBA em Direito Tributário pela FGV e pós-graduando em Governança Pública. Advogado autárquico do Instituto de Previdência dos Servidores do Estado do Espírito Santo (IPAJM) desde 2015. Ocupou o cargo de Gerente Jurídico Previdenciário entre os anos de 2017 a 2019, tendo participado da Comissão que elaborou a reforma previdenciária no Estado do Espírito Santo. Atualmente ocupa o cargo de Diretor de Proteção Social do IPAJM.",
+         "name" : "GABRIEL DUQUE ZONTA",
+         "role" : "Diretor de Proteção Social do Instituto de Previdência dos Servidores do Estado do Espírito Santo - IPAJM"
+      },
+      {
+         "biography" : "",
+         "name" : "GILBERTO DE SOUZA TULLI",
+         "role" : ""
+      },
+      {
+         "biography" : "Engenharia UFS, Pós-graduação Gestão de Desenvolvimento Regional Sustentável – UFBA, Pós-Graduação em Gestão Previdenciária e Regimes Próprios de Previdência. – Faculdade Facuminas.",
+         "name" : "GILDO DE SOUZA XAVIER FILHO",
+         "role" : "Diretor de Previdência Instituto de Previdência dos Servidores do Estado de Sergipe – SERGIPEPREVIDÊNCIA"
+      },
+      {
+         "biography" : "Graduado em economia (UniCeub), com mestrado (Universidade Federal de Pernambuco – UFPE) e doutorado (Universidade de Brasília – UnB) também em economia. Possui certificação profissional em previdência complementar com ênfase em investimentos pelo Instituto de Certificação em Seguridade Social (ICCS). Funcionário de carreira do Banco do Brasil, desde 1986. Atuou como conselheiro fiscal da BRB Administradora de Seguros S.A. (Empresa Nacional de Seguros e Previdência), Diretor-Superintendente FUNTERRA (Fundação de Previdência Privada) da TERRACAP (Companhia Imobiliária de Brasília), Diretor Administrativo, Financeiro e Relações com Investidores da São Paulo Turismo S.A. (empresa nacional do segmento de turismo e eventos), assessor do Ministro e da Secretaria de Orçamento Federal do Ministério do Planejamento, Desenvolvimento e Gestão (atual Ministério da Economia) e Diretor-Presidente da Prevcom-BRC (Fundação de Previdência Complementar do Brasil Central) do Governo de Goiás. Atualmente, é coordenador e professor do MBA Executivo em Economia e Gestão de Previdência Complementar da Fundação Getúlio Vargas (FGV).",
+         "name" : "GILVAN CÂNDIDO DA SILVA",
+         "role" : "1º Vice-Presidente Suplente do CONAPREV e Presidente do Goiás Previdência – GOIASPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "GLEISON PEREIRA DE SOUZA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "GUILHERME SARAIVA DE SÁ",
+         "role" : ""
+      },
+      {
+         "biography" : "Halan Harlens Pacheco de Morais é servidor público da carreira de Especialista em Previdência Social e com experiência de mais de 25 anos em Previdência Complementar. É graduado em Matemática pela Universidade Federal do Rio de Janeiro – UFRJ. Possui especialização em Análise, Projetos e Gerência de Sistemas pela Pontifícia Universidade Católica do Rio de Janeiro – PUC, MBA em Previdência Complementar pelo Instituto de Desenvolvimento e Estudos Aplicados à Seguridade – IDEAS e especialização em Engenharia de Produção com ênfase em Previdência Complementar pela COPPE/UFRJ. Foi Diretor de Seguridade e Assessor da Diretoria Administrativa e Financeira do Fundo de Pensão dos Servidores da Fundação Oswaldo Cruz – Fiocruz. Dirigiu a área de seguridade do Fundo Único de Previdência Social do Estado do Rio de Janeiro – Rioprevidência e participou da elaboração do projeto de criação da Previdência Complementar do Estado do Rio de Janeiro.",
+         "name" : "HALAN HARLENS PACHECO DE MORAIS",
+         "role" : "Diretor Presidente da Fundação de Previdência Complementar do Estado do Rio de janeiro – RJPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "HÉLIO ANDRADE DE AGUIAR SOBRINHO",
+         "role" : ""
+      },
+      {
+         "biography" : "Advogada, Diretora de Governança e Compliance da Alagoas Previdência, com certificação profissional em Compliance Anticorrupção - CPC-A, certificação de dirigente de RPPS - CRPPS DIRIG 1 e certificação de membro do Comitê de Investimentos de RPPS - CRPPS CGINV.",
+         "name" : "ISADORA TEIXEIRA DO NASCIMENTO",
+         "role" : "Diretora de Governança e Compliance do Alagoas Previdência - ALAGOASPREVIDÊNCIA"
+      },
+      {
+         "biography" : "Joana D’Arc dos Santos é graduada em Ciências Contábeis pela FANESE, com especialização em Auditoria Governamental e Contabilidade Pública. Possui ampla experiência em contabilidade e finanças públicas, com ênfase em gestão de recursos, controle orçamentário e conformidade fiscal. Atua na assessoria técnica de processos previdenciários, com destaque para a regularização de débitos junto à Receita Federal e à PGFN.",
+         "name" : "JOANA D’ARC DOS SANTOS",
+         "role" : "Diretora de Benefícios do Instituto de Previdência do Município de Aracaju – AJUPREV"
+      },
+      {
+         "biography" : "Presidente do Instituto de Previdência dos Servidores do Município de Curitiba - IPMC. Conselheira Deliberativa da OABPrev-PR. Certificada pelo ICSS – Instituto de Certificação de Seguridade Social. CPRPPS Dirigente Nível avançado III. É advogada concursada do Instituto de Previdência de Curitiba. Foi Diretora de Previdência do CuritibaPrev – Fundo de Previdência Complementar de Curitiba.",
+         "name" : "JOCELAINE MORAES DE SOUZA",
+         "role" : "Presidente do Instituto de Previdência e Assistência do município de Curitiba - IPMC"
+      },
+      {
+         "biography" : "",
+         "name" : "JOCILDO SILVA LEMOS",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "JORGE LUIZ FERRI BERZAGUI",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "JORGE OLIVEIRA MARTINS",
+         "role" : ""
+      },
+      {
+         "biography" : "Formado em Contabilidade, Administração e Direito, com especialização em Direito Processual Civil e Doutorado em Ciência Jurídicas e Sociais pela UMSA-AR (Direito Constitucional no Mercosul), foi Agente de Previdência Social em Nazaré da Mata/PE, Chefe de Gabinete do Superintendente do antigo IAPAS/PB, Inspetor Regional do antigo IAPAS/PB, Auditor Chefe do INSS na Paraíba/PB, Chefe da Divisão de Recursos Humanos do INSS/PB, Chefe de Serviço de Recursos Humanos do INSS/PB, Chefe de Serviço de Benefícios do INSS/PB, Presidente do 21º JRPS-PB, Gerente Executivo do INSS/PB, Secretário de Recursos Humanos do TJ/PB, Diretor de Gestão de Pessoas do TJ/PB, Professor de Direito Constitucional do Centro Universitário de João Pessoa/PB, Professor de Direito Previdenciário da ESMA/PB (Escola Superior da Magistratura), Professor de Direito Previdenciário da FESP Faculdade/PB, Coordenador de Pós-Graduação em Direito Previdenciário do UNIPÊ/PB, Coordenador de Pós-Graduação em Direito do Trabalho e Processo do Trabalho do UNIPÊ/PB e Professor de Direito Previdenciário da ESMAT-13 – TRT-PB. Atualmente é Professor de Pós-Graduação em Direito Previdenciário e Presidente do Instituto de Previdência do Estado da Paraíba (PBPREV).",
+         "name" : "JOSÉ ANTÔNIO COÊLHO CAVALCANTI",
+         "role" : "Presidente da Paraíba Previdência – PBPREV"
+      },
+      {
+         "biography" : "Formação: Graduação: Ciências Contábeis - UVV; Pós-graduação: MBA em Finanças Públicas - UVV; Especialização em Controle da Administração Pública – UFES; Cursos: CPA-10, CPA-20, Certificação do RPPS - Nível:",
+         "name" : "JOSÉ AUGUSTO FERREIRA DE CARVALHO",
+         "role" : "Membro do Conselho e do Comitê de Investimentos do Instituto de Previdência dos Servidores do Município de Guarapari - IPG"
+      },
+      {
+         "biography" : "",
+         "name" : "JOSÉ ELIAS DO NASCIMENTO MARÇAL",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduado em Ciências Jurídicas e Sociais pela Universidade Federal do Rio Grande do Sul (Ufrgs), em 1990, Kliemann é procurador do Estado desde 1992. Foi Procurador-Geral Adjunto (2007/2010) e membro do Conselho Superior da Procuradoria-Geral do Estado (PGE). Também integrou o Conselho Deliberativo do Ipergs, do qual foi Presidente por duas gestões. Além disso, atuou junto aos Tribunais Superiores em Brasília, no Distrito Federal (2001/2004), e representou a Administração Estadual junto ao Tribunal de Contas do Estado (2004/2006). Kliemann é mestre em Direito pela Pontifícia Universidade Católica de São Paulo e professor na área de Seguridade Social, com diversos artigos e pareceres publicados. Foi Subchefe Jurídico da Casa Civil do atual governo do Estado e ocupou o cargo de Secretário Adjunto da pasta. Preside, atualmente, o Conselho Deliberativo da Fundação de Previdência Complementar do Servidor Público do Estado do RS (RS-Prev). Desde abril de 2018, Kliemann ocupa o cargo de Diretor-Presidente do IPE Prev.",
+         "name" : "JOSÉ GUILHERME KLIEMANN",
+         "role" : "1º Vice-Presidente do CONAPREV e Diretor – Presidente do Instituto de Previdência do Estado do Rio Grande do Sul (IPE PREV RS)"
+      },
+      {
+         "biography" : "",
+         "name" : "JOSÉ JUAREZ DIÓGENES TAVARES",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "JOSÉ MARIA DE ABREU DUTRA",
+         "role" : ""
+      },
+      {
+         "biography" : "Professor Associado do Departamento de Economia da UFS – Graduação e Mestrado, disciplinas de Métodos Quantitativos, Elaboração de Projetos e Finanças (2002). Diretor-Presidente do SERGIPEPREVIDENCIA (2016). Membro do Comitê de Investimentos da PrevNordeste. Diretor Presidente da Escola de Administração e Gestão Pública -SEPLAG-SE 2015-2016. Presidente da EMSETUR (2007 a 2015). Presidente da Fundação de Apoio a pesquisa e Extensão de Sergipe – FAPESE (2004 a 2006). Consultor Estudo de Viabilidade Econômica de Projetos do Banco Interamericano de Desenvolvimento (1997). Graduação Economia UFS -1992. Mestrado Desenvolvimento Econômico UFPR (1997). Doutorado Economia e Turismo (USP), 2002. Certificação Profissional CPA-20 – Associação Brasileira das Entidades dos Mercados Financeiros e de Capitais (ANBIMA), 2017/2020. Certificação Educação Executiva Avaliação de Empresas (INSPER), 2018. Pós-Graduando Produtos Financeiros e Gestão de Riscos – FIA Business School (2020).",
+         "name" : "JOSÉ ROBERTO DE LIMA ANDRADE",
+         "role" : "Diretor-Presidente do Instituto de Previdência dos Servidores do Estado de Sergipe – SERGIPEPREVIDÊNCIA"
+      },
+      {
+         "biography" : "Advogado; Presidente da Associação Brasileira de Previdência Estaduais e Municipais (ABIPEM); 1º Secretário da Associação Paulista de Entidades de Previdência do Estado e dos Municípios (APEPREM); Presidente do Instituto de Previdência do Município de Jundiaí; Membro titular do CNRPPS, representando a ABIPEM; e Membro do Conselho de Administração de Recursos de Terceiros (ANBIMA)..",
+         "name" : "JOÃO CARLOS FIGUEIREDO",
+         "role" : "Presidente da Associação Brasileira de Instituições de Previdência Estaduais e Municipais – ABIPEM."
+      },
+      {
+         "biography" : "Diretor de Previdência PRPREV desde 06/2023; Chefe do Núcleo Regional - Secretaria da Agricultura do Estado do Paraná - de 2019 a maio de 2023; Chefe Fundador da Inspeção de Produtos de Origem Animal da SEAB de 2008 a 2010; Médico Veterinário, com Mestrado em Ciências Veterinária pela UFPR 2005; Pós-graduação em Ciências Políticas e Pós Graduação em Administração Pública pela UEPG; Pós Graduação em Gestão de Pessoas no Serviço Público pela UEPG.",
+         "name" : "JOÃO CARLOS ROCHA ALMEIDA",
+         "role" : "Diretor de Previdência da ParanaPrevidência - PARANAPREVIDÊNCIA"
+      },
+      {
+         "biography" : "",
+         "name" : "KATHARINA SAMARA LOPES FLORENCIO",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduado em Administração com ênfase em Agronegócios pela FASUL, com pós-graduações em MBA em Gestão de Pessoas (FACUMINAS). Servidora pública de Toledo (2012-atual), cargo de Analista em Administração e Planejamento. Atualmente é Secretário de Recursos Humanos do Município de Toledo, cargo que ocupa desde janeiro/2025. Possui certificação CP RPPS CGINV I pelo Instituto Totum.",
+         "name" : "LEANDRO MARCELO LUDVIG",
+         "role" : "Presidente do Conselho de Administração do Fundo de Aposentadorias e Pensões dos Servidores Publicos Municipais de Toledo – FAPES/TOLEDOPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "LINAURA MARIA FREIRE SANTOS",
+         "role" : ""
+      },
+      {
+         "biography" : "Luciano Paz Xavier é contador por formação (UNIT), com MBA em Gestão Pública pela Fundação Getúlio Vargas. Funcionário da Caixa Econômica Federal há 36 anos. Já esteve à frente da Diretoria de Previdência do IPES, atuou como Superintendente Geral de Compras Centralizadas do Estado de Sergipe, foi Secretário Municipal de Planejamento e Orçamento, Secretário Municipal da Fazenda e Secretário Municipal da Saúde, da Prefeitura Municipal de Aracaju.",
+         "name" : "LUCIANO PAZ XAVIER",
+         "role" : "Diretor – Presidente do Instituto de Previdência do Município de Aracaju - AJUPREV"
+      },
+      {
+         "biography" : "Servidor Público desde 28/12/1983 Bacharel em Direito; com especialização em Gestão de RPPS; Certificado como dirigente de RPPS; Certificado em Conselheiro Deliberativo e Fiscal e Certificado em Gestão do Comitê de Investimento.",
+         "name" : "LUIS LIMA SHIRATA",
+         "role" : "Diretor Geral de Benefícios do Instituto Municipal de Previdência de Campo Grande – IMPCG"
+      },
+      {
+         "biography" : "",
+         "name" : "LUIZ FERNANDO XAVIER DE SOUZA",
+         "role" : "Assessor jurídico da Presidência do Instituto de Previdência dos Servidores do Município de Goiânia - GOIANIAPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "Leonardo Motta",
+         "role" : ""
+      },
+      {
+         "biography" : "Bacharel em Economia pela UNICAMP e Mestrado/MBA em Regulação de Saúde Suplementar pela ENSP/Fiocruz e FGV/RJ. Servidora da Prefeitura de Campinas ao longo de 29 anos, atuou como Assessora da Secretaria da Fazenda, Diretora do Departamento de Previdência do Servidor e Diretora Administrativo-Financeira do Hospital Municipal Dr. Mário Gatti, Secretária de Gestão do Município de São Paulo, Assessora Técnica da Superintendência do IAMSPE, Chefe de Gabinete da Agência Nacional de Saúde Suplementar (ANS) da Secretaria de Segurança Pública do Estado de São Paulo e do Instituto de Previdência Municipal de São Paulo (IPREM-SP).",
+         "name" : "MARCIA REGINA UNGARETTE",
+         "role" : "Superintendente do Instituto de Previdência Municipal de São Paulo – IPREM"
+      },
+      {
+         "biography" : "",
+         "name" : "MARCONI MUZZIO PIRES DE PAIVA FILHO",
+         "role" : ""
+      },
+      {
+         "biography" : "Marcos Cesar Malaquias Tabosa, servidor público municipal de carreira desde o ano de 1996 e graduado em Tecnólogo em Gestão Pública. Durante sua jornada como servidor presidiu o Sindicato dos Funcionários e Servidores Municipais de Campo Grande - SISEM desde 2009 até a data de sua licenciatura para assumir o cargo de Diretor-Presidente do IMPCG, tendo exercido funções como fiscalizar e acompanhar a execução de atos administrativos e ordenar despesas; ocupou o cargo legislativo de Vereador de Campo Grande no período de 2021-2024.",
+         "name" : "MARCOS CESAR MALAQUIAS TABOSA",
+         "role" : "Diretor - Presidente do Instituto Municipal de Previdência de Campo Grande - IMPCG"
+      },
+      {
+         "biography" : "Formada em Direito, pela FAESA e em Pedagogia, pela FAFIA e pós-graduada em Controles da Administração Pública pela UFES. Sempre atuou na área pública. Na Secretaria de Administração do Governo do Estado foi Subsecretária de Administração Geral, Gerente de Controle Interno e Análise de Custos, Gerente de Administração Geral e Chefe de Grupo Administrativo. Na Prefeitura de Vitória ocupou o cargo de Subsecretária de Transportes, da SETRAN e no Tribunal de Justiça do Espírito Santo foi Assessora Jurídica. Presidiu o Conselho Deliberativo da PREVES - Fundação de Previdência Complementar do Estado do Espírito Santo e possui Certificação da Associação Brasileira das Entidades dos Mercados Financeiro e de Capitais AMBIMA. Atualmente ocupa os cargos de Diretoria de Administração e Presidência da Fundação.",
+         "name" : "MARIA LEILA CASAGRANDE",
+         "role" : "Diretora Presidente da Fundação de Previdência Complementar do Estado do Espírito Santo – PREVES."
+      },
+      {
+         "biography" : "Graduação em Direito: Unibrasil – Fev/2006 (OAB 63232). Especialização em gestão da Previdência: Universidade Positivo – Mar/2012 – Abr/2014; Especialização em Advocacia no Regime Próprio de Previdência: ESMAFE: Out/2020 – maio/2022; Gerência de Benefícios IPMC: Jul2008-Jan2013; Coordenador de Benefícios IPMC (Fev 13 – Fev 14); Diretora Administrativo Financeiro ICS: Mar2014-Dez2016; Gerência de Benefícios IPMC: Abr2017-Dez2021; Assessoria da Diretoria de Previdência: Jan2022-Dez2024.",
+         "name" : "MARIELLA VICCO PEREIRA",
+         "role" : "Diretora de Previdência do Instituto de Previdência e Assistência do município de Curitiba - IPMC"
+      },
+      {
+         "biography" : "",
+         "name" : "MARINA BRITO BATTILANI",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "MAURO LUIZ DE OLIVEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "Auditora do Tribunal de Contas do Município do Rio de Janeiro, desde 2011, formada em Ciências Atuariais pela UFRJ, com Mestrado em Matemática Aplicada à Finanças pela IPMA, além de possuir Pós-graduação em Controladorias pela UERJ e em Contabilidade Governamental pela AVM Faculdade Integrada. Trabalhou na Coordenadoria de Auditoria e Desenvolvimento do TCMRJ, efetivando auditorias de Controle Externo nos órgãos da Prefeitura, com destaque para o Funprevi. Antes de ingressar no quadro de servidores os Município do Rio, teve uma breve passagem como analista de Planejamento, Gestão e Infraestrutura do IBGE, bem como foi Atuária Sênior em consultoria, onde trabalhou com planos de previdência, cálculo de provisões matemáticas e desenho de plano de benefícios, além de elaborar pareceres e notas técnicas atuariais e ainda estudo de hipóteses atuariais e biométricas.",
+         "name" : "MELISSA GARRIDO CABRAL",
+         "role" : "Presidente do Instituto de Previdência e Assistência do Rio de Janeiro (PREVI-RIO)"
+      },
+      {
+         "biography" : "",
+         "name" : "MILENA GUILHERME DIAS",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "NAYANA CAVALCANTE COSTA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "NEREU BATISTA LINHARES",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ORLANDO REIS",
+         "role" : ""
+      },
+      {
+         "biography" : "Formação: Administrador. Eleito 06 vezes vereador de Belém. 02 vezes presidente da Câmara",
+         "name" : "ORLANDO REIS PANTOJA",
+         "role" : "Presidente do Instituto de Previdência dos Servidores Públicos do Município de Belém - BELEMPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "PAULO HENRIQUE DE SOUSA FERREIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduado em Direito em 2005 pelo Centro Universitário Nilton Lins, pós-graduado em Direito Penal",
+         "name" : "RAFAEL DA CRUZ LAURIA",
+         "role" : "Procurador – Chefe do Manaus Previdência - MANAUSPREV"
+      },
+      {
+         "biography" : "Formado em Administração. Instituto de Previdência do Estado de Roraima – Atual Presidente Instituto de Previdência do Estado de Roraima – 2021 a 2024 Diretor de Administração e Finanças Instituto de Previdência do Estado de Roraima – 2020 a 2021 Vice-Presidente Instituto de Previdência do Estado de Roraima – 2018 a 2020 Diretor de Investimento e Arrecadação Banco do Brasil - de 2008 a 2009 Gerente Administração",
+         "name" : "RAFAEL DAVID AIRES ALENCAR",
+         "role" : "Presidente do Instituto de Previdência do Estado de Roraima - IPER"
+      },
+      {
+         "biography" : "",
+         "name" : "RAQUEL GALVÃO RODRIGUES DA SILVA",
+         "role" : ""
+      },
+      {
+         "biography" : "Advogada e pedagoga, pós-graduada em Direito Tributário pela FGV. Sua trajetória na gestão pública iniciou-se em 2012 na Secretaria Extraordinária de Pesca e Aquicultura, onde exerceu os cargos de Secretária Executiva e Coordenadora de Projetos daquele Órgão. Nos últimos três anos, atuou com destaque na Assessoria Especial da Vice-Governadoria. Em 2022, assumiu a Secretaria de Estado de Meio Ambiente e Recursos Naturais (SEMA). Ainda na SEMA, foi eleita Vice-Presidente do Fórum de Secretários da Amazônia Legal (2023). Atualmente, ocupa a Presidência do Instituto de Previdência dos Servidores do Estado do Maranhão.",
+         "name" : "RAYSA QUEIROZ MACIEL RODRIGUES",
+         "role" : "Presidente do Instituto de Previdência dos Servidores do Estado do Maranhão - IPREV/MA."
+      },
+      {
+         "biography" : "",
+         "name" : "REGES MOISES DOS SANTOS",
+         "role" : ""
+      },
+      {
+         "biography" : "Graduada em Relações Internacionais pela Universidade de Brasília (UnB), com mestrado em Relações Internacionais pela University of Kent at Canterbury, Inglaterra. Servidora pública da carreira de Auditora Federal de Finanças e Controle, da Secretaria do Tesouro Nacional, desde 1995, tendo se especializado na área da dívida pública, estratégia e novos produtos do mercado financeiro e operações com títulos públicos federais. Vem atuando em previdência complementar de servidores públicos há 10 anos, desde que foi cedida para a Funpresp-Exe para atuar na gestão dos investimentos em 2013. Foi diretora de Investimentos do Regime Próprio de Previdência do Distrito Federal em 2016, quando liderou o processo de criação da Fundação de Previdência Complementar dos Servidores do Distrito Federal – DF-Previcom, tendo sido nomeada como diretora-presidente em 2018, acumulando a Presidência com o cargo de diretora de Investimentos – AETQ, até dezembro de 2023.",
+         "name" : "REGINA CELIA DIAS",
+         "role" : "Diretora de Seguridade da Fundação de Previdência Complementar do Servidor Público Federal do Poder Executivo – Funpresp-Exe."
+      },
+      {
+         "biography" : "",
+         "name" : "ROBERTA ESTER SENNA PORTILHO MATOS",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "ROBERTO MOISÉS DOS SANTOS",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "RODRIGO GARRIDO DIAS",
+         "role" : ""
+      },
+      {
+         "biography" : "Rodrigo Ribeiro da Luz é servidor público da carreira de Especialista em Previdência Social. É graduado em Ciências Econômicas pela Universidade de São Paulo (FEA/USP) e mestre em Administração Pública pela Fundação Getúlio Vargas (EBAPE/FGV). Possui especialização pela School of Business da The George Washington University (GWSB/GWU) em “Theory and Operation of a Modern National Economy”, no âmbito do Programa Minerva. Foi coordenador de atuária do Rioprevidência, tendo também atuado na Diretoria de Investimento dessa autarquia. Ainda na Administração Pública, atuou como economista na Gerência de Logística da Companhia do Metropolitano de São Paulo (Metrô). Na iniciativa privada atuou como gerente financeiro e executou atividades administrativas, além de ter trabalhado em instituições financeiras como bancos e corretoras de valores.",
+         "name" : "RODRIGO RIBEIRO DA LUZ",
+         "role" : "Diretor de Investimentos da Fundação de Previdência Complementar do Estado do Rio de janeiro – RJPREV."
+      },
+      {
+         "biography" : "Graduada em Matemática e Física (FURB/2003), Pós-graduação em Direito Previdenciário",
+         "name" : "ROSANA MARIA DE SOUZA ROSA",
+         "role" : "Vice-presidente da Associação dos Institutos de Previdência de Santa Catarina - ASSIMPASC."
+      },
+      {
+         "biography" : "Graduada em Ciências Econômicas pela Unioeste, com pós-graduações em Planejamento do Desenvolvimento Urbano e Regional (Unioeste) e MBA em Regimes Próprios de Previdência Social (Celso Lisboa). Servidora pública de Toledo (1994-2019), atuou como Diretora de Tesouraria (1997- 2019) e Coordenadora do TOLEDOPREV (2006-2019). Atualmente é Diretora Executiva do TOLEDOPREV, cargo que ocupa desde 2019. Possui certificações CP RPPS DIRIG III, CGINV III pelo Instituto Totum, e ANBIMA CPA-10 e CPA-20.",
+         "name" : "ROSELI FABRIS DALLA COSTA",
+         "role" : "Diretora Executiva do Fundo de Aposentadorias e Pensões dos Servidores Publicos Municipais de Toledo – FAPES/TOLEDOPREV"
+      },
+      {
+         "biography" : "",
+         "name" : "ROSSANA FRIDERICHS LUZZI",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "RUBIA CRISTINA SERRANO",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SANDRO JACOBSEN GRANDO",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SELMO CASSIMIRO DA SILVA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SHARLLES FERNANDO BEZERRA LIMA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SONIA PRISCILA DE SOUZA CUNHA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SYLVIO EUGÊNIO DE ARAÚJO MEDEIROS",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "SÉRGIO BASTOS DE CASTRO",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "TIAGO CORDEIRO NOGUEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "UBIRAMAR MENDONÇA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "UGO GABRIEL BARBOZA GARCIA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "VALDENE CARDOSO FARIA PEREIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "",
+         "name" : "VINICIUS RESENDE TEIXEIRA",
+         "role" : ""
+      },
+      {
+         "biography" : "Atua como Presidente do Instituto de Gestão Previdenciária e Proteção Social do Estado do Pará –",
+         "name" : "WASHINGTON COSTA DE ALBUQUERQUE",
+         "role" : "Presidente do Instituto de Gestão Previdenciária e Proteção Social do Estado do Pará – IGEPPS."
+      },
+      {
+         "biography" : "",
+         "name" : "WILCLEM DE LAZARI ARAUJO",
+         "role" : ""
+      },
+      {
+         "biography" : "Diretor Técnico e Procurador de Carreira da RioPretoPrev. Especialista em Direito e Processo",
+         "name" : "WILCLEN DE LAZARI ARAUJO",
+         "role" : "Diretor Técnico do Regime Próprio de Previdência Social de São José do Rio Preto/SP - RIOPRETOPREV"
+      },
+      {
+         "biography" : "Formação Acadêmica: Técnico em Contabilidade; Graduação em Gestão Pública – Universidade Paulista",
+         "name" : "WILSON MARQUES PAZ",
+         "role" : "Presidente do Instituto de Previdência dos Servidores Públicos do Município de Itapemirim - IPREVITA"
+      },
+      {
+         "biography" : "",
+         "name" : "WILSON PEREIRA RAMOS",
+         "role" : "Administrador do Departamento Municipal de Previdência dos Servidores Públicos do Município de Porto Alegre - PREVIMPA"
+      }
+   ],
+   "source" : "Solicitação de Alteração do Site do CONAPREV 05.06.2025.docx"
+}
