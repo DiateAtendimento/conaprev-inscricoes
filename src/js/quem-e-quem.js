@@ -206,7 +206,7 @@
             profile: String(registration.perfil || 'Participante'),
             entity: registrationEntity(registration),
             role: String(documentPerson.role || '').trim(),
-            biography: /[.!?)]$/.test(documentBiography) ? documentBiography : '',
+            biography: documentBiography,
             photo: resolvePhoto(photoIndex, registration.nome),
           };
         })
