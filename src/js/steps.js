@@ -239,6 +239,11 @@
   function renderStep() {
     $('#miStepLabel').textContent = `Passo ${state.step} de ${STEP_MAX}`;
 
+    // Na abertura, a etapa de CPF ocupa apenas o espaço necessário.
+    // Após a pesquisa, restaura a altura normal para receber os demais campos.
+    const compactCpfStep = state.step === STEP_MIN && !state.searched;
+    modalEl.classList.toggle('is-cpf-step-compact', compactCpfStep);
+
     const formFooter = $('#miFormFooter');
     const showFormFooter = state.searched || state.step > STEP_MIN;
     formFooter?.classList.toggle('d-none', !showFormFooter);

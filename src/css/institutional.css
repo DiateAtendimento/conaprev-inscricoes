@@ -172,6 +172,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .mi-stepper .mi-step.is-done::before { content: "✓"; color: var(--white); border-color: var(--gov-green); background: var(--gov-green); }
 .mi-pane { display: none; min-height: 410px; padding: 34px; border-top: 1px solid var(--border); background: var(--white); }
 .mi-pane.active { display: block; }
+#modalInscricao.is-cpf-step-compact .mi-pane[data-step="1"].active { min-height: 0; }
 #modalInscricao .form-label { color: #2b3443; font-size: 14px; font-weight: 600; }
 #modalInscricao .form-control, #modalInscricao .form-select { min-height: 48px; border-color: #c8d0dc; border-radius: 7px; font-size: 15px; }
 .mi-cpf-wrap { align-items: flex-end !important; gap: 12px !important; }
