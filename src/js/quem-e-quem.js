@@ -1,7 +1,14 @@
 (() => {
   'use strict';
 
-  const PROFILE_NAMES = ['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff', 'Convidado', 'Apoiador'];
+  const PROFILE_NAMES = ['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff'];
+  const PROFILE_LABELS = {
+    Conselheiro: 'Conselheiros',
+    CNRPPS: 'CNRPPS',
+    Palestrante: 'Palestrantes',
+    COPAJURE: 'COPAJURE',
+    Staff: 'Staff',
+  };
   const PHOTO_SOURCES = [
     { manifest: '/imagens/fotos-conselheiros/manifest.json', directory: '/imagens/fotos-conselheiros' },
     { manifest: '/imagens/fotos-palestrantes/manifest.json', directory: '/imagens/fotos-palestrantes' },
@@ -20,6 +27,7 @@
   const profile = document.getElementById('peopleProfile');
   const dialog = document.getElementById('peopleDialog');
   const closeDialog = document.getElementById('peopleDialogClose');
+  const profileButtons = [...document.querySelectorAll('.people-profile-overview [data-profile]')];
   let people = [];
 
   function normalize(value) {
@@ -98,8 +106,10 @@
   function deduplicate(items) {
     const unique = new Map();
     items.forEach((item) => {
-      const key = normalize(item.nome);
-      if (key && !unique.has(key)) unique.set(key, item);
+      const nameKey = normalize(item.nome);
+      if (!nameKey) return;
+      const key = `${normalize(item.perfil)}:${nameKey}`;
+      if (!unique.has(key)) unique.set(key, item);
     });
     return [...unique.values()];
   }
@@ -168,23 +178,29 @@
     });
 
     grid.replaceChildren(...filtered.map(createCard));
+    profileButtons.forEach(button => button.classList.toggle('is-active', button.dataset.profile === selectedProfile));
     count.textContent = `${filtered.length} ${filtered.length === 1 ? 'pessoa' : 'pessoas'}`;
     status.hidden = filtered.length > 0;
     if (!filtered.length) {
       status.className = 'people-status is-empty';
       status.textContent = people.length
         ? 'Nenhuma pessoa corresponde aos filtros selecionados.'
-        : 'Ainda não há inscrições correspondentes às informações do documento.';
+        : 'Ainda não há inscrições disponíveis para estes perfis.';
     }
   }
 
   function populateProfiles() {
-    const names = [...new Set(people.map(person => person.profile))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-    names.forEach((name) => {
+    PROFILE_NAMES.forEach((name) => {
       const option = document.createElement('option');
       option.value = name;
-      option.textContent = name;
+      option.textContent = PROFILE_LABELS[name] || name;
       profile.appendChild(option);
+    });
+    profileButtons.forEach((button) => {
+      const profileName = button.dataset.profile;
+      const profileCount = people.filter(person => person.profile === profileName).length;
+      const counter = button.querySelector('strong');
+      if (counter) counter.textContent = String(profileCount);
     });
   }
 
@@ -199,18 +215,16 @@
       people = deduplicate(registrations)
         .map(registration => {
           const documentPerson = catalogMatch(catalog, registration.nome);
-          if (!documentPerson) return null;
-          const documentBiography = String(documentPerson.biography || '').trim();
+          const documentBiography = String(documentPerson?.biography || '').trim();
           return {
-            name: String(registration.nome || documentPerson.name).trim(),
+            name: String(registration.nome || documentPerson?.name || '').trim(),
             profile: String(registration.perfil || 'Participante'),
             entity: registrationEntity(registration),
-            role: String(documentPerson.role || '').trim(),
+            role: String(documentPerson?.role || '').trim(),
             biography: documentBiography,
             photo: resolvePhoto(photoIndex, registration.nome),
           };
         })
-        .filter(Boolean)
         .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
 
       status.hidden = true;
@@ -226,6 +240,10 @@
 
   search.addEventListener('input', render);
   profile.addEventListener('change', render);
+  profileButtons.forEach(button => button.addEventListener('click', () => {
+    profile.value = profile.value === button.dataset.profile ? '' : button.dataset.profile;
+    render();
+  }));
   closeDialog.addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => {
     if (event.target === dialog) dialog.close();
