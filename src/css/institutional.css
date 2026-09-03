@@ -1315,7 +1315,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .people-dialog__section--role { border-left: 4px solid #1351b4; }
 .people-dialog__body h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; color: #0b438c; font-size: 14px; text-transform: uppercase; letter-spacing: .055em; }
 .people-dialog__body h3 i { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: #1351b4; background: #e9f1fc; font-size: 14px; }
-.people-dialog__body p { margin: 0; color: #3f5064; font-size: 15px; line-height: 1.78; }
+.people-dialog__body p { margin: 0; color: #3f5064; font-size: 15px; line-height: 1.78; white-space: pre-line; }
 
 @media (max-width: 1050px) {
   .people-profile-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
