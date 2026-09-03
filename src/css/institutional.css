@@ -1296,18 +1296,26 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 .person-card__content strong { margin-top: 13px; color: #092f66; font-size: 18px; line-height: 1.28; }
 .person-card__role { display: -webkit-box; margin-top: 8px; overflow: hidden; color: #5a687a; font-size: 13px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .person-card__more { margin-top: 16px; color: #1351b4; font-size: 12px; font-weight: 700; }
-.people-dialog { width: min(760px, calc(100% - 32px)); max-height: min(84vh, 760px); padding: 0; border: 0; border-radius: 22px; color: #1f2937; background: #fff; box-shadow: 0 30px 90px rgba(0, 24, 60, .42); overflow: auto; }
-.people-dialog::backdrop { background: rgba(1, 25, 57, .72); backdrop-filter: blur(5px); }
-.people-dialog__close { position: absolute; z-index: 2; top: 18px; right: 18px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .38); border-radius: 50%; color: #fff; background: rgba(0, 31, 70, .36); cursor: pointer; }
-.people-dialog__header { display: flex; align-items: center; gap: 24px; padding: 35px; color: #fff; background: linear-gradient(125deg, #063b7e, #1165bd); }
-.people-dialog__header img { width: 130px; height: 130px; flex: 0 0 130px; border: 5px solid rgba(255, 255, 255, .95); border-radius: 50%; object-fit: cover; object-position: center top; background: #fff; box-shadow: 0 15px 35px rgba(0, 23, 55, .25); }
+.people-dialog { width: min(680px, calc(100% - 48px)); height: calc(100dvh - 48px); max-height: none; margin: 24px 24px 24px auto; padding: 0; border: 0; border-radius: 24px; color: #1f2937; background: #f5f8fc; box-shadow: 0 30px 90px rgba(0, 24, 60, .46); overflow: hidden; grid-template-rows: auto minmax(0, 1fr); }
+.people-dialog[open] { display: grid; animation: people-dialog-enter .28s ease-out; }
+@keyframes people-dialog-enter { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: translateX(0); } }
+.people-dialog::backdrop { background: rgba(1, 25, 57, .66); backdrop-filter: blur(6px); }
+.people-dialog__close { position: absolute; z-index: 2; top: 18px; right: 18px; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .48); border-radius: 50%; color: #fff; background: rgba(0, 31, 70, .28); cursor: pointer; transition: background .2s ease, transform .2s ease; }
+.people-dialog__close:hover, .people-dialog__close:focus-visible { background: rgba(0, 31, 70, .58); transform: rotate(4deg) scale(1.05); }
+.people-dialog__header { position: relative; display: flex; align-items: center; gap: 22px; padding: 28px 76px 28px 30px; overflow: hidden; color: #fff; background: linear-gradient(125deg, #073b7a 0%, #1351b4 55%, #0878c9 100%); }
+.people-dialog__header::after { content: ""; position: absolute; right: -65px; bottom: -105px; width: 240px; height: 240px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255, 255, 255, .045), 0 0 0 70px rgba(255, 255, 255, .025); pointer-events: none; }
+.people-dialog__header > * { position: relative; z-index: 1; }
+.people-dialog__header img { width: 112px; height: 112px; flex: 0 0 112px; border: 4px solid rgba(255, 255, 255, .95); border-radius: 50%; object-fit: cover; object-position: center top; background: #fff; box-shadow: 0 13px 30px rgba(0, 23, 55, .28); }
 .people-dialog__header .people-profile-tag { color: #073e82; background: #ffcf32; }
-.people-dialog__header h2 { margin: 11px 52px 5px 0; color: #fff; font-size: clamp(25px, 4vw, 38px); line-height: 1.12; }
-.people-dialog__header p { margin: 0; color: rgba(255, 255, 255, .78); }
-.people-dialog__body { padding: 32px 35px 38px; }
-.people-dialog__body h3 { margin: 0 0 8px; color: #0b438c; font-size: 15px; text-transform: uppercase; letter-spacing: .055em; }
-.people-dialog__body h3:not(:first-child) { margin-top: 25px; }
-.people-dialog__body p { margin: 0; color: #465568; line-height: 1.72; }
+.people-dialog__header h2 { margin: 10px 0 5px; color: #fff; font-size: clamp(25px, 3.2vw, 35px); line-height: 1.12; letter-spacing: -.025em; }
+.people-dialog__header p { margin: 0; color: rgba(255, 255, 255, .84); font-weight: 500; }
+.people-dialog__body { display: grid; align-content: start; gap: 18px; padding: 24px 28px 34px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.people-dialog__body::-webkit-scrollbar { display: none; }
+.people-dialog__section { padding: 22px 23px 24px; border: 1px solid #dce6f2; border-radius: 16px; background: #fff; box-shadow: 0 7px 22px rgba(6, 47, 100, .055); }
+.people-dialog__section--role { border-left: 4px solid #1351b4; }
+.people-dialog__body h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; color: #0b438c; font-size: 14px; text-transform: uppercase; letter-spacing: .055em; }
+.people-dialog__body h3 i { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; color: #1351b4; background: #e9f1fc; font-size: 14px; }
+.people-dialog__body p { margin: 0; color: #3f5064; font-size: 15px; line-height: 1.78; }
 
 @media (max-width: 1050px) {
   .people-profile-overview { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1326,10 +1334,12 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .people-grid { grid-template-columns: 1fr; }
   .person-card__button { min-height: 215px; padding: 21px; }
   .person-card__photo { width: 100px; height: 126px; flex-basis: 100px; }
-  .people-dialog__header { align-items: flex-start; flex-direction: column; padding: 30px 24px 25px; }
-  .people-dialog__header img { width: 105px; height: 105px; flex-basis: 105px; }
-  .people-dialog__header h2 { margin-right: 40px; }
-  .people-dialog__body { padding: 26px 24px 31px; }
+  .people-dialog { width: calc(100% - 20px); height: calc(100dvh - 20px); margin: 10px 10px 10px auto; border-radius: 20px; }
+  .people-dialog__header { align-items: center; padding: 24px 62px 24px 20px; }
+  .people-dialog__header img { width: 86px; height: 86px; flex-basis: 86px; }
+  .people-dialog__header h2 { margin-right: 0; font-size: 24px; }
+  .people-dialog__body { gap: 14px; padding: 18px 16px 24px; }
+  .people-dialog__section { padding: 19px 18px 21px; border-radius: 14px; }
 }
 
 @media (max-width: 780px) {
