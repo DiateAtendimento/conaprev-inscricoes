@@ -312,26 +312,6 @@
       }
     }
 
-    const galleryWrap = document.createElement('div');
-    galleryWrap.id = 'miGalleryWrap';
-    galleryWrap.className = 'mt-4 d-none';
-    galleryWrap.innerHTML = `
-      <div id="miGalleryTitle" class="fw-semibold mb-2">Inscritos</div>
-      <div id="miGalleryMsg" class="small text-muted"></div>
-      <div id="miGalleryGridWrap" class="mi-gallery-grid-wrap" role="region" aria-label="Carrossel de inscritos" aria-roledescription="carrossel">
-        <button id="miGalleryPrev" class="mi-gallery-carousel-button is-prev" type="button" aria-label="Inscrição anterior">
-          <i class="bi bi-chevron-left" aria-hidden="true"></i>
-        </button>
-        <div id="miGalleryViewport" class="mi-gallery-viewport" tabindex="0" aria-label="Inscritos">
-          <div id="miGalleryGrid" class="mi-staff-grid"></div>
-        </div>
-        <button id="miGalleryNext" class="mi-gallery-carousel-button is-next" type="button" aria-label="Próxima inscrição">
-          <i class="bi bi-chevron-right" aria-hidden="true"></i>
-        </button>
-      </div>
-    `;
-    pane.appendChild(galleryWrap);
-
     pane.dataset.enhanced = '1';
     btnSearch.addEventListener('click', onPesquisarCpf);
   }
@@ -1361,7 +1341,6 @@
         renderStep();
       }
 
-      renderSeats();
     } catch (e) {
       msg.textContent = e.message || 'Erro na busca.';
       msg.className = 'small ms-2 text-danger';
@@ -1390,8 +1369,6 @@
     $('#miPerfil').textContent = perfil;
 
     ensureStep1UI();
-    renderSeats();
-
     const form = document.getElementById('miForm');
     form.reset();
     $all('#miForm .was-validated').forEach(el => el.classList.remove('was-validated'));
