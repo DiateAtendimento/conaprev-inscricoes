@@ -1205,7 +1205,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
 
 /* Reuniões anteriores */
 .meetings-page, .meeting-detail-page { background: #f6f8fb; }
-.meetings-hero { margin: 28px auto 0; width: min(1320px, calc(100% - 40px)); min-height: 280px; display: flex; align-items: center; overflow: hidden; position: relative; border-radius: 18px; color: #fff; background: radial-gradient(circle at 82% 30%, rgba(255,205,7,.28), transparent 12%), linear-gradient(112deg, #071f41 0%, #074f99 58%, #0066b3 100%); box-shadow: 0 14px 38px rgba(8,45,88,.16); }
+.meetings-hero { margin: 0; width: 100%; min-height: 390px; display: flex; align-items: center; overflow: hidden; position: relative; border-radius: 0; color: #fff; background: radial-gradient(circle at 82% 30%, rgba(255,205,7,.28), transparent 12%), linear-gradient(112deg, #071f41 0%, #074f99 58%, #0066b3 100%); box-shadow: 0 14px 38px rgba(8,45,88,.16); }
 .meetings-hero::after { content: ""; position: absolute; width: 330px; height: 330px; right: 5%; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; box-shadow: 0 0 0 42px rgba(255,255,255,.04), 0 0 0 86px rgba(255,255,255,.025); }
 .meetings-hero .container { position: relative; z-index: 1; }
 .meetings-hero span, .meetings-heading span, .meeting-card__eyebrow, .meeting-detail__heading span { color: #f2b705; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -1277,7 +1277,7 @@ body:has(#voteLoginCard.d-none) .vote-explainer { display: none; }
   .meeting-gallery-section { padding-right: 0; padding-bottom: 36px; border-right: 0; border-bottom: 1px solid #d7e0ea; }
 }
 @media (max-width: 620px) {
-  .meetings-hero { width: 100%; margin-top: 0; min-height: 245px; border-radius: 0; }
+  .meetings-hero { min-height: 390px; }
   .meetings-content { padding-block: 38px 52px; }
   .meetings-heading { align-items: flex-start; flex-direction: column; }
   .meeting-card { grid-template-columns: 1fr; }
