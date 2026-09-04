@@ -42,6 +42,7 @@
   const elFinalList        = document.getElementById('adminFinalizadosList');
   const elAtivosPager      = document.getElementById('adminAtivosPager');
   const elFinalPager       = document.getElementById('adminFinalizadosPager');
+  const elConferencesSort  = document.getElementById('adminConferencesSort');
 
   const elBadgeTop         = document.getElementById('adminNotifBadge');
   const elBadgeModal       = document.getElementById('adminNotifCount');
@@ -142,6 +143,7 @@
     limit: 50,
     ativosOffset: 0,
     finalOffset: 0,
+    conferencesSort: 'asc',
     ativosCache: [],
     finalCache: [],
     currentView: 'adminOverview',
@@ -249,13 +251,13 @@
     });
   }
 
-  // Extrai Número para ordenAção por protocolo (ex.: 'CNL028' -> 28, 'PAT-0012' -> 12)
+  // Extrai a sequência final do protocolo (ex.: 'CON86-2026-000789' -> 789).
   function protoKey(v) {
     const s = String(v || '');
     const m = s.match(/(\d+)/g);
     if (!m) return 0;
-    // pega o MAIOR trecho numérico (resiste a prefixos diferentes)
-    return Math.max(...m.map(n => parseInt(n, 10)).filter(n => Number.isFinite(n)));
+    const key = parseInt(m[m.length - 1], 10);
+    return Number.isFinite(key) ? key : 0;
   }
 
   const stripDiacritics = (value) =>
@@ -525,8 +527,13 @@
       toRender.sort((a, b) => protoKey(a?.numerodeinscricao) - protoKey(b?.numerodeinscricao));
     }
     if (status === 'finalizados') {
-      // Mantém apenas finalizados e ordena por nome (A->Z)
-      toRender.sort((a, b) => String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity: 'base' }));
+      // Ordena a página conferida pela sequência da inscrição.
+      const direction = state.conferencesSort === 'desc' ? -1 : 1;
+      toRender.sort((a, b) => {
+        const protocolOrder = protoKey(a?.numerodeinscricao) - protoKey(b?.numerodeinscricao);
+        if (protocolOrder) return protocolOrder * direction;
+        return String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR', { sensitivity: 'base' }) * direction;
+      });
     }
 
     targetEl.innerHTML = (toRender && toRender.length)
@@ -634,6 +641,7 @@
     params.set('status', status);
     if (state.q) params.set('q', state.q);
     params.set('hasProtocol', '1');
+    if (status === 'finalizados') params.set('order', state.conferencesSort);
     params.set('limit', String(state.limit));
     const offset = (status === 'ativos') ? state.ativosOffset : state.finalOffset;
     params.set('offset', String(offset));
@@ -895,6 +903,12 @@
       await refreshBoth();
       snapshotActiveProtocols();
     }, 300));
+  });
+
+  elConferencesSort?.addEventListener('change', () => {
+    state.conferencesSort = elConferencesSort.value === 'desc' ? 'desc' : 'asc';
+    state.finalOffset = 0;
+    refreshFinalizados();
   });
 
   const refreshDashboard = async () => {

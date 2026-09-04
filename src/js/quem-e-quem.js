@@ -231,7 +231,7 @@
       populateProfiles();
       render();
     } catch (error) {
-      console.error('[Quem é quem]', error);
+      console.error('[Inscritos]', error);
       count.textContent = 'Indisponível';
       status.className = 'people-status is-error';
       status.textContent = 'Não foi possível carregar os participantes agora. Tente novamente em instantes.';

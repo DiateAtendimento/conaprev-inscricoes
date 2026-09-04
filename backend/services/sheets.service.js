@@ -130,12 +130,13 @@ function nowBRISO() {
   return `${yyyy}-${mm}-${dd}T${HH}:${MM}:${SS}-03:00`;
 }
 
-// extrai Número para ordenAção (ex.: CNL028 ? 28, PAT-0012 ? 12)
+// Extrai a sequência final do protocolo (ex.: CON86-2026-000789 -> 789).
 function protoKey(v) {
   const s = String(v || '');
   const m = s.match(/(\d+)/g);
   if (!m) return 0;
-  return Math.max(...m.map(n => parseInt(n, 10)).filter(Number.isFinite));
+  const key = parseInt(m[m.length - 1], 10);
+  return Number.isFinite(key) ? key : 0;
 }
 
 export async function getSpreadsheetMeta() {
@@ -605,7 +606,7 @@ export async function listInscricoesGallery(perfil) {
 }
 
 
-export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false } = {}) {
+export async function listarInscricoes(perfil, status = "ativos", q = "", { limit = 200, offset = 0, hasProtocol = false, order = "desc" } = {}) {
   const sheetName = sheetForPerfil(perfil);
   const { headers, rows } = await readAllCached(sheetName, CACHE_TTL_DEFAULT_MS);
 
@@ -638,9 +639,14 @@ export async function listarInscricoes(perfil, status = "ativos", q = "", { limi
 
   const deduped = dedupeItems(out, buildDisplayDedupKey);
 
-  // OrdenAção server-side para FINALIZADOS: MAIOR ? MENOR por Número do protocolo
+  // Ordenação server-side antes da paginação, pelo número sequencial do protocolo.
   if (String(status).toLowerCase() === "finalizados") {
-    deduped.sort((a, b) => protoKey(b.numerodeinscricao) - protoKey(a.numerodeinscricao));
+    const direction = order === "asc" ? 1 : -1;
+    deduped.sort((a, b) => {
+      const protocolOrder = protoKey(a.numerodeinscricao) - protoKey(b.numerodeinscricao);
+      if (protocolOrder) return protocolOrder * direction;
+      return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", { sensitivity: "base" }) * direction;
+    });
   }
 
   // paginAção

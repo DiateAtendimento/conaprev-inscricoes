@@ -79,7 +79,7 @@ async function buscarPorCpfSafe(cpf, perfil) {
 }
 
 /**
- * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&limit=&offset=
+ * GET /api/inscricoes/listar?perfil=...&status=ativos|finalizados&q=...&order=asc|desc&limit=&offset=
  * Lista Inscrições para acompanhamento administrativo.
  * ObservAção: a ordenAção de FINALIZADOS (MAIOR?MENOR por protocolo) j� � feita no service.
  */
@@ -91,12 +91,13 @@ r.get("/listar", adminGuard, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit || "200", 10) || 200, 500);
     const offset = Math.max(parseInt(req.query.offset || "0", 10) || 0, 0);
     const hasProtocol = String(req.query.hasProtocol || "") === "1";
+    const order = String(req.query.order || "desc").toLowerCase() === "asc" ? "asc" : "desc";
 
     if (!PERFIS_OK.has(perfil)) {
       return res.status(400).json({ error: "Perfil inválido" });
     }
 
-    const out = await listarInscricoes(perfil, status, q, { limit, offset, hasProtocol });
+    const out = await listarInscricoes(perfil, status, q, { limit, offset, hasProtocol, order });
     return res.json(Array.isArray(out) ? out : []);
   } catch (e) {
     console.error("[GET /inscricoes/listar]", e);
