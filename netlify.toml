@@ -1,3 +1,12 @@
 [build]
   publish = "public"
   command = "mkdir -p public/src && cp -R src/* public/src/"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/reunioes/:meeting"
+  to = "/reuniao.html?id=:meeting"
+  status = 200

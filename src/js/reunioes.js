@@ -26,7 +26,7 @@
     }
   ];
 
-  const meetingUrl = (id) => `/reuniao.html?id=${encodeURIComponent(id)}`;
+  const meetingUrl = (id) => `/reunioes/${encodeURIComponent(id)}`;
   const cover = (item, large = false) => item.cover
     ? `<img src="${item.cover}" alt="${item.number} Reunião do CONAPREV em ${item.city}" loading="lazy">`
     : `<div class="meeting-placeholder meeting-placeholder--${item.theme}" role="img" aria-label="Identidade visual da ${item.number} Reunião em ${item.city}"><span>${item.number}</span><strong>CONAPREV</strong><small>${item.city}</small>${large ? '<i class="bi bi-images" aria-hidden="true"></i>' : ''}</div>`;
@@ -38,7 +38,8 @@
 
   const detail = document.getElementById('meetingDetailContent');
   if (!detail) return;
-  const id = new URLSearchParams(location.search).get('id') || '85';
+  const pathMeeting = location.pathname.match(/\/reunioes\/(\d+)\/?$/)?.[1];
+  const id = new URLSearchParams(location.search).get('id') || pathMeeting || '85';
   const item = meetings.find((meeting) => meeting.id === id);
   if (!item) {
     detail.innerHTML = '<section class="meeting-not-found"><i class="bi bi-exclamation-circle"></i><h1>Reunião não encontrada</h1><p>O registro solicitado não está disponível.</p><a href="/reunioes.html">Consultar reuniões</a></section>';
@@ -47,23 +48,78 @@
 
   document.title = `${item.number} Reunião do CONAPREV`;
   const files = [
-    { icon: 'bi-easel2', label: 'Apresentações', url: item.presentations },
-    { icon: 'bi-file-earmark-text', label: 'Atas', url: item.minutes }
+    { icon: 'bi-easel2', label: 'Apresentações', type: 'presentations' },
+    { icon: 'bi-file-earmark-text', label: 'Atas', type: 'minutes' }
   ];
-  const gallery = item.photos.length
-    ? `<div class="meeting-gallery">${item.photos.map((photo, index) => `<button type="button" data-gallery-index="${index}"><img src="${photo.src}" alt="${photo.alt}" loading="lazy"></button>`).join('')}</div>`
-    : '<div class="meeting-gallery-empty"><i class="bi bi-images"></i><strong>Galeria em atualização</strong><span>As fotografias oficiais serão incluídas quando disponibilizadas.</span></div>';
 
-  detail.innerHTML = `<header class="meeting-detail__heading"><div class="meeting-number-icon"><i class="bi bi-calendar-event"></i></div><div><span>Reunião Ordinária</span><h1>${item.number} Reunião do CONAPREV</h1><p><i class="bi bi-calendar3"></i>${item.date}<i class="bi bi-geo-alt"></i>${item.city}</p></div></header><div class="meeting-detail__layout"><section class="meeting-gallery-section"><h2><i class="bi bi-images"></i> Fotos da reunião</h2>${gallery}</section><aside class="meeting-summary"><section><h2><i class="bi bi-file-earmark-text"></i> Resumo da reunião</h2><p>${item.summary}</p></section><section class="meeting-files"><h2><i class="bi bi-folder2-open"></i> Arquivos da reunião</h2><div>${files.map((file) => file.url ? `<a href="${file.url}" target="_blank" rel="noopener"><i class="bi ${file.icon}"></i><strong>${file.label}</strong><span>Abrir no Google Drive <i class="bi bi-box-arrow-up-right"></i></span></a>` : `<div class="meeting-file-disabled" aria-label="${file.label}: link ainda não disponibilizado"><i class="bi ${file.icon}"></i><strong>${file.label}</strong><span>Link em atualização</span></div>`).join('')}</div></section></aside></div>`;
+  detail.innerHTML = `<header class="meeting-detail__heading"><div class="meeting-number-icon"><i class="bi bi-calendar-event"></i></div><div><span>Reunião Ordinária</span><h1>${item.number} Reunião do CONAPREV</h1><p><i class="bi bi-calendar3"></i>${item.date}<i class="bi bi-geo-alt"></i>${item.city}</p></div></header><div class="meeting-detail__layout"><section class="meeting-gallery-section"><h2><i class="bi bi-images"></i> Fotos da reunião</h2><div id="meetingGallery" aria-live="polite"><div class="meeting-loading"><span class="spinner-border" aria-hidden="true"></span><strong>Carregando fotos...</strong></div></div></section><aside class="meeting-summary"><section><h2><i class="bi bi-file-earmark-text"></i> Resumo da reunião</h2><p>${item.summary}</p></section><section class="meeting-files"><h2><i class="bi bi-folder2-open"></i> Arquivos da reunião</h2><div>${files.map((file) => `<button type="button" data-files-type="${file.type}" data-files-label="${file.label}"><i class="bi ${file.icon}"></i><strong>${file.label}</strong><span>Consultar arquivos <i class="bi bi-arrow-right"></i></span></button>`).join('')}</div></section></aside></div>`;
 
   const dialog = document.getElementById('meetingGalleryDialog');
   const dialogImage = document.getElementById('meetingGalleryImage');
   const dialogCaption = document.getElementById('meetingGalleryCaption');
-  detail.querySelectorAll('[data-gallery-index]').forEach((button) => button.addEventListener('click', () => {
-    const photo = item.photos[Number(button.dataset.galleryIndex)];
-    if (!photo || !dialog) return;
-    dialogImage.src = photo.src; dialogImage.alt = photo.alt; dialogCaption.textContent = photo.alt; dialog.showModal();
-  }));
+  const galleryRoot = document.getElementById('meetingGallery');
+  const filesDialog = document.getElementById('meetingFilesDialog');
+  const filesTitle = document.getElementById('meetingFilesTitle');
+  const filesContent = document.getElementById('meetingFilesContent');
+  const filesFooter = document.getElementById('meetingFilesFooter');
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  const endpoint = (type) => `/.netlify/functions/drive-files?meeting=${encodeURIComponent(item.id)}&type=${encodeURIComponent(type)}`;
+  const photoUrl = (fileId, size = 900) => `/.netlify/functions/drive-image?meeting=${encodeURIComponent(item.id)}&file=${encodeURIComponent(fileId)}&size=${size}`;
+
+  async function requestFiles(type) {
+    const response = await fetch(endpoint(type), { headers: { accept: 'application/json' } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'DRIVE_ERROR');
+    return data;
+  }
+
+  async function loadPhotos() {
+    try {
+      const data = await requestFiles('photos');
+      if (!data.files?.length) {
+        galleryRoot.innerHTML = '<div class="meeting-gallery-empty"><i class="bi bi-images"></i><strong>Nenhuma foto disponível para esta reunião.</strong><span>Novas fotos aparecerão automaticamente quando forem adicionadas ao acervo.</span></div>';
+        return;
+      }
+      galleryRoot.innerHTML = `<div class="meeting-gallery">${data.files.map((photo) => `<button type="button" data-gallery-file="${escapeHtml(photo.id)}" data-gallery-name="${escapeHtml(photo.name)}"><img src="${photoUrl(photo.id)}" alt="${escapeHtml(photo.name)}" loading="lazy" decoding="async"></button>`).join('')}</div>`;
+      galleryRoot.querySelectorAll('[data-gallery-file]').forEach((button) => button.addEventListener('click', () => {
+        if (!dialog) return;
+        const name = button.dataset.galleryName || 'Foto da reunião';
+        dialogImage.src = photoUrl(button.dataset.galleryFile, 1600);
+        dialogImage.alt = name;
+        dialogCaption.textContent = name;
+        dialog.showModal();
+      }));
+    } catch {
+      galleryRoot.innerHTML = '<div class="meeting-gallery-empty meeting-gallery-error"><i class="bi bi-exclamation-circle"></i><strong>Não foi possível carregar as fotos neste momento.</strong><button type="button" data-retry-photos>Tentar novamente</button></div>';
+      galleryRoot.querySelector('[data-retry-photos]')?.addEventListener('click', loadPhotos);
+    }
+  }
+
+  async function openFiles(type, label) {
+    if (!filesDialog || !filesTitle || !filesContent || !filesFooter) return;
+    filesTitle.textContent = `${label} — ${item.number} Reunião do CONAPREV`;
+    filesContent.innerHTML = `<div class="meeting-loading"><span class="spinner-border" aria-hidden="true"></span><strong>Carregando ${label.toLocaleLowerCase('pt-BR')}...</strong></div>`;
+    filesFooter.innerHTML = '';
+    if (!filesDialog.open) filesDialog.showModal();
+    try {
+      const data = await requestFiles(type);
+      if (!data.files?.length) {
+        const empty = type === 'minutes' ? 'Nenhuma ata disponível.' : 'Nenhuma apresentação disponível.';
+        filesContent.innerHTML = `<div class="meeting-dialog-state"><i class="bi bi-folder2-open"></i><strong>${empty}</strong></div>`;
+      } else {
+        filesContent.innerHTML = `<ul>${data.files.map((file) => `<li><i class="bi bi-file-earmark"></i><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(file.mimeType)}</span></div>${file.webViewLink ? `<a href="${escapeHtml(file.webViewLink)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${escapeHtml(file.name)} no Google Drive"><i class="bi bi-box-arrow-up-right"></i></a>` : '<span class="meeting-file-unavailable">Indisponível</span>'}</li>`).join('')}</ul>`;
+      }
+      if (data.folder?.webViewLink) filesFooter.innerHTML = `<a href="${escapeHtml(data.folder.webViewLink)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-folder2-open"></i> Abrir pasta no Google Drive</a>`;
+    } catch {
+      filesContent.innerHTML = '<div class="meeting-dialog-state meeting-dialog-state--error"><i class="bi bi-exclamation-circle"></i><strong>Não foi possível carregar os arquivos neste momento.</strong><button type="button" data-retry-files>Tentar novamente</button></div>';
+      filesContent.querySelector('[data-retry-files]')?.addEventListener('click', () => openFiles(type, label));
+    }
+  }
+
+  detail.querySelectorAll('[data-files-type]').forEach((button) => button.addEventListener('click', () => openFiles(button.dataset.filesType, button.dataset.filesLabel)));
   dialog?.querySelector('[data-gallery-close]')?.addEventListener('click', () => dialog.close());
   dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+  filesDialog?.querySelector('[data-files-close]')?.addEventListener('click', () => filesDialog.close());
+  filesDialog?.addEventListener('click', (event) => { if (event.target === filesDialog) filesDialog.close(); });
+  loadPhotos();
 })();
