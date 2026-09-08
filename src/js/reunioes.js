@@ -56,7 +56,8 @@
 
   const dialog = document.getElementById('meetingGalleryDialog');
   const dialogImage = document.getElementById('meetingGalleryImage');
-  const dialogCaption = document.getElementById('meetingGalleryCaption');
+  const dialogCaption = document.getElementById('meetingGalleryCaptionText');
+  const dialogCounter = document.getElementById('meetingGalleryCounter');
   const galleryRoot = document.getElementById('meetingGallery');
   const filesDialog = document.getElementById('meetingFilesDialog');
   const filesTitle = document.getElementById('meetingFilesTitle');
@@ -65,6 +66,26 @@
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const endpoint = (type) => `/.netlify/functions/drive-files?meeting=${encodeURIComponent(item.id)}&type=${encodeURIComponent(type)}`;
   const photoUrl = (fileId, size = 900) => `/.netlify/functions/drive-image?meeting=${encodeURIComponent(item.id)}&file=${encodeURIComponent(fileId)}&size=${size}`;
+  const visiblePhotoLimit = 25;
+  let galleryPhotos = [];
+  let galleryIndex = 0;
+
+  function showGalleryPhoto(index) {
+    if (!galleryPhotos.length || !dialog || !dialogImage || !dialogCaption || !dialogCounter) return;
+    galleryIndex = (index + galleryPhotos.length) % galleryPhotos.length;
+    const photo = galleryPhotos[galleryIndex];
+    const name = photo.name || 'Foto da reunião';
+    dialogImage.src = photoUrl(photo.id, 1600);
+    dialogImage.alt = name;
+    dialogCaption.textContent = name;
+    dialogCounter.textContent = `${galleryIndex + 1} de ${galleryPhotos.length}`;
+  }
+
+  function openGallery(index = 0) {
+    if (!galleryPhotos.length || !dialog) return;
+    showGalleryPhoto(index);
+    if (!dialog.open) dialog.showModal();
+  }
 
   async function requestFiles(type) {
     const response = await fetch(endpoint(type), { headers: { accept: 'application/json' } });
@@ -77,18 +98,15 @@
     try {
       const data = await requestFiles('photos');
       if (!data.files?.length) {
+        galleryPhotos = [];
         galleryRoot.innerHTML = '<div class="meeting-gallery-empty"><i class="bi bi-images"></i><strong>Nenhuma foto disponível para esta reunião.</strong><span>Novas fotos aparecerão automaticamente quando forem adicionadas ao acervo.</span></div>';
         return;
       }
-      galleryRoot.innerHTML = `<div class="meeting-gallery">${data.files.map((photo) => `<button type="button" data-gallery-file="${escapeHtml(photo.id)}" data-gallery-name="${escapeHtml(photo.name)}"><img src="${photoUrl(photo.id)}" alt="${escapeHtml(photo.name)}" loading="lazy" decoding="async"></button>`).join('')}</div>`;
-      galleryRoot.querySelectorAll('[data-gallery-file]').forEach((button) => button.addEventListener('click', () => {
-        if (!dialog) return;
-        const name = button.dataset.galleryName || 'Foto da reunião';
-        dialogImage.src = photoUrl(button.dataset.galleryFile, 1600);
-        dialogImage.alt = name;
-        dialogCaption.textContent = name;
-        dialog.showModal();
-      }));
+      galleryPhotos = data.files;
+      const visiblePhotos = galleryPhotos.slice(0, visiblePhotoLimit);
+      galleryRoot.innerHTML = `<div class="meeting-gallery">${visiblePhotos.map((photo, index) => `<button type="button" data-gallery-index="${index}" aria-label="Visualizar ${escapeHtml(photo.name)}"><img src="${photoUrl(photo.id)}" alt="${escapeHtml(photo.name)}" loading="lazy" decoding="async"></button>`).join('')}</div><div class="meeting-gallery-actions"><button type="button" data-gallery-all><i class="bi bi-images" aria-hidden="true"></i> Ver todas as fotos</button></div>`;
+      galleryRoot.querySelectorAll('[data-gallery-index]').forEach((button) => button.addEventListener('click', () => openGallery(Number(button.dataset.galleryIndex))));
+      galleryRoot.querySelector('[data-gallery-all]')?.addEventListener('click', () => openGallery(0));
     } catch {
       galleryRoot.innerHTML = '<div class="meeting-gallery-empty meeting-gallery-error"><i class="bi bi-exclamation-circle"></i><strong>Não foi possível carregar as fotos neste momento.</strong><button type="button" data-retry-photos>Tentar novamente</button></div>';
       galleryRoot.querySelector('[data-retry-photos]')?.addEventListener('click', loadPhotos);
@@ -109,7 +127,6 @@
       } else {
         filesContent.innerHTML = `<ul>${data.files.map((file) => `<li><i class="bi bi-file-earmark"></i><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(file.mimeType)}</span></div>${file.webViewLink ? `<a href="${escapeHtml(file.webViewLink)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${escapeHtml(file.name)} no Google Drive"><i class="bi bi-box-arrow-up-right"></i></a>` : '<span class="meeting-file-unavailable">Indisponível</span>'}</li>`).join('')}</ul>`;
       }
-      if (data.folder?.webViewLink) filesFooter.innerHTML = `<a href="${escapeHtml(data.folder.webViewLink)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-folder2-open"></i> Abrir pasta no Google Drive</a>`;
     } catch {
       filesContent.innerHTML = '<div class="meeting-dialog-state meeting-dialog-state--error"><i class="bi bi-exclamation-circle"></i><strong>Não foi possível carregar os arquivos neste momento.</strong><button type="button" data-retry-files>Tentar novamente</button></div>';
       filesContent.querySelector('[data-retry-files]')?.addEventListener('click', () => openFiles(type, label));
@@ -118,6 +135,12 @@
 
   detail.querySelectorAll('[data-files-type]').forEach((button) => button.addEventListener('click', () => openFiles(button.dataset.filesType, button.dataset.filesLabel)));
   dialog?.querySelector('[data-gallery-close]')?.addEventListener('click', () => dialog.close());
+  dialog?.querySelector('[data-gallery-prev]')?.addEventListener('click', () => showGalleryPhoto(galleryIndex - 1));
+  dialog?.querySelector('[data-gallery-next]')?.addEventListener('click', () => showGalleryPhoto(galleryIndex + 1));
+  dialog?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') showGalleryPhoto(galleryIndex - 1);
+    if (event.key === 'ArrowRight') showGalleryPhoto(galleryIndex + 1);
+  });
   dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
   filesDialog?.querySelector('[data-files-close]')?.addEventListener('click', () => filesDialog.close());
   filesDialog?.addEventListener('click', (event) => { if (event.target === filesDialog) filesDialog.close(); });
