@@ -141,6 +141,23 @@ function quoteQueryValue(value) {
   return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
+function canonicalFolderName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/(\d+)\s*(?:a|ª|º)(?=[^a-z0-9]|$)/g, '$1')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function isMeetingFolderName(value, meeting) {
+  const parts = canonicalFolderName(value).split('-').filter(Boolean);
+  return parts[0] === String(meeting)
+    && parts.includes('reuniao')
+    && parts.includes('conaprev');
+}
+
 export function parseMeeting(raw) {
   const text = String(raw ?? '').trim();
   if (!/^\d{1,3}$/.test(text)) throw new DriveFunctionError('INVALID_MEETING', 400);
@@ -163,7 +180,7 @@ export function parseFileId(raw) {
   return id;
 }
 
-async function findFolder(parentId, name) {
+async function findFolder(parentId, name, fallbackMatcher = null) {
   const q = `'${quoteQueryValue(parentId)}' in parents and name = '${quoteQueryValue(name)}' and mimeType = '${FOLDER_MIME}' and trashed = false`;
   const data = await driveJson('/files', {
     q,
@@ -173,15 +190,60 @@ async function findFolder(parentId, name) {
     pageSize: '2',
     fields: 'files(id,name,mimeType)'
   });
-  return Array.isArray(data.files) ? data.files[0] || null : null;
+  const exact = Array.isArray(data.files) ? data.files[0] || null : null;
+  if (exact) return exact;
+
+  // Fallback controlado: continua limitado ao parent autorizado e apenas tolera
+  // acentos, caixa, espaços e separadores diferentes no nome da pasta.
+  const siblings = await driveJson('/files', {
+    q: `'${quoteQueryValue(parentId)}' in parents and mimeType = '${FOLDER_MIME}' and trashed = false`,
+    spaces: 'drive',
+    supportsAllDrives: 'true',
+    includeItemsFromAllDrives: 'true',
+    pageSize: '1000',
+    fields: 'files(id,name,mimeType)'
+  });
+  const target = canonicalFolderName(name);
+  if (!Array.isArray(siblings.files)) return null;
+  const canonicalMatch = siblings.files.find((folder) => canonicalFolderName(folder.name) === target);
+  if (canonicalMatch) return canonicalMatch;
+  if (typeof fallbackMatcher !== 'function') return null;
+
+  // Evita escolher silenciosamente a pasta errada se houver mais de uma variação.
+  const compatible = siblings.files.filter(fallbackMatcher);
+  return compatible.length === 1 ? compatible[0] : null;
+}
+
+async function getFolder(folderId) {
+  const folder = await driveJson(`/files/${encodeURIComponent(folderId)}`, {
+    fields: 'id,name,mimeType,trashed',
+    supportsAllDrives: 'true'
+  });
+  return folder
+    && folder.mimeType === FOLDER_MIME
+    && folder.trashed !== true
+    ? folder
+    : null;
 }
 
 export function resolveMeeting(meeting) {
   return cached(`meeting:${meeting}`, async () => {
     const { rootFolderId } = requiredEnvironment();
-    const folder = await findFolder(rootFolderId, `${meeting}-Reuniao-CONAPREV`);
-    if (!folder) throw new DriveFunctionError('MEETING_NOT_FOUND', 404);
-    return folder;
+    const expectedName = `${meeting}-Reuniao-CONAPREV`;
+    const folder = await findFolder(
+      rootFolderId,
+      expectedName,
+      (candidate) => isMeetingFolderName(candidate.name, meeting)
+    );
+    if (folder) return folder;
+
+    // Também aceita uma configuração em que o próprio ID raiz é a pasta da
+    // reunião, mas somente quando nome e tipo confirmam a reunião solicitada.
+    const configuredRoot = await getFolder(rootFolderId);
+    if (configuredRoot && isMeetingFolderName(configuredRoot.name, meeting)) {
+      return configuredRoot;
+    }
+    throw new DriveFunctionError('MEETING_NOT_FOUND', 404);
   });
 }
 

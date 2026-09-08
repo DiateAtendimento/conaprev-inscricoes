@@ -41,6 +41,7 @@ global.fetch = async (input) => {
   if (url.pathname.endsWith('/files')) {
     const q = url.searchParams.get('q') || '';
     if (q.includes("name = '999-Reuniao-CONAPREV'")) return json({ files: [] });
+    if (q.includes("name = '84-Reuniao-CONAPREV'")) return json({ files: [] });
     if (q.includes("name = '85-Reuniao-CONAPREV'")) return json({ files: [{ id: 'meeting-85-id', name: '85-Reuniao-CONAPREV', mimeType: 'application/vnd.google-apps.folder' }] });
     if (q.includes("name = 'Apresentacoes'")) return json({ files: [{ id: 'presentations-id', name: 'Apresentacoes', mimeType: 'application/vnd.google-apps.folder' }] });
     if (q.includes("name = 'fotos'")) return json({ files: [{ id: 'photos-id', name: 'fotos', mimeType: 'application/vnd.google-apps.folder' }] });
@@ -48,6 +49,13 @@ global.fetch = async (input) => {
     if (q.includes("'presentations-id' in parents")) return json({ files: [{ id: 'presentation-file', name: 'Apresentação.pdf', mimeType: 'application/pdf', size: '100', modifiedTime: '2026-01-01T00:00:00Z', webViewLink: 'https://drive.google.com/file/presentation-file', iconLink: 'https://drive.google.com/icon' }] });
     if (q.includes("'photos-id' in parents")) return json({ files: [{ id: 'photo-file-ok', name: 'foto.jpg', mimeType: 'image/jpeg', modifiedTime: '2026-01-01T00:00:00Z' }, { id: 'not-image', name: 'arquivo.pdf', mimeType: 'application/pdf' }] });
     if (q.includes("'minutes-id' in parents")) return json({ files: [] });
+    if (q.includes("'root-folder-test' in parents") && !q.includes('name =')) return json({ files: [{ id: 'meeting-84-id', name: '84-Reunião-CONAPREV', mimeType: 'application/vnd.google-apps.folder' }] });
+  }
+  if (url.pathname.endsWith('/files/root-folder-direct')) {
+    return json({ id: 'root-folder-direct', name: '83ª Reunião Ordinária do CONAPREV', mimeType: 'application/vnd.google-apps.folder', trashed: false });
+  }
+  if (url.pathname.endsWith('/files/root-folder-test')) {
+    return json({ id: 'root-folder-test', name: 'Reunioes-CONAPREV', mimeType: 'application/vnd.google-apps.folder', trashed: false });
   }
   return json({ error: 'unexpected mock request' }, 500);
 };
@@ -65,6 +73,24 @@ test('localiza a reunião e apenas as três subpastas previstas', async () => {
   const body = JSON.parse(response.body);
   assert.deepEqual(Object.keys(body.folders).sort(), ['minutes', 'photos', 'presentations']);
   assert.equal(body.folders.photos.id, 'photos-id');
+});
+
+test('tolera acentos no nome da pasta sem sair da pasta raiz', async () => {
+  const response = await meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '84' } });
+  assert.equal(response.statusCode, 200);
+  assert.equal(JSON.parse(response.body).folder.name, '84-Reunião-CONAPREV');
+});
+
+test('aceita o ID raiz apontando diretamente para a pasta da reunião', async () => {
+  const originalRoot = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID = 'root-folder-direct';
+  try {
+    const response = await meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '83' } });
+    assert.equal(response.statusCode, 200);
+    assert.equal(JSON.parse(response.body).folder.name, '83ª Reunião Ordinária do CONAPREV');
+  } finally {
+    process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID = originalRoot;
+  }
 });
 
 test('lista apresentações e trata pasta vazia', async () => {
