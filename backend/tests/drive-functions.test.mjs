@@ -4,6 +4,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { handler as meetingHandler } from '../../netlify/functions/drive-meeting.mjs';
 import { handler as filesHandler } from '../../netlify/functions/drive-files.mjs';
 import { handler as imageHandler } from '../../netlify/functions/drive-image.mjs';
+import { normalizePrivateKey } from '../../netlify/functions/lib/drive.mjs';
 
 const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 process.env.GOOGLE_PROJECT_ID = 'drive-functions-test';
@@ -14,6 +15,13 @@ process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID = 'root-folder-test';
 const json = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
   headers: { 'content-type': 'application/json' }
+});
+
+test('normaliza chave PEM multilinha, JSON e duplamente escapada', () => {
+  const pem = '-----BEGIN PRIVATE KEY-----\nABC\n-----END PRIVATE KEY-----';
+  assert.equal(normalizePrivateKey(pem), pem);
+  assert.equal(normalizePrivateKey(JSON.stringify(pem)), pem);
+  assert.equal(normalizePrivateKey(pem.replace(/\n/g, '\\\\n')), pem);
 });
 
 global.fetch = async (input) => {

@@ -23,10 +23,30 @@ export class DriveFunctionError extends Error {
   }
 }
 
+export function normalizePrivateKey(rawValue) {
+  let value = String(rawValue || '').trim();
+  if (!value) return '';
+
+  // Aceita tanto PEM multilinha quanto o valor copiado do JSON da Service Account.
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      value = value.slice(1, -1);
+    }
+  }
+
+  return value
+    .replace(/\\\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\r\n/g, '\n')
+    .trim();
+}
+
 function requiredEnvironment() {
   const projectId = process.env.GOOGLE_PROJECT_ID?.trim();
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL?.trim();
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const privateKey = normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
   const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim();
   if (!projectId || !clientEmail || !privateKey || !rootFolderId) {
     throw new DriveFunctionError('DRIVE_NOT_CONFIGURED', 503);
