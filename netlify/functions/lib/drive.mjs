@@ -316,8 +316,30 @@ export async function validatePhoto(meeting, fileId) {
   return file;
 }
 
+export async function validateDocument(meeting, type, fileId) {
+  if (type !== 'presentations' && type !== 'minutes') {
+    throw new DriveFunctionError('INVALID_TYPE', 400);
+  }
+  const folder = await resolveSubfolder(meeting, type, true);
+  const file = await driveJson(`/files/${encodeURIComponent(fileId)}`, {
+    fields: 'id,name,mimeType,parents,trashed,modifiedTime,md5Checksum,size',
+    supportsAllDrives: 'true'
+  });
+  if (file.trashed
+    || file.mimeType === FOLDER_MIME
+    || !Array.isArray(file.parents)
+    || !file.parents.includes(folder.id)) {
+    throw new DriveFunctionError('FILE_NOT_AUTHORIZED', 403);
+  }
+  return file;
+}
+
 export function driveMediaUrl(fileId) {
   return `${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`;
+}
+
+export function driveExportUrl(fileId, mimeType = 'application/pdf') {
+  return `${DRIVE_API}/files/${encodeURIComponent(fileId)}/export?mimeType=${encodeURIComponent(mimeType)}`;
 }
 
 export function folderLink(id) {

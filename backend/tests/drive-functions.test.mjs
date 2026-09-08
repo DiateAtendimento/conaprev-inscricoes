@@ -4,6 +4,7 @@ import { generateKeyPairSync } from 'node:crypto';
 import { handler as meetingHandler } from '../../netlify/functions/drive-meeting.mjs';
 import { handler as filesHandler } from '../../netlify/functions/drive-files.mjs';
 import { handler as imageHandler } from '../../netlify/functions/drive-image.mjs';
+import documentHandler from '../../netlify/functions/drive-document.mjs';
 import { normalizePrivateKey } from '../../netlify/functions/lib/drive.mjs';
 
 const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -31,6 +32,12 @@ global.fetch = async (input) => {
   }
   if (url.hostname === 'thumbnail.test') {
     return new Response(Buffer.from('test-image'), { status: 200, headers: { 'content-type': 'image/jpeg', etag: '"image-etag"' } });
+  }
+  if (url.pathname.endsWith('/files/presentation-file') && url.searchParams.get('alt') === 'media') {
+    return new Response(Buffer.from('%PDF-test'), { status: 200, headers: { 'content-type': 'application/pdf', 'content-length': '9' } });
+  }
+  if (url.pathname.endsWith('/files/presentation-file')) {
+    return json({ id: 'presentation-file', name: 'Apresentação.pdf', mimeType: 'application/pdf', parents: ['presentations-id'], trashed: false, size: '9' });
   }
   if (url.pathname.endsWith('/files/photo-file-ok')) {
     return json({ id: 'photo-file-ok', name: 'foto.jpg', mimeType: 'image/jpeg', parents: ['photos-id'], trashed: false, size: '10', modifiedTime: '2026-01-01T00:00:00Z', thumbnailLink: 'https://thumbnail.test/photo=s220' });
@@ -114,6 +121,14 @@ test('entrega thumbnail validada com tipo e cache', async () => {
   assert.equal(response.isBase64Encoded, true);
   assert.equal(response.headers['content-type'], 'image/jpeg');
   assert.match(response.headers['cache-control'], /s-maxage=86400/);
+});
+
+test('entrega documento pelo site sem expor o link privado do Drive', async () => {
+  const response = await documentHandler(new Request('https://site.test/.netlify/functions/drive-document?meeting=85&type=presentations&file=presentation-file'));
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-type'), 'application/pdf');
+  assert.match(response.headers.get('content-disposition'), /^inline;/);
+  assert.equal(await response.text(), '%PDF-test');
 });
 
 test('retorna erro seguro para reunião inexistente', async () => {

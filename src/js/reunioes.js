@@ -66,6 +66,7 @@
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const endpoint = (type) => `/.netlify/functions/drive-files?meeting=${encodeURIComponent(item.id)}&type=${encodeURIComponent(type)}`;
   const photoUrl = (fileId, size = 900) => `/.netlify/functions/drive-image?meeting=${encodeURIComponent(item.id)}&file=${encodeURIComponent(fileId)}&size=${size}`;
+  const documentUrl = (type, fileId) => `/.netlify/functions/drive-document?meeting=${encodeURIComponent(item.id)}&type=${encodeURIComponent(type)}&file=${encodeURIComponent(fileId)}`;
   const visiblePhotoLimit = 25;
   let galleryPhotos = [];
   let galleryIndex = 0;
@@ -125,7 +126,7 @@
         const empty = type === 'minutes' ? 'Nenhuma ata disponível.' : 'Nenhuma apresentação disponível.';
         filesContent.innerHTML = `<div class="meeting-dialog-state"><i class="bi bi-folder2-open"></i><strong>${empty}</strong></div>`;
       } else {
-        filesContent.innerHTML = `<ul>${data.files.map((file) => `<li><i class="bi bi-file-earmark"></i><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(file.mimeType)}</span></div>${file.webViewLink ? `<a href="${escapeHtml(file.webViewLink)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir ${escapeHtml(file.name)} no Google Drive"><i class="bi bi-box-arrow-up-right"></i></a>` : '<span class="meeting-file-unavailable">Indisponível</span>'}</li>`).join('')}</ul>`;
+        filesContent.innerHTML = `<ul>${data.files.map((file) => `<li><i class="bi bi-file-earmark"></i><div><strong>${escapeHtml(file.name)}</strong><span>${escapeHtml(file.mimeType)}</span></div><a href="${documentUrl(type, file.id)}" target="_blank" rel="noopener noreferrer" aria-label="Visualizar ${escapeHtml(file.name)}"><i class="bi bi-eye"></i></a></li>`).join('')}</ul>`;
       }
     } catch {
       filesContent.innerHTML = '<div class="meeting-dialog-state meeting-dialog-state--error"><i class="bi bi-exclamation-circle"></i><strong>Não foi possível carregar os arquivos neste momento.</strong><button type="button" data-retry-files>Tentar novamente</button></div>';
