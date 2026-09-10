@@ -74,7 +74,7 @@ async function buscarPorCpfSafe(cpf, perfil) {
     return await buscarPorCpf(cpf, perfil);
   } catch (e) {
     console.error("buscarPorCpfSafe:", e);
-    return null;
+    throw e;
   }
 }
 

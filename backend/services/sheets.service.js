@@ -22,26 +22,27 @@ const CACHE_TTL_SEARCH_MS  = 10_000;
 const _cache = new Map(); // key -> { expires, data } | Promise
 const _ck = (sheetName) => `sheet:${sheetName}`;
 const _pk = (sheetName) => `${_ck(sheetName)}:pending`;
-const _sequenceLocks = new Map(); // perfil -> Promise
+const _sequenceLocks = new Map(); // aba -> fila de escrita
 
 function invalidateSheetCache(sheetName) {
   _cache.delete(_ck(sheetName));
   _cache.delete(_pk(sheetName));
 }
 
-async function withSequenceLock(perfil, task) {
-  const previous = _sequenceLocks.get(perfil) || Promise.resolve();
+async function withSequenceLock(lockKey, task) {
+  const previous = _sequenceLocks.get(lockKey) || Promise.resolve();
   let release;
   const current = new Promise((resolve) => { release = resolve; });
-  _sequenceLocks.set(perfil, previous.then(() => current));
+  const queued = previous.then(() => current, () => current);
+  _sequenceLocks.set(lockKey, queued);
 
-  await previous;
+  await previous.catch(() => {});
   try {
     return await task();
   } finally {
     release();
-    if (_sequenceLocks.get(perfil) === current) {
-      _sequenceLocks.delete(perfil);
+    if (_sequenceLocks.get(lockKey) === queued) {
+      _sequenceLocks.delete(lockKey);
     }
   }
 }
@@ -334,6 +335,20 @@ async function reconcileCpfRows({ cpf, perfil, sheetName }) {
   };
 }
 
+const POST_WRITE_RECONCILE_DELAYS_MS = [0, 200, 600];
+
+async function reconcileCpfRowsAfterWrite(args) {
+  let result = null;
+  for (const delayMs of POST_WRITE_RECONCILE_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    const current = await reconcileCpfRows(args);
+    if (current) result = current;
+  }
+  return result;
+}
+
 function validarDados(formData) {
   if (!formData?.cpf || !String(formData.cpf).trim()) throw new Error("Campo obrigat�rio: cpf");
   const clean = normalizeCpfValue(formData.cpf);
@@ -382,9 +397,9 @@ export async function buscarAutorizadoParaVotarPorCpf(cpf) {
 
 
 export async function inscreverDados(formData, perfil) {
-  return withSequenceLock(perfil, async () => {
+  const sheetName = sheetForPerfil(perfil);
+  return withSequenceLock(sheetName, async () => {
     validarDados(formData);
-    const sheetName = sheetForPerfil(perfil);
     const existing = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
     if (existing) return existing.codigo;
 
@@ -395,7 +410,7 @@ export async function inscreverDados(formData, perfil) {
     const lastColLetter = columnLetterFromIndex(headers.length - 1);
 
     const sheets = await getSheets();
-    const appendResp = await sheets.spreadsheets.values.append({
+    await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!A1:${lastColLetter}`,
       valueInputOption: "RAW",
@@ -403,7 +418,7 @@ export async function inscreverDados(formData, perfil) {
       requestBody: { values: [row] }
     });
 
-    const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+    const reconciled = await reconcileCpfRowsAfterWrite({ cpf: formData.cpf, perfil, sheetName });
     if (!reconciled?.codigo) {
       throw new Error("Falha ao consolidar a inscrição após a gravação.");
     }
@@ -437,8 +452,8 @@ export async function atualizarDados(formData, perfil) {
 }
 
 export async function confirmarInscricao(formData, perfil) {
-  return withSequenceLock(perfil, async () => {
-    const sheetName = sheetForPerfil(perfil);
+  const sheetName = sheetForPerfil(perfil);
+  return withSequenceLock(sheetName, async () => {
     if (formData?.cpf) {
       const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
       if (reconciled?.codigo) return reconciled.codigo;
