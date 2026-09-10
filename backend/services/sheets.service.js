@@ -5,7 +5,9 @@ import { normalizeKey, normalizeText, titleCase } from "./normalize.service.js";
 import {
   DEFAULT_MAX_INSCRICOES_POR_PERFIL,
   buildCodigoFromSequence,
+  extractSequenceNumber,
   findNextAvailableSequence,
+  getProfilePrefix,
 } from "./inscricao-sequence.service.js";
 
 const SHEET_ID = cfg.sheetId;
@@ -240,13 +242,13 @@ function rowBelongsToPerfil(rowObj, perfil, sheetName) {
   return String(rowObj.identificacao || "").trim() === String(perfil || "").trim();
 }
 
-function getUsedCodesForPerfil(headers, rows, perfil, sheetName) {
+function getUsedCodesForPerfil(headers, rows, perfil) {
   const usedCodes = [];
+  const prefix = getProfilePrefix(perfil);
   rows.forEach((row) => {
     const obj = mapRow(headers, row);
-    if (!rowBelongsToPerfil(obj, perfil, sheetName)) return;
     const codigo = String(obj.numerodeinscricao || "").trim();
-    if (codigo) usedCodes.push(codigo);
+    if (codigo.toUpperCase().startsWith(prefix)) usedCodes.push(codigo);
   });
   return usedCodes;
 }
@@ -298,7 +300,7 @@ async function ensureCodigoForRow(sheetName, headers, rows, rowIndex, perfil) {
   const currentCode = String(row[colCode] || "").trim();
   if (currentCode) return currentCode;
 
-  const usedCodes = getUsedCodesForPerfil(headers, rows, perfil, sheetName);
+  const usedCodes = getUsedCodesForPerfil(headers, rows, perfil);
   const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
   if (!nextSequence) {
     throw new Error(`Limite de ${DEFAULT_MAX_INSCRICOES_POR_PERFIL} inscrições atingido para o perfil ${perfil}.`);
@@ -335,7 +337,103 @@ async function reconcileCpfRows({ cpf, perfil, sheetName }) {
   };
 }
 
+async function reconcileDuplicateProtocols({ perfil, sheetName }) {
+  const { headers, rows } = await readAll(sheetName);
+  const colCode = headerIndex(headers, "numerodeinscricao");
+  if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
+
+  const prefix = getProfilePrefix(perfil);
+  const usedCodes = [];
+  const seenSequences = new Set();
+  const duplicates = [];
+
+  rows.forEach((row, index) => {
+    const codigo = String(row[colCode] || "").trim().toUpperCase();
+    if (!codigo.startsWith(prefix)) return;
+    const sequence = extractSequenceNumber(codigo);
+    if (!Number.isInteger(sequence) || sequence < 1) return;
+    usedCodes.push(codigo);
+    if (seenSequences.has(sequence)) {
+      duplicates.push({ rowIndex: index + 2 });
+      return;
+    }
+    seenSequences.add(sequence);
+  });
+
+  if (!duplicates.length) return { fixed: 0 };
+
+  const updates = [];
+  for (const duplicate of duplicates) {
+    const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
+    if (!nextSequence) {
+      throw new Error(`Não foi possível corrigir protocolos duplicados: limite de ${DEFAULT_MAX_INSCRICOES_POR_PERFIL} inscrições atingido para o perfil ${perfil}.`);
+    }
+    const codigo = buildCodigoFromSequence(perfil, nextSequence);
+    usedCodes.push(codigo);
+    updates.push({
+      range: `${sheetName}!${columnLetterFromIndex(colCode)}${duplicate.rowIndex}`,
+      values: [[codigo]],
+    });
+  }
+
+  const sheets = await getSheets();
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: SHEET_ID,
+    requestBody: {
+      valueInputOption: "RAW",
+      data: updates,
+    },
+  });
+  invalidateSheetCache(sheetName);
+  return { fixed: updates.length };
+}
+
 const POST_WRITE_RECONCILE_DELAYS_MS = [0, 200, 600];
+
+async function confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex }) {
+  let confirmedCode = "";
+
+  for (const delayMs of POST_WRITE_RECONCILE_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    // Sempre parte de uma leitura nova da planilha. Se outra requisição tiver
+    // disputado o mesmo número, a linha posterior é renumerada antes da resposta.
+    await reconcileDuplicateProtocols({ perfil, sheetName });
+    const { headers, rows } = await readAll(sheetName);
+    const colCode = headerIndex(headers, "numerodeinscricao");
+    if (colCode < 0) throw new Error(`Planilha ${sheetName} está sem a coluna "Número de Inscrição".`);
+
+    const targetRow = rows[rowIndex - 2] || [];
+    let codigo = String(targetRow[colCode] || "").trim().toUpperCase();
+    if (!codigo) {
+      codigo = await ensureCodigoForRow(sheetName, headers, rows, rowIndex, perfil);
+      confirmedCode = "";
+      continue;
+    }
+
+    const prefix = getProfilePrefix(perfil);
+    const sequence = extractSequenceNumber(codigo);
+    const owners = [];
+    rows.forEach((row, index) => {
+      const otherCode = String(row[colCode] || "").trim().toUpperCase();
+      if (!otherCode.startsWith(prefix)) return;
+      if (extractSequenceNumber(otherCode) === sequence) owners.push(index + 2);
+    });
+
+    if (!Number.isInteger(sequence) || owners.length !== 1 || owners[0] !== rowIndex) {
+      confirmedCode = "";
+      continue;
+    }
+    confirmedCode = codigo;
+  }
+
+  if (!confirmedCode) {
+    throw new Error("Não foi possível reservar um protocolo único para a inscrição.");
+  }
+  return confirmedCode;
+}
 
 async function reconcileCpfRowsAfterWrite(args) {
   let result = null;
@@ -345,8 +443,14 @@ async function reconcileCpfRowsAfterWrite(args) {
     }
     const current = await reconcileCpfRows(args);
     if (current) result = current;
+    await reconcileDuplicateProtocols(args);
   }
-  return result;
+  return (await reconcileCpfRows(args)) || result;
+}
+
+export async function reconcileProfileProtocols(perfil) {
+  const sheetName = sheetForPerfil(perfil);
+  return withSequenceLock(sheetName, () => reconcileDuplicateProtocols({ perfil, sheetName }));
 }
 
 function validarDados(formData) {
@@ -401,7 +505,12 @@ export async function inscreverDados(formData, perfil) {
   return withSequenceLock(sheetName, async () => {
     validarDados(formData);
     const existing = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
-    if (existing) return existing.codigo;
+    if (existing) {
+      await reconcileDuplicateProtocols({ perfil, sheetName });
+      const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+      const rowIndex = reconciled?.rowIndex || existing.rowIndex;
+      return confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex });
+    }
 
     const { headers } = await readAll(sheetName);
 
@@ -422,7 +531,7 @@ export async function inscreverDados(formData, perfil) {
     if (!reconciled?.codigo) {
       throw new Error("Falha ao consolidar a inscrição após a gravação.");
     }
-    return reconciled.codigo;
+    return confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex: reconciled.rowIndex });
   });
 }
 
@@ -456,13 +565,19 @@ export async function confirmarInscricao(formData, perfil) {
   return withSequenceLock(sheetName, async () => {
     if (formData?.cpf) {
       const reconciled = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
-      if (reconciled?.codigo) return reconciled.codigo;
+      if (reconciled?.codigo) {
+        await reconcileDuplicateProtocols({ perfil, sheetName });
+        const stable = await reconcileCpfRows({ cpf: formData.cpf, perfil, sheetName });
+        const rowIndex = stable?.rowIndex || reconciled.rowIndex;
+        return confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex });
+      }
     }
 
     const idx = Number(formData._rowIndex);
     if (!idx || idx < 2) throw new Error("Linha inválida.");
     const { headers, rows } = await readAll(sheetName);
-    const codigo = await ensureCodigoForRow(sheetName, headers, rows, idx, perfil);
+    await ensureCodigoForRow(sheetName, headers, rows, idx, perfil);
+    const codigo = await confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex: idx });
     invalidateSheetCache(sheetName);
     return codigo;
   });

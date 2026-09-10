@@ -14,6 +14,7 @@ import {
   listInscricoesGallery,
   listarInscricoes,
   marcarConferido,
+  reconcileProfileProtocols,
 } from "../services/sheets.service.js";
 
 const r = Router();
@@ -97,6 +98,9 @@ r.get("/listar", adminGuard, async (req, res) => {
       return res.status(400).json({ error: "Perfil inválido" });
     }
 
+    if (offset === 0) {
+      await reconcileProfileProtocols(perfil);
+    }
     const out = await listarInscricoes(perfil, status, q, { limit, offset, hasProtocol, order });
     return res.json(Array.isArray(out) ? out : []);
   } catch (e) {
