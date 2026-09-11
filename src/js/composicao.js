@@ -3,6 +3,7 @@
 
   const FALLBACK_PHOTO = '/imagens/fotos-conselheiros/padrao.svg';
   const PHOTO_DIR = '/imagens/fotos-conselheiros';
+  const HIDDEN_STATE_REPRESENTATIVES = new Set(['AM', 'RR']);
   const CATEGORY_TITLES = {
     diretoriaExecutiva: 'Diretoria Executiva',
     estados: 'Representantes por Estado',
@@ -160,10 +161,14 @@
     const state = composition.estados[uf];
     if (!state) return;
     const estadual = [{ instituicao: `Estado de ${state.nome}`, bandeira: state.bandeira, titular: state.estadual?.titular, suplente: state.estadual?.suplente }];
+    const groups = [];
+    if (!HIDDEN_STATE_REPRESENTATIVES.has(uf)) {
+      groups.push(stateGroup('Conselheiros estaduais', estadual, 'Representação estadual não informada'));
+    }
+    groups.push(stateGroup('Conselheiros municipais', state.municipal || [], 'Representação municipal não informada'));
+    groups.push(stateGroup('Conselheiros regionais', state.regional || [], 'Representação regional não informada'));
     els.statePanel.innerHTML = `<header class="composition-state-header"><img src="${escapeHtml(state.bandeira)}" alt="Bandeira de ${escapeHtml(state.nome)}"><div><span>${escapeHtml(uf)}</span><h3>${escapeHtml(state.nome)}</h3><p>Região ${escapeHtml(state.regiao)}</p></div></header>
-      ${stateGroup('Conselheiros estaduais', estadual, 'Representação estadual não informada')}
-      ${stateGroup('Conselheiros municipais', state.municipal || [], 'Representação municipal não informada')}
-      ${stateGroup('Conselheiros regionais', state.regional || [], 'Representação regional não informada')}`;
+      ${groups.join('')}`;
     bindProfileButtons(els.statePanel);
   }
 
