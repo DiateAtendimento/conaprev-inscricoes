@@ -62,7 +62,12 @@
   }
 
   function photoFor(name) {
-    const file = findByFlexibleName(photos, name);
+    const key = normalize(name);
+    const exact = photos.get(key);
+    const candidates = exact ? [] : [...photos.entries()].filter(([photoKey]) => (
+      photoKey.startsWith(`${key} `) || key.startsWith(`${photoKey} `)
+    ));
+    const file = exact || (candidates.length === 1 ? candidates[0][1] : null);
     return file ? `${PHOTO_DIR}/${encodeURIComponent(file)}` : FALLBACK_PHOTO;
   }
 
@@ -80,9 +85,16 @@
     </article>`;
   }
 
+  function municipalityFlagFor(localidade) {
+    const slug = normalize(localidade).replace(/\s+/g, '-');
+    return slug ? `/imagens/fotos-bandeiras-municipios/${slug}.jpg` : '';
+  }
+
   function pairCard(item) {
     const institution = item.instituicao || item.localidade || 'Representação';
-    const logo = item.logo ? `<img class="composition-institution__logo" src="${escapeHtml(item.logo)}" alt="Logo ${escapeHtml(institution)}" loading="lazy">` : `<span class="composition-institution__monogram" aria-hidden="true">${escapeHtml(institution.slice(0, 3))}</span>`;
+    const visual = item.logo || (item.localidade ? municipalityFlagFor(item.localidade) : '');
+    const visualLabel = item.localidade ? `Bandeira de ${institution}` : `Logo ${institution}`;
+    const logo = visual ? `<img class="composition-institution__logo" src="${escapeHtml(visual)}" alt="${escapeHtml(visualLabel)}" loading="lazy">` : `<span class="composition-institution__monogram" aria-hidden="true">${escapeHtml(institution.slice(0, 3))}</span>`;
     return `<article class="composition-institution"><header>${logo}<div><span>Instituição</span><h3>${escapeHtml(institution)}</h3>${item.representatividade ? `<p>${escapeHtml(item.representatividade)}</p>` : ''}</div></header><div class="composition-institution__people">${personCard(item.titular, institution)}${personCard(item.suplente, institution)}</div></article>`;
   }
 

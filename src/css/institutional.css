@@ -1819,6 +1819,7 @@ body.vote-admin-page::before {
 .people-filter span { color: #52647b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .people-filter select { min-width: 0; border: 0; outline: 0; color: #123766; background: transparent; font-weight: 600; }
 .people-profile-overview { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+.people-profile-overview.is-guest-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 620px; }
 .people-profile-overview button { min-width: 0; min-height: 82px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 14px; border: 1px solid #d8e3f0; border-radius: 14px; color: #24415f; background: #fff; box-shadow: 0 5px 18px rgba(6, 47, 100, .05); cursor: pointer; transition: border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease; }
 .people-profile-overview button:hover { transform: translateY(-2px); border-color: #8fb4e6; color: #1351b4; }
 .people-profile-overview button.is-active { border-color: #1351b4; color: #fff; background: #1351b4; }
@@ -1882,6 +1883,7 @@ body.vote-admin-page::before {
   .people-toolbar { grid-template-columns: 1fr; margin-top: -72px; }
   .people-profile-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .people-profile-overview button:last-child { grid-column: 1 / -1; }
+  .people-profile-overview.is-guest-directory button:last-child { grid-column: auto; }
   .people-results-heading { align-items: flex-start; flex-direction: column; margin-top: 38px; }
   .people-grid { grid-template-columns: 1fr; }
   .person-card__button { min-height: 215px; padding: 21px; }

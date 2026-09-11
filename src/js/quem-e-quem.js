@@ -1,13 +1,25 @@
 (() => {
   'use strict';
 
-  const PROFILE_NAMES = ['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff'];
+  const DEFAULT_PROFILE_NAMES = ['Conselheiro', 'CNRPPS', 'Palestrante', 'COPAJURE', 'Staff'];
+  const GUEST_PROFILE_NAMES = ['Convidado', 'Apoiador'];
+  const VALID_PROFILE_NAMES = [...DEFAULT_PROFILE_NAMES, ...GUEST_PROFILE_NAMES];
+  const pageParams = new URLSearchParams(window.location.search);
+  const requestedProfiles = String(pageParams.get('perfis') || '')
+    .split(',')
+    .map(value => value.trim())
+    .filter(value => VALID_PROFILE_NAMES.includes(value));
+  const PROFILE_NAMES = requestedProfiles.length ? [...new Set(requestedProfiles)] : DEFAULT_PROFILE_NAMES;
+  const IS_GUEST_DIRECTORY = pageParams.get('origem') === 'convidados'
+    && PROFILE_NAMES.every(name => GUEST_PROFILE_NAMES.includes(name));
   const PROFILE_LABELS = {
     Conselheiro: 'Conselheiros',
     CNRPPS: 'CNRPPS',
     Palestrante: 'Palestrantes',
     COPAJURE: 'COPAJURE',
     Staff: 'Staff',
+    Convidado: 'Convidados',
+    Apoiador: 'Apoiadores',
   };
   const PHOTO_SOURCES = [
     { manifest: '/imagens/fotos-conselheiros/manifest.json', directory: '/imagens/fotos-conselheiros' },
@@ -27,6 +39,28 @@
   const profile = document.getElementById('peopleProfile');
   const dialog = document.getElementById('peopleDialog');
   const closeDialog = document.getElementById('peopleDialogClose');
+  const profileOverview = document.querySelector('.people-profile-overview');
+
+  if (IS_GUEST_DIRECTORY) {
+    const iconByProfile = { Convidado: 'bi-person-badge', Apoiador: 'bi-building-check' };
+    profileOverview?.classList.add('is-guest-directory');
+    profileOverview?.replaceChildren(...PROFILE_NAMES.map((profileName) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.profile = profileName;
+      button.innerHTML = `<i class="bi ${iconByProfile[profileName]}" aria-hidden="true"></i><span>${PROFILE_LABELS[profileName]}</span><strong>0</strong>`;
+      return button;
+    }));
+    document.querySelectorAll('a[href="/index.html#inscricoes"]').forEach(anchor => {
+      anchor.href = '/insc-conv-pat.html#home';
+    });
+    document.querySelectorAll('a[href="/quem-e-quem.html"]').forEach(anchor => {
+      anchor.href = '/quem-e-quem.html?perfis=Convidado,Apoiador&origem=convidados';
+    });
+    const heroDescription = document.querySelector('.people-hero p');
+    if (heroDescription) heroDescription.textContent = 'Conheça os convidados e apoiadores inscritos na 86ª Reunião Ordinária do CONAPREV.';
+  }
+
   const profileButtons = [...document.querySelectorAll('.people-profile-overview [data-profile]')];
   let people = [];
 
