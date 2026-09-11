@@ -43,7 +43,7 @@
 
     <header class="topbar landing-header public-header">
       <div class="container hospitality-header-top public-header__inner">
-        <a href="/index.html" class="event-lockup brand-home-link public-header__brand" aria-label="Voltar para a página inicial">
+        <a href="/insc-conv-pat.html" class="event-lockup brand-home-link public-header__brand" aria-label="Voltar para a página de convidados e apoiadores">
           <img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV">
           <span class="event-lockup-divider" aria-hidden="true"></span>
           <span class="event-edition"><strong>86ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span>
@@ -59,11 +59,11 @@
       <div class="contact-strip contact-bar">
         <nav class="container contact-strip-inner landing-public-nav" aria-label="Navegação principal">
           <a href="#home">Inscrições</a>
-          <a href="/composicao.html">Composição</a>
+          <a href="/composicao.html?origem=convidados">Composição</a>
           <a href="/quem-e-quem.html?perfis=Convidado,Apoiador&amp;origem=convidados">Inscritos</a>
-          <a href="/reunioes.html">Reuniões</a>
-          <a href="/sobre-evento.html">Informações</a>
-          <a href="/contato.html">Contato</a>
+          <a href="/reunioes.html?origem=convidados">Reuniões</a>
+          <a href="/sobre-evento.html?origem=convidados">Informações</a>
+          <a href="/contato.html?origem=convidados">Contato</a>
           <button class="menu-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-label="Abrir menu"><i class="bi bi-list" aria-hidden="true"></i></button>
         </nav>
       </div>
@@ -78,11 +78,11 @@
       <div class="offcanvas-body">
         <nav class="menu-list">
           <a href="#home" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Inscrições</span></a>
-          <a href="/composicao.html" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-diagram-3" aria-hidden="true"></i><span>Composição</span></a>
+          <a href="/composicao.html?origem=convidados" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-diagram-3" aria-hidden="true"></i><span>Composição</span></a>
           <a href="/quem-e-quem.html?perfis=Convidado,Apoiador&amp;origem=convidados" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-people" aria-hidden="true"></i><span>Inscritos</span></a>
-          <a href="/reunioes.html" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-calendar-event" aria-hidden="true"></i><span>Reuniões</span></a>
-          <a href="/sobre-evento.html" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Informações</span></a>
-          <a href="/contato.html" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-envelope" aria-hidden="true"></i><span>Contato</span></a>
+          <a href="/reunioes.html?origem=convidados" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-calendar-event" aria-hidden="true"></i><span>Reuniões</span></a>
+          <a href="/sobre-evento.html?origem=convidados" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-info-circle" aria-hidden="true"></i><span>Informações</span></a>
+          <a href="/contato.html?origem=convidados" class="menu-item d-flex align-items-center gap-2"><i class="bi bi-envelope" aria-hidden="true"></i><span>Contato</span></a>
         </nav>
       </div>
     </div>
@@ -90,7 +90,7 @@
     <section class="guest-hero">
       <div class="container guest-hero-inner">
         <div class="guest-hero-copy">
-          <a href="/index.html" class="event-lockup brand-home-link" aria-label="Voltar para a página inicial"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span class="event-lockup-divider"></span><span class="event-edition"><strong>86ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span></a>
+          <a href="/insc-conv-pat.html" class="event-lockup brand-home-link" aria-label="Voltar para a página de convidados e apoiadores"><img src="imagens/logos/logo-conaprev.svg" alt="CONAPREV"><span class="event-lockup-divider"></span><span class="event-edition"><strong>86ª</strong><small>REUNIÃO<br>ORDINÁRIA</small></span></a>
           <span class="guest-kicker">86ª REUNIÃO ORDINÁRIA DO</span><h1>CONAPREV</h1>
           <p>Conselho Nacional dos Dirigentes de<br>Regimes Próprios de Previdência Social</p>
           <div><span><i class="bi bi-calendar3"></i> 5 e 6 de novembro de 2026</span><span><i class="bi bi-geo-alt"></i> Vitória/ES</span></div>
@@ -226,7 +226,7 @@
           </form>
         </div>
 
-        <div class="modal-footer">
+        <div id="miFormFooter" class="modal-footer d-none">
           <button id="miBtnVoltar" class="btn btn-outline-secondary" type="button">Voltar</button>
           <button id="miBtnAvancar" class="btn btn-primary" type="button">Avançar</button>
         </div>
