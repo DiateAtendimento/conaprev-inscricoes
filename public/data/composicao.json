@@ -1,0 +1,79 @@
+{
+  "diretoriaExecutiva": [
+    { "nome": "Allex Albert Rodrigues", "representatividade": "DRPPS", "tipo": "Titular" },
+    { "nome": "José Guilherme Kliemann", "representatividade": "Estado do Rio Grande do Sul", "tipo": "Titular" },
+    { "nome": "Daniel Ribeiro Silva", "representatividade": "RPPS de Capitais Salvador", "tipo": "Titular" },
+    { "nome": "Gilvan Cândido da Silva", "representatividade": "Estado de Goiás", "tipo": "Titular" },
+    { "nome": "Daniela Cristina da Eira Corrêa Benayon", "representatividade": "RPPS de Capitais Manaus", "tipo": "Titular" }
+  ],
+  "estados": {
+    "AC": { "nome": "Acre", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Acre-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "AL": { "nome": "Alagoas", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Alagoas-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "AP": { "nome": "Amapá", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Amapa-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "AM": { "nome": "Amazonas", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Amazonas-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "BA": { "nome": "Bahia", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Bahia-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "CE": { "nome": "Ceará", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Ceara-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "DF": { "nome": "Distrito Federal", "regiao": "Centro-Oeste", "bandeira": "/imagens/fotos-bandeiras-estados/Brasilia-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "ES": { "nome": "Espírito Santo", "regiao": "Sudeste", "bandeira": "/imagens/fotos-bandeiras-estados/Espiritosanto-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "GO": { "nome": "Goiás", "regiao": "Centro-Oeste", "bandeira": "/imagens/fotos-bandeiras-estados/Goias-1.jpg", "estadual": { "titular": { "nome": "Gilvan Cândido da Silva", "representatividade": "Estado de Goiás", "tipo": "Titular" } }, "municipal": [], "regional": [] },
+    "MA": { "nome": "Maranhão", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Maranhao-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "MT": { "nome": "Mato Grosso", "regiao": "Centro-Oeste", "bandeira": "/imagens/fotos-bandeiras-estados/Matogrosso-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "MS": { "nome": "Mato Grosso do Sul", "regiao": "Centro-Oeste", "bandeira": "/imagens/fotos-bandeiras-estados/Matogrossodosul-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "MG": { "nome": "Minas Gerais", "regiao": "Sudeste", "bandeira": "/imagens/fotos-bandeiras-estados/Minasgerais-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "PA": { "nome": "Pará", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Para-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "PB": { "nome": "Paraíba", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Paraiba-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "PR": { "nome": "Paraná", "regiao": "Sul", "bandeira": "/imagens/fotos-bandeiras-estados/Parana-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "PE": { "nome": "Pernambuco", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Pernambuco-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "PI": { "nome": "Piauí", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Piaui-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "RJ": { "nome": "Rio de Janeiro", "regiao": "Sudeste", "bandeira": "/imagens/fotos-bandeiras-estados/Riodejaneiro-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "RN": { "nome": "Rio Grande do Norte", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Riograndedonorte-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "RS": { "nome": "Rio Grande do Sul", "regiao": "Sul", "bandeira": "/imagens/fotos-bandeiras-estados/Riograndedosul-1.jpg", "estadual": { "titular": { "nome": "José Guilherme Kliemann", "representatividade": "Estado do Rio Grande do Sul", "tipo": "Titular" } }, "municipal": [], "regional": [] },
+    "RO": { "nome": "Rondônia", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Rondonia-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "RR": { "nome": "Roraima", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Roraima-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "SC": { "nome": "Santa Catarina", "regiao": "Sul", "bandeira": "/imagens/fotos-bandeiras-estados/Santacatarina-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "SP": {
+      "nome": "São Paulo", "regiao": "Sudeste", "bandeira": "/imagens/fotos-bandeiras-estados/Saopaulo-1.jpg",
+      "estadual": {
+        "titular": { "nome": "Marina Brito Battilani", "representatividade": "Estado de São Paulo", "tipo": "Titular" },
+        "suplente": { "nome": "Leonardo da Silva Motta", "representatividade": "Estado de São Paulo", "tipo": "Suplente" }
+      },
+      "municipal": [{ "localidade": "São Paulo", "representatividade": "RPPS de Capital", "titular": { "nome": "João Batista de Santiago", "tipo": "Titular" }, "suplente": { "nome": "Ana Paula Rezzutti Rossi Figueiredo", "tipo": "Suplente" } }],
+      "regional": [{ "localidade": "Capivari/SP", "representatividade": "RPPS Rotativos", "titular": { "nome": "Agnaldo Aparecido Tempesta", "tipo": "Titular" }, "suplente": { "nome": "Luciana Cristina Forte Aranha", "tipo": "Suplente" } }]
+    },
+    "SE": { "nome": "Sergipe", "regiao": "Nordeste", "bandeira": "/imagens/fotos-bandeiras-estados/Sergipe-1.jpg", "estadual": {}, "municipal": [], "regional": [] },
+    "TO": { "nome": "Tocantins", "regiao": "Norte", "bandeira": "/imagens/fotos-bandeiras-estados/Tocantins-1.jpg", "estadual": {}, "municipal": [], "regional": [] }
+  },
+  "associacoes": {
+    "nacionais": [
+      { "instituicao": "ABIPEM", "titular": { "nome": "João Carlos Figueiredo", "tipo": "Titular" }, "suplente": { "nome": "Daniel Leandro Boccardo", "tipo": "Suplente" } },
+      { "instituicao": "ANEPREM", "titular": { "nome": "Adilson Carlos Pereira", "tipo": "Titular" }, "suplente": { "nome": "Alderi Zanatta", "tipo": "Suplente" } }
+    ],
+    "municipais": [
+      { "instituicao": "ADIMP-MS", "logo": "/imagens/fotos-associacoes/ADIMP-MS.png", "titular": { "nome": "Eberton Costa de Oliveira", "tipo": "Titular" }, "suplente": { "nome": "Michel Vaz Morrison", "tipo": "Suplente" } },
+      { "instituicao": "AEPREMERJ", "logo": "/imagens/fotos-associacoes/AEPREMERJ.png", "titular": { "nome": "Alessandra Arantes Marques", "tipo": "Titular" }, "suplente": { "nome": "Katia Simone de Oliveira", "tipo": "Suplente" } },
+      { "instituicao": "APEPREV", "logo": "/imagens/fotos-associacoes/APEPREV.png", "titular": { "nome": "Marcio Oliveira Apolinário", "tipo": "Titular" }, "suplente": { "nome": "Edirlene Rodrigues Milharesi", "tipo": "Suplente" } }
+    ]
+  },
+  "conselhosConfederacoesForuns": [
+    { "instituicao": "COMSEFAZ", "titular": { "nome": "Carlos Alberto de Miranda Medeiros", "tipo": "Titular" }, "suplente": { "nome": "Gabriel Duque Zonta", "tipo": "Suplente" } },
+    { "instituicao": "CONSAD" },
+    { "instituicao": "CNM", "titular": { "nome": "Antônio Mário Rattes de Oliveira", "tipo": "Titular" }, "suplente": { "nome": "Rodrigo Garrido Dias", "tipo": "Suplente" } },
+    { "instituicao": "ATRICON", "titular": { "nome": "Severiano José Costandrade de Aguiar", "tipo": "Titular" }, "suplente": { "nome": "Alexandre Manir Figueiredo Sarquis", "tipo": "Suplente" } },
+    { "instituicao": "FONAC", "titular": { "nome": "Marcela Arruda", "tipo": "Titular" } },
+    { "instituicao": "FBSS", "titular": { "nome": "Jorge Luiz Ferri Berzagui", "tipo": "Titular" }, "suplente": { "nome": "Rossana Friderichs Luzzi", "tipo": "Suplente" } }
+  ],
+  "entidadesFechadas": [
+    { "instituicao": "PREVES", "titular": { "nome": "Maria Leila Casagrande", "tipo": "Titular" }, "suplente": { "nome": "Alexandre Wernersbach Neves", "tipo": "Suplente" } },
+    { "instituicao": "FUNPRESP-EXE", "titular": { "nome": "Cícero Rafael Barros Dias", "tipo": "Titular" }, "suplente": { "nome": "Regina Celia Dias", "tipo": "Suplente" } },
+    { "instituicao": "RJPREV", "titular": { "nome": "Halan Harlens Pacheco de Morais", "tipo": "Titular" }, "suplente": { "nome": "Rodrigo Ribeiro da Luz", "tipo": "Suplente" } },
+    { "instituicao": "SP-PREVCOM", "titular": { "nome": "Sylvio Eugenio de Araújo Medeiros", "tipo": "Titular" }, "suplente": { "nome": "Ugo Gabriel Barboza Garcia", "tipo": "Suplente" } },
+    { "instituicao": "BB PREVIDÊNCIA", "titular": { "nome": "Sandro Jacobsen Grando", "tipo": "Titular" }, "suplente": { "nome": "Vinicius Resende Teixeira", "tipo": "Suplente" } }
+  ],
+  "uniao": [
+    { "instituicao": "RPPS / DRPPS", "titular": { "nome": "Allex Albert Rodrigues", "tipo": "Titular" } },
+    { "instituicao": "RGPS", "titular": { "nome": "Benedito Adalberto Brunca", "tipo": "Titular" } },
+    { "instituicao": "MGI", "titular": { "nome": "Cynthia Beltrão de Souza Guerra Curado", "tipo": "Titular" }, "suplente": { "nome": "Bruno de Sousa Rocha", "tipo": "Suplente" } },
+    { "instituicao": "INSS", "titular": { "nome": "Ana Cristina Viana Silveira", "tipo": "Titular" }, "suplente": { "nome": "Ana Cristina Evangelista", "tipo": "Suplente" } },
+    { "instituicao": "DATAPREV", "titular": { "nome": "Ubiramar Mendonça", "tipo": "Titular" } }
+  ]
+}

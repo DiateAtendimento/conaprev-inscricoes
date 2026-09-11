@@ -148,6 +148,7 @@
     finalCache: [],
     currentView: 'adminOverview',
     loading: false,
+    polling: false,
     pollTimer: null,     // intervalo de polling quando modal aberto
     lastAtivosIds: new Set(), // snapshot da aba atual (para toasts)
   };
@@ -415,26 +416,27 @@
       }).toString();
 
       const reqs = ALL_PROFILES.map(p =>
-        fetch(`${API}/api/inscricoes/listar?${qs(p)}`, { headers: headersAdmin() })
-          .then(r => (r.ok ? r.json() : []))
-          .catch(() => [])
+        fetch(`${API}/api/inscricoes/listar?${qs(p)}`, { headers: headersAdmin(), cache: 'no-store' })
+          .then(async (r) => ({ ok: r.ok, data: r.ok ? await r.json() : null }))
+          .catch(() => ({ ok: false, data: null }))
       );
-      const lists = await Promise.all(reqs);
+      const results = await Promise.all(reqs);
+      if (results.some(result => !result.ok || !Array.isArray(result.data))) return null;
       let total = 0;
-      lists.forEach(arr => {
+      results.forEach(({ data: arr }) => {
         if (Array.isArray(arr)) {
           total += arr.filter(it => String(it?.numerodeinscricao || '').trim()).length;
         }
       });
       return total;
     } catch {
-      return 0;
+      return null;
     }
   }
 
   async function refreshGlobalBadge() {
     const c = await countAllProfilesActivesWithProtocol();
-    setNotif(c);
+    if (c !== null) setNotif(c);
   }
 
   function setNotif(c) {
@@ -653,7 +655,8 @@
       const q = buildQuery(status);
       const res = await fetch(`${API}/api/inscricoes/listar?${q}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', ...headersAdmin() }
+        headers: { 'Content-Type': 'application/json', ...headersAdmin() },
+        cache: 'no-store'
       });
       if (res.status === 401) {
         if (monitorModal) monitorModal.hide();
@@ -662,10 +665,11 @@
       }
       if (!res.ok) throw new Error('Erro ao listar');
       const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      if (!Array.isArray(data)) throw new Error('Resposta inválida ao listar');
+      return data;
     } catch (e) {
       console.error('[admin] fetchList', status, e);
-      return [];
+      return null;
     }
   }
 
@@ -683,20 +687,30 @@
     if (!elAtivosList) return;
     state.loading = true;
     const data = await fetchList('ativos');
+    if (!Array.isArray(data)) {
+      state.loading = false;
+      return false;
+    }
     state.ativosCache = data;
     renderList(elAtivosList, elAtivosPager, data, 'ativos');
     updateDashboardMetrics();
     state.loading = false;
+    return true;
   }
 
   async function refreshFinalizados(){
     if (!elFinalList) return;
     state.loading = true;
     const data = await fetchList('finalizados');
+    if (!Array.isArray(data)) {
+      state.loading = false;
+      return false;
+    }
     state.finalCache = data;
     renderList(elFinalList, elFinalPager, data, 'finalizados');
     updateDashboardMetrics();
     state.loading = false;
+    return true;
   }
 
   function updateDashboardMetrics() {
@@ -940,37 +954,46 @@
     refreshBoth().then(() => snapshotActiveProtocols());
     if (state.pollTimer) clearInterval(state.pollTimer);
     state.pollTimer = setInterval(async () => {
-      // Mantém as duas views e seus indicadores atualizados sem trocar a tela atual.
-      const [data, finalizados] = await Promise.all([
-        fetchList('ativos'),
-        fetchList('finalizados')
-      ]);
+      if (state.polling) return;
+      state.polling = true;
+      try {
+        // Mantém as duas views e seus indicadores atualizados sem trocar a tela atual.
+        const [data, finalizados] = await Promise.all([
+          fetchList('ativos'),
+          fetchList('finalizados')
+        ]);
 
-      // detecta novos protocolos (apenas com Número)
-      const currentSet = new Set();
-      (data || []).forEach(it => {
-        const proto = String(it?.numerodeinscricao || '').trim();
-        if (proto) currentSet.add(proto);
-      });
+        // Uma falha transitória nunca pode apagar dados que já foram carregados.
+        if (!Array.isArray(data) || !Array.isArray(finalizados)) return;
 
-      // compara com o último snapshot
-      currentSet.forEach(proto => {
-        if (!state.lastAtivosIds.has(proto)) {
-          showToast(`Você tem uma nova inscrição ${proto}`);
-        }
-      });
+        // detecta novos protocolos (apenas com Número)
+        const currentSet = new Set();
+        data.forEach(it => {
+          const proto = String(it?.numerodeinscricao || '').trim();
+          if (proto) currentSet.add(proto);
+        });
 
-      state.ativosCache = data;
-      state.finalCache = finalizados;
-      renderList(elAtivosList, elAtivosPager, data, 'ativos');
-      renderList(elFinalList, elFinalPager, finalizados, 'finalizados');
-      updateDashboardMetrics();
+        // compara com o último snapshot
+        currentSet.forEach(proto => {
+          if (!state.lastAtivosIds.has(proto)) {
+            showToast(`Você tem uma nova inscrição ${proto}`);
+          }
+        });
 
-      // Badge global (soma de todos os perfis)
-      refreshGlobalBadge();
+        state.ativosCache = data;
+        state.finalCache = finalizados;
+        renderList(elAtivosList, elAtivosPager, data, 'ativos');
+        renderList(elFinalList, elFinalPager, finalizados, 'finalizados');
+        updateDashboardMetrics();
 
-      // atualiza snapshot ao final
-      state.lastAtivosIds = currentSet;
+        // Badge global (soma de todos os perfis)
+        refreshGlobalBadge();
+
+        // atualiza snapshot ao final
+        state.lastAtivosIds = currentSet;
+      } finally {
+        state.polling = false;
+      }
     }, 8000); // 8s
   });
 
@@ -979,6 +1002,7 @@
       clearInterval(state.pollTimer);
       state.pollTimer = null;
     }
+    state.polling = false;
   });
 
   // ======= Autologin neste navegador (sem vazar para outros) =======
