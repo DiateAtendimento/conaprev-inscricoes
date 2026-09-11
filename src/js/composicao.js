@@ -92,8 +92,8 @@
 
   function pairCard(item) {
     const institution = item.instituicao || item.localidade || 'Representação';
-    const visual = item.logo || (item.localidade ? municipalityFlagFor(item.localidade) : '');
-    const visualLabel = item.localidade ? `Bandeira de ${institution}` : `Logo ${institution}`;
+    const visual = item.logo || item.bandeira || (item.localidade ? municipalityFlagFor(item.localidade) : '');
+    const visualLabel = (item.bandeira || item.localidade) ? `Bandeira de ${institution}` : `Logo ${institution}`;
     const logo = visual ? `<img class="composition-institution__logo" src="${escapeHtml(visual)}" alt="${escapeHtml(visualLabel)}" loading="lazy">` : `<span class="composition-institution__monogram" aria-hidden="true">${escapeHtml(institution.slice(0, 3))}</span>`;
     return `<article class="composition-institution"><header>${logo}<div><span>Instituição</span><h3>${escapeHtml(institution)}</h3>${item.representatividade ? `<p>${escapeHtml(item.representatividade)}</p>` : ''}</div></header><div class="composition-institution__people">${personCard(item.titular, institution)}${personCard(item.suplente, institution)}</div></article>`;
   }
@@ -159,7 +159,7 @@
   function renderState(uf) {
     const state = composition.estados[uf];
     if (!state) return;
-    const estadual = [{ instituicao: `Estado de ${state.nome}`, titular: state.estadual?.titular, suplente: state.estadual?.suplente }];
+    const estadual = [{ instituicao: `Estado de ${state.nome}`, bandeira: state.bandeira, titular: state.estadual?.titular, suplente: state.estadual?.suplente }];
     els.statePanel.innerHTML = `<header class="composition-state-header"><img src="${escapeHtml(state.bandeira)}" alt="Bandeira de ${escapeHtml(state.nome)}"><div><span>${escapeHtml(uf)}</span><h3>${escapeHtml(state.nome)}</h3><p>Região ${escapeHtml(state.regiao)}</p></div></header>
       ${stateGroup('Conselheiros estaduais', estadual, 'Representação estadual não informada')}
       ${stateGroup('Conselheiros municipais', state.municipal || [], 'Representação municipal não informada')}
