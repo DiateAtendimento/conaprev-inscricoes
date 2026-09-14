@@ -162,10 +162,17 @@
     article.className = 'person-card';
     article.style.setProperty('--person-delay', `${Math.min(index * 45, 360)}ms`);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'person-card__button';
-    button.setAttribute('aria-label', `Ver perfil de ${person.name}`);
+    const isInteractive = !(IS_GUEST_DIRECTORY && person.profile === 'Convidado');
+    const cardContent = document.createElement(isInteractive ? 'button' : 'div');
+    if (isInteractive) {
+      cardContent.type = 'button';
+      cardContent.setAttribute('aria-label', `Ver perfil de ${person.name}`);
+    }
+    cardContent.className = 'person-card__button';
+    if (!isInteractive) {
+      cardContent.classList.add('is-static');
+      cardContent.style.cursor = 'default';
+    }
 
     const photoWrap = document.createElement('span');
     photoWrap.className = 'person-card__photo';
@@ -189,10 +196,11 @@
     const more = document.createElement('span');
     more.className = 'person-card__more';
     more.innerHTML = 'Conhecer perfil <i class="bi bi-arrow-up-right" aria-hidden="true"></i>';
-    content.append(tag, name, role, more);
-    button.append(photoWrap, content);
-    button.addEventListener('click', () => openPerson(person));
-    article.appendChild(button);
+    content.append(tag, name, role);
+    if (isInteractive) content.appendChild(more);
+    cardContent.append(photoWrap, content);
+    if (isInteractive) cardContent.addEventListener('click', () => openPerson(person));
+    article.appendChild(cardContent);
     return article;
   }
 
