@@ -1,7 +1,21 @@
 (() => {
+  const ENVIRONMENT_KEY = 'conaprev:environment';
+  const GUEST_ENVIRONMENT = 'convidados';
   const params = new URLSearchParams(window.location.search);
+  const isGuestEntry = /^\/insc-conv-pat(?:\.html)?\/?$/.test(window.location.pathname);
   const isGuestRoute = /^\/convidados(?:\/|$)/.test(window.location.pathname);
-  if (!isGuestRoute && params.get('origem') !== 'convidados') return;
+  const hasGuestParam = params.get('origem') === GUEST_ENVIRONMENT;
+  let hasStoredGuestContext = false;
+  try {
+    hasStoredGuestContext = sessionStorage.getItem(ENVIRONMENT_KEY) === GUEST_ENVIRONMENT;
+    if (isGuestEntry || isGuestRoute || hasGuestParam) {
+      sessionStorage.setItem(ENVIRONMENT_KEY, GUEST_ENVIRONMENT);
+      hasStoredGuestContext = true;
+    }
+  } catch (_) {
+    hasStoredGuestContext = false;
+  }
+  if (!isGuestEntry && !isGuestRoute && !hasGuestParam && !hasStoredGuestContext) return;
   const preview = params.get('preview');
 
   const isSameOrigin = (url) => url.origin === window.location.origin;
@@ -21,32 +35,32 @@
 
     if (!isSameOrigin(url)) return;
 
-    if (url.pathname === '/index.html' || url.pathname === '/' || url.pathname === '/insc-conv-pat.html') {
+    if (url.pathname === '/index.html' || url.pathname === '/index' || url.pathname === '/' || /^\/insc-conv-pat(?:\.html)?\/?$/.test(url.pathname)) {
       url.pathname = '/insc-conv-pat.html';
-      url.searchParams.delete('origem');
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
       if (url.hash === '#inscricoes' || url.hash === '#inicio') url.hash = '#home';
-    } else if (url.pathname === '/quem-e-quem.html' || url.pathname === '/convidados/inscritos') {
+    } else if (url.pathname === '/quem-e-quem.html' || url.pathname === '/quem-e-quem' || url.pathname === '/convidados/inscritos') {
       url.pathname = '/convidados/inscritos';
       url.searchParams.delete('perfis');
-      url.searchParams.delete('origem');
-    } else if (url.pathname === '/composicao.html' || url.pathname === '/convidados/composicao') {
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
+    } else if (url.pathname === '/composicao.html' || url.pathname === '/composicao' || url.pathname === '/convidados/composicao') {
       url.pathname = '/convidados/composicao';
-      url.searchParams.delete('origem');
-    } else if (url.pathname === '/reunioes.html' || url.pathname === '/convidados/reunioes') {
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
+    } else if (url.pathname === '/reunioes.html' || url.pathname === '/reunioes' || url.pathname === '/convidados/reunioes') {
       url.pathname = '/convidados/reunioes';
-      url.searchParams.delete('origem');
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
     } else if (url.pathname.startsWith('/reunioes/')) {
       url.pathname = `/convidados${url.pathname}`;
-      url.searchParams.delete('origem');
-    } else if (url.pathname === '/sobre-evento.html' || url.pathname === '/convidados/informacoes') {
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
+    } else if (url.pathname === '/sobre-evento.html' || url.pathname === '/sobre-evento' || url.pathname === '/convidados/informacoes') {
       url.pathname = '/convidados/informacoes';
-      url.searchParams.delete('origem');
-    } else if (url.pathname === '/contato.html' || url.pathname === '/convidados/contato') {
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
+    } else if (url.pathname === '/contato.html' || url.pathname === '/contato' || url.pathname === '/convidados/contato') {
       url.pathname = '/convidados/contato';
-      url.searchParams.delete('origem');
-    } else if (url.pathname === '/hospedagem.html' || url.pathname === '/convidados/hospedagem') {
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
+    } else if (url.pathname === '/hospedagem.html' || url.pathname === '/hospedagem' || url.pathname === '/convidados/hospedagem') {
       url.pathname = '/convidados/hospedagem';
-      url.searchParams.delete('origem');
+      url.searchParams.set('origem', GUEST_ENVIRONMENT);
     }
 
     if (preview === 'CONAPREV86_DEV' && !/\.pdf$/i.test(url.pathname)) {
@@ -58,10 +72,6 @@
 
   function applyGuestContext(root = document) {
     root.querySelectorAll?.('a[href]').forEach(contextualizeLink);
-
-    root.querySelectorAll?.('.public-nav a').forEach((anchor) => {
-      if (anchor.textContent.trim().toLocaleLowerCase('pt-BR') === 'início') anchor.remove();
-    });
 
     root.querySelectorAll?.('#liveVotingBtn, #adminAccessBtn, [data-guest-hidden="true"]').forEach((element) => {
       element.remove();

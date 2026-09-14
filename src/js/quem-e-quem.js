@@ -6,15 +6,21 @@
   const VALID_PROFILE_NAMES = [...DEFAULT_PROFILE_NAMES, ...GUEST_PROFILE_NAMES];
   const pageParams = new URLSearchParams(window.location.search);
   const IS_GUEST_ROUTE = /^\/convidados\/inscritos\/?$/.test(window.location.pathname);
+  let HAS_GUEST_CONTEXT = IS_GUEST_ROUTE || pageParams.get('origem') === 'convidados';
+  try {
+    HAS_GUEST_CONTEXT = HAS_GUEST_CONTEXT || sessionStorage.getItem('conaprev:environment') === 'convidados';
+  } catch (_) {
+    // A rota e o parâmetro continuam disponíveis quando o storage é bloqueado.
+  }
   const requestedProfiles = String(pageParams.get('perfis') || '')
     .split(',')
     .map(value => value.trim())
     .filter(value => VALID_PROFILE_NAMES.includes(value));
-  const PROFILE_NAMES = IS_GUEST_ROUTE
+  const PROFILE_NAMES = HAS_GUEST_CONTEXT
     ? GUEST_PROFILE_NAMES
     : (requestedProfiles.length ? [...new Set(requestedProfiles)] : DEFAULT_PROFILE_NAMES);
-  const IS_GUEST_DIRECTORY = IS_GUEST_ROUTE || (pageParams.get('origem') === 'convidados'
-    && PROFILE_NAMES.every(name => GUEST_PROFILE_NAMES.includes(name)));
+  const IS_GUEST_DIRECTORY = HAS_GUEST_CONTEXT
+    && PROFILE_NAMES.every(name => GUEST_PROFILE_NAMES.includes(name));
   const PROFILE_LABELS = {
     Conselheiro: 'Conselheiros',
     CNRPPS: 'CNRPPS',
@@ -22,7 +28,7 @@
     COPAJURE: 'COPAJURE',
     Staff: 'Staff',
     Convidado: 'Convidados',
-    Apoiador: 'Apoiadores',
+    Apoiador: 'Patrocinadores',
   };
   const PHOTO_SOURCES = [
     { manifest: '/imagens/fotos-conselheiros/manifest.json', directory: '/imagens/fotos-conselheiros' },
@@ -55,13 +61,13 @@
       return button;
     }));
     document.querySelectorAll('a[href="/index.html#inscricoes"]').forEach(anchor => {
-      anchor.href = '/insc-conv-pat.html#home';
+      anchor.href = '/insc-conv-pat.html?origem=convidados#home';
     });
     document.querySelectorAll('a[href="/quem-e-quem.html"]').forEach(anchor => {
       anchor.href = '/convidados/inscritos';
     });
     const heroDescription = document.querySelector('.people-hero p');
-    if (heroDescription) heroDescription.textContent = 'Conheça os convidados e apoiadores inscritos na 86ª Reunião Ordinária do CONAPREV.';
+    if (heroDescription) heroDescription.textContent = 'Conheça os convidados e patrocinadores inscritos na 86ª Reunião Ordinária do CONAPREV.';
   }
 
   const profileButtons = [...document.querySelectorAll('.people-profile-overview [data-profile]')];
