@@ -10,3 +10,38 @@
   from = "/reunioes/:meeting"
   to = "/reuniao.html?id=:meeting"
   status = 200
+
+[[redirects]]
+  from = "/convidados/composicao"
+  to = "/composicao.html"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/inscritos"
+  to = "/quem-e-quem.html"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/reunioes/:meeting"
+  to = "/reuniao.html?id=:meeting"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/reunioes"
+  to = "/reunioes.html"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/informacoes"
+  to = "/sobre-evento.html"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/contato"
+  to = "/contato.html"
+  status = 200
+
+[[redirects]]
+  from = "/convidados/hospedagem"
+  to = "/hospedagem.html"
+  status = 200

@@ -1,6 +1,7 @@
 (() => {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('origem') !== 'convidados') return;
+  const isGuestRoute = /^\/convidados(?:\/|$)/.test(window.location.pathname);
+  if (!isGuestRoute && params.get('origem') !== 'convidados') return;
   const preview = params.get('preview');
 
   const isSameOrigin = (url) => url.origin === window.location.origin;
@@ -20,21 +21,32 @@
 
     if (!isSameOrigin(url)) return;
 
-    if (url.pathname === '/index.html' || url.pathname === '/') {
+    if (url.pathname === '/index.html' || url.pathname === '/' || url.pathname === '/insc-conv-pat.html') {
       url.pathname = '/insc-conv-pat.html';
       url.searchParams.delete('origem');
       if (url.hash === '#inscricoes' || url.hash === '#inicio') url.hash = '#home';
-    } else if (url.pathname === '/quem-e-quem.html') {
-      url.searchParams.set('perfis', 'Convidado,Apoiador');
-      url.searchParams.set('origem', 'convidados');
-    } else if (
-      url.pathname === '/composicao.html' ||
-      url.pathname === '/reunioes.html' ||
-      url.pathname.startsWith('/reunioes/') ||
-      url.pathname === '/sobre-evento.html' ||
-      url.pathname === '/contato.html'
-    ) {
-      url.searchParams.set('origem', 'convidados');
+    } else if (url.pathname === '/quem-e-quem.html' || url.pathname === '/convidados/inscritos') {
+      url.pathname = '/convidados/inscritos';
+      url.searchParams.delete('perfis');
+      url.searchParams.delete('origem');
+    } else if (url.pathname === '/composicao.html' || url.pathname === '/convidados/composicao') {
+      url.pathname = '/convidados/composicao';
+      url.searchParams.delete('origem');
+    } else if (url.pathname === '/reunioes.html' || url.pathname === '/convidados/reunioes') {
+      url.pathname = '/convidados/reunioes';
+      url.searchParams.delete('origem');
+    } else if (url.pathname.startsWith('/reunioes/')) {
+      url.pathname = `/convidados${url.pathname}`;
+      url.searchParams.delete('origem');
+    } else if (url.pathname === '/sobre-evento.html' || url.pathname === '/convidados/informacoes') {
+      url.pathname = '/convidados/informacoes';
+      url.searchParams.delete('origem');
+    } else if (url.pathname === '/contato.html' || url.pathname === '/convidados/contato') {
+      url.pathname = '/convidados/contato';
+      url.searchParams.delete('origem');
+    } else if (url.pathname === '/hospedagem.html' || url.pathname === '/convidados/hospedagem') {
+      url.pathname = '/convidados/hospedagem';
+      url.searchParams.delete('origem');
     }
 
     if (preview === 'CONAPREV86_DEV' && !/\.pdf$/i.test(url.pathname)) {

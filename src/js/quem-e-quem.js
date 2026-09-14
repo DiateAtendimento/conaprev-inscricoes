@@ -5,13 +5,16 @@
   const GUEST_PROFILE_NAMES = ['Convidado', 'Apoiador'];
   const VALID_PROFILE_NAMES = [...DEFAULT_PROFILE_NAMES, ...GUEST_PROFILE_NAMES];
   const pageParams = new URLSearchParams(window.location.search);
+  const IS_GUEST_ROUTE = /^\/convidados\/inscritos\/?$/.test(window.location.pathname);
   const requestedProfiles = String(pageParams.get('perfis') || '')
     .split(',')
     .map(value => value.trim())
     .filter(value => VALID_PROFILE_NAMES.includes(value));
-  const PROFILE_NAMES = requestedProfiles.length ? [...new Set(requestedProfiles)] : DEFAULT_PROFILE_NAMES;
-  const IS_GUEST_DIRECTORY = pageParams.get('origem') === 'convidados'
-    && PROFILE_NAMES.every(name => GUEST_PROFILE_NAMES.includes(name));
+  const PROFILE_NAMES = IS_GUEST_ROUTE
+    ? GUEST_PROFILE_NAMES
+    : (requestedProfiles.length ? [...new Set(requestedProfiles)] : DEFAULT_PROFILE_NAMES);
+  const IS_GUEST_DIRECTORY = IS_GUEST_ROUTE || (pageParams.get('origem') === 'convidados'
+    && PROFILE_NAMES.every(name => GUEST_PROFILE_NAMES.includes(name)));
   const PROFILE_LABELS = {
     Conselheiro: 'Conselheiros',
     CNRPPS: 'CNRPPS',
@@ -55,7 +58,7 @@
       anchor.href = '/insc-conv-pat.html#home';
     });
     document.querySelectorAll('a[href="/quem-e-quem.html"]').forEach(anchor => {
-      anchor.href = '/quem-e-quem.html?perfis=Convidado,Apoiador&origem=convidados';
+      anchor.href = '/convidados/inscritos';
     });
     const heroDescription = document.querySelector('.people-hero p');
     if (heroDescription) heroDescription.textContent = 'Conheça os convidados e apoiadores inscritos na 86ª Reunião Ordinária do CONAPREV.';
