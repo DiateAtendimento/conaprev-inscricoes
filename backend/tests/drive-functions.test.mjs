@@ -49,6 +49,7 @@ global.fetch = async (input) => {
     const q = url.searchParams.get('q') || '';
     if (q.includes("name = '999-Reuniao-CONAPREV'")) return json({ files: [] });
     if (q.includes("name = '84-Reuniao-CONAPREV'")) return json({ files: [] });
+    if (q.includes("name = '86-Reuniao-CONAPREV'")) return json({ files: [] });
     if (q.includes("name = '85-Reuniao-CONAPREV'")) return json({ files: [{ id: 'meeting-85-id', name: '85-Reuniao-CONAPREV', mimeType: 'application/vnd.google-apps.folder' }] });
     if (q.includes("name = 'Apresentacoes'")) return json({ files: [{ id: 'presentations-id', name: 'Apresentacoes', mimeType: 'application/vnd.google-apps.folder' }] });
     if (q.includes("name = 'fotos'")) return json({ files: [{ id: 'photos-id', name: 'fotos', mimeType: 'application/vnd.google-apps.folder' }] });
@@ -56,7 +57,11 @@ global.fetch = async (input) => {
     if (q.includes("'presentations-id' in parents")) return json({ files: [{ id: 'presentation-file', name: 'Apresentação.pdf', mimeType: 'application/pdf', size: '100', modifiedTime: '2026-01-01T00:00:00Z', webViewLink: 'https://drive.google.com/file/presentation-file', iconLink: 'https://drive.google.com/icon' }] });
     if (q.includes("'photos-id' in parents")) return json({ files: [{ id: 'photo-file-ok', name: 'foto.jpg', mimeType: 'image/jpeg', modifiedTime: '2026-01-01T00:00:00Z' }, { id: 'not-image', name: 'arquivo.pdf', mimeType: 'application/pdf' }] });
     if (q.includes("'minutes-id' in parents")) return json({ files: [] });
-    if (q.includes("'root-folder-test' in parents") && !q.includes('name =')) return json({ files: [{ id: 'meeting-84-id', name: '84-Reunião-CONAPREV', mimeType: 'application/vnd.google-apps.folder' }] });
+    if (q.includes("'root-folder-test' in parents") && !q.includes('name =')) return json({ files: [
+      { id: 'meeting-84-id', name: '84-Reunião-CONAPREV', mimeType: 'application/vnd.google-apps.folder' },
+      { id: 'meeting-85-id', name: '85-Reuniao-CONAPREV', mimeType: 'application/vnd.google-apps.folder' },
+      { id: 'meeting-86-id', name: '86ª Reunião Ordinária do CONAPREV', mimeType: 'application/vnd.google-apps.folder' }
+    ] });
   }
   if (url.pathname.endsWith('/files/root-folder-direct')) {
     return json({ id: 'root-folder-direct', name: '83ª Reunião Ordinária do CONAPREV', mimeType: 'application/vnd.google-apps.folder', trashed: false });
@@ -86,6 +91,20 @@ test('tolera acentos no nome da pasta sem sair da pasta raiz', async () => {
   const response = await meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '84' } });
   assert.equal(response.statusCode, 200);
   assert.equal(JSON.parse(response.body).folder.name, '84-Reunião-CONAPREV');
+});
+
+test('mantém várias pastas de reuniões irmãs sem interferência entre elas', async () => {
+  const [meeting84, meeting85, meeting86] = await Promise.all([
+    meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '84' } }),
+    meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '85' } }),
+    meetingHandler({ httpMethod: 'GET', queryStringParameters: { meeting: '86' } })
+  ]);
+  assert.equal(meeting84.statusCode, 200);
+  assert.equal(meeting85.statusCode, 200);
+  assert.equal(meeting86.statusCode, 200);
+  assert.equal(JSON.parse(meeting84.body).folder.name, '84-Reunião-CONAPREV');
+  assert.equal(JSON.parse(meeting85.body).folder.name, '85-Reuniao-CONAPREV');
+  assert.equal(JSON.parse(meeting86.body).folder.name, '86ª Reunião Ordinária do CONAPREV');
 });
 
 test('aceita o ID raiz apontando diretamente para a pasta da reunião', async () => {

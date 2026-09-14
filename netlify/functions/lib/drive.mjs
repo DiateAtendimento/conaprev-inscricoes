@@ -12,6 +12,7 @@ const SUBFOLDERS = Object.freeze({
 });
 
 let tokenCache = { token: '', expiresAt: 0 };
+let tokenPromise = null;
 const valueCache = new Map();
 
 export class DriveFunctionError extends Error {
@@ -58,8 +59,7 @@ function base64url(value) {
   return Buffer.from(value).toString('base64url');
 }
 
-async function accessToken() {
-  if (tokenCache.token && Date.now() < tokenCache.expiresAt - 60_000) return tokenCache.token;
+async function requestAccessToken() {
   const { clientEmail, privateKey } = requiredEnvironment();
   const now = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
@@ -81,15 +81,30 @@ async function accessToken() {
     throw new DriveFunctionError('DRIVE_CREDENTIALS_INVALID', 503);
   }
 
-  const response = await fetch(TOKEN_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: `${unsigned}.${signature}`
-    })
-  });
-  if (!response.ok) throw new DriveFunctionError('DRIVE_AUTH_FAILED', 503);
+  let response;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      response = await fetch(TOKEN_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: `${unsigned}.${signature}`
+        })
+      });
+    } catch {
+      response = null;
+    }
+
+    if (response?.ok) break;
+    const retryable = !response || response.status === 429 || response.status >= 500;
+    if (!retryable || attempt === 2) {
+      console.error('[drive:auth]', { status: response?.status || 0, retryable });
+      throw new DriveFunctionError(retryable ? 'DRIVE_AUTH_UNAVAILABLE' : 'DRIVE_AUTH_FAILED', 503);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 150 * (attempt + 1)));
+  }
+
   const data = await response.json();
   if (!data.access_token) throw new DriveFunctionError('DRIVE_AUTH_FAILED', 503);
   tokenCache = {
@@ -99,8 +114,18 @@ async function accessToken() {
   return tokenCache.token;
 }
 
+async function accessToken() {
+  if (tokenCache.token && Date.now() < tokenCache.expiresAt - 60_000) return tokenCache.token;
+  if (!tokenPromise) {
+    tokenPromise = requestAccessToken().finally(() => {
+      tokenPromise = null;
+    });
+  }
+  return tokenPromise;
+}
+
 export async function authorizedFetch(url, options = {}) {
-  const token = await accessToken();
+  let token = await accessToken();
   let response;
   try {
     response = await fetch(url, {
@@ -112,7 +137,16 @@ export async function authorizedFetch(url, options = {}) {
   }
   if (response.status === 401) {
     tokenCache = { token: '', expiresAt: 0 };
-    throw new DriveFunctionError('DRIVE_AUTH_FAILED', 503);
+    token = await accessToken();
+    try {
+      response = await fetch(url, {
+        ...options,
+        headers: { ...(options.headers || {}), authorization: `Bearer ${token}` }
+      });
+    } catch {
+      throw new DriveFunctionError('DRIVE_UNAVAILABLE', 503);
+    }
+    if (response.status === 401) throw new DriveFunctionError('DRIVE_AUTH_FAILED', 503);
   }
   if (response.status === 403) throw new DriveFunctionError('DRIVE_ACCESS_DENIED', 503);
   if (response.status === 404) throw new DriveFunctionError('DRIVE_ITEM_NOT_FOUND', 404);
