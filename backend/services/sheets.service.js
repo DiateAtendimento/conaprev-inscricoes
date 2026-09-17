@@ -8,6 +8,7 @@ import {
   extractSequenceNumber,
   findNextAvailableSequence,
   getProfilePrefix,
+  isCompleteRegistrationRecord,
 } from "./inscricao-sequence.service.js";
 
 const SHEET_ID = cfg.sheetId;
@@ -247,6 +248,7 @@ function getUsedCodesForPerfil(headers, rows, perfil) {
   const prefix = getProfilePrefix(perfil);
   rows.forEach((row) => {
     const obj = mapRow(headers, row);
+    if (!isCompleteRegistrationRecord(obj)) return;
     const codigo = String(obj.numerodeinscricao || "").trim();
     if (codigo.toUpperCase().startsWith(prefix)) usedCodes.push(codigo);
   });
@@ -346,10 +348,16 @@ async function reconcileDuplicateProtocols({ perfil, sheetName }) {
   const usedCodes = [];
   const seenSequences = new Set();
   const duplicates = [];
+  const orphanProtocolRows = [];
 
   rows.forEach((row, index) => {
-    const codigo = String(row[colCode] || "").trim().toUpperCase();
+    const obj = mapRow(headers, row);
+    const codigo = String(obj.numerodeinscricao || "").trim().toUpperCase();
     if (!codigo.startsWith(prefix)) return;
+    if (!isCompleteRegistrationRecord(obj)) {
+      orphanProtocolRows.push({ rowIndex: index + 2 });
+      return;
+    }
     const sequence = extractSequenceNumber(codigo);
     if (!Number.isInteger(sequence) || sequence < 1) return;
     usedCodes.push(codigo);
@@ -360,9 +368,14 @@ async function reconcileDuplicateProtocols({ perfil, sheetName }) {
     seenSequences.add(sequence);
   });
 
-  if (!duplicates.length) return { fixed: 0 };
+  if (!duplicates.length && !orphanProtocolRows.length) {
+    return { fixed: 0, clearedOrphans: 0 };
+  }
 
-  const updates = [];
+  const updates = orphanProtocolRows.map(({ rowIndex }) => ({
+    range: `${sheetName}!${columnLetterFromIndex(colCode)}${rowIndex}`,
+    values: [[""]],
+  }));
   for (const duplicate of duplicates) {
     const nextSequence = findNextAvailableSequence(usedCodes, DEFAULT_MAX_INSCRICOES_POR_PERFIL);
     if (!nextSequence) {
@@ -385,7 +398,7 @@ async function reconcileDuplicateProtocols({ perfil, sheetName }) {
     },
   });
   invalidateSheetCache(sheetName);
-  return { fixed: updates.length };
+  return { fixed: duplicates.length, clearedOrphans: orphanProtocolRows.length };
 }
 
 const POST_WRITE_RECONCILE_DELAYS_MS = [0, 200, 600];
@@ -417,7 +430,9 @@ async function confirmUniqueProtocolForRow({ perfil, sheetName, rowIndex }) {
     const sequence = extractSequenceNumber(codigo);
     const owners = [];
     rows.forEach((row, index) => {
-      const otherCode = String(row[colCode] || "").trim().toUpperCase();
+      const obj = mapRow(headers, row);
+      if (!isCompleteRegistrationRecord(obj)) return;
+      const otherCode = String(obj.numerodeinscricao || "").trim().toUpperCase();
       if (!otherCode.startsWith(prefix)) return;
       if (extractSequenceNumber(otherCode) === sequence) owners.push(index + 2);
     });

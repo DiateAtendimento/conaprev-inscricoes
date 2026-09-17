@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   buildCodigoFromSequence,
   findNextAvailableSequence,
+  isCompleteRegistrationRecord,
 } from "../services/inscricao-sequence.service.js";
 
 function codesThrough(last, missing = []) {
@@ -25,4 +26,16 @@ test("usa o número seguinte ao maior quando não existem vagas", () => {
 test("um protocolo repetido não faz a sequência pular uma vaga", () => {
   const usedCodes = [...codesThrough(26), buildCodigoFromSequence("Conselheiro", 26)];
   assert.equal(findNextAvailableSequence(usedCodes), 27);
+});
+
+test("protocolo residual sem uma inscricao completa nao ocupa a vaga", () => {
+  const rows = [
+    { codigo: "CNL036", nome: "Inscricao valida", cpf: "12345678901" },
+    { codigo: "CNL037", nome: "", cpf: "" },
+    { codigo: "CNL038", nome: "Formula residual", cpf: "" },
+  ];
+  const usedCodes = rows
+    .filter((row) => isCompleteRegistrationRecord(row))
+    .map((row) => row.codigo);
+  assert.equal(findNextAvailableSequence([...codesThrough(35), ...usedCodes]), 37);
 });

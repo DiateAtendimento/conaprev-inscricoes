@@ -6,6 +6,7 @@ import {
   buildCodigoFromSequence,
   findMissingSequences,
   findNextAvailableSequence,
+  isCompleteRegistrationRecord,
   normalizeUsedSequences,
   validateProfileSequences,
 } from "../services/inscricao-sequence.service.js";
@@ -26,6 +27,13 @@ test("normaliza sequencias repetidas e ordena", () => {
 test("encontra o primeiro numero faltante sem pular inscricoes", () => {
   assert.equal(findNextAvailableSequence(["PAT001", "PAT002", "PAT004"]), 3);
   assert.deepEqual(findMissingSequences(["PAT001", "PAT002", "PAT004"], 5), [3, 5]);
+});
+
+test("linha incompleta nao representa uma inscricao valida", () => {
+  assert.equal(isCompleteRegistrationRecord({ nome: "Pessoa Teste", cpf: "123.456.789-01" }), true);
+  assert.equal(isCompleteRegistrationRecord({ nome: "Pessoa Teste", cpf: "" }), false);
+  assert.equal(isCompleteRegistrationRecord({ nome: "", cpf: "12345678901" }), false);
+  assert.equal(isCompleteRegistrationRecord({ nome: "Pessoa Teste", cpf: "123" }), false);
 });
 
 test("retorna null quando o perfil ja ocupou as 65 inscricoes", () => {

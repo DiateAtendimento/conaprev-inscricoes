@@ -42,6 +42,13 @@ function normalizeUsedSequences(codigos) {
   return [...used].sort((a, b) => a - b);
 }
 
+// Linhas auxiliares, formulas e tentativas incompletas nao reservam numero.
+function isCompleteRegistrationRecord(record = {}) {
+  const cpf = String(record.cpf || "").replace(/\D/g, "");
+  const nome = String(record.nome || "").trim();
+  return cpf.length === 11 && nome.length > 0;
+}
+
 function findMissingSequences(codigos, max = DEFAULT_MAX_INSCRICOES_POR_PERFIL) {
   const used = new Set(normalizeUsedSequences(codigos));
   const missing = [];
@@ -77,6 +84,7 @@ export {
   findMissingSequences,
   findNextAvailableSequence,
   getProfilePrefix,
+  isCompleteRegistrationRecord,
   normalizeUsedSequences,
   validateProfileSequences,
 };
