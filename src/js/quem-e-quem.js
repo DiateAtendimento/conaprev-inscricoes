@@ -132,8 +132,32 @@
   function resolvePhoto(index, name) {
     const key = normalize(name);
     if (index.has(key)) return index.get(key);
-    const candidates = [...index.entries()].filter(([photoKey]) => photoKey.startsWith(`${key} `) || key.startsWith(`${photoKey} `));
-    return candidates.length === 1 ? candidates[0][1] : DEFAULT_PHOTO;
+    const aliases = new Map([
+      ['alessandra marques', 'alessandra arantes marques'],
+      ['abelardo osni rocha junior', 'abelardo osni rocha filho'],
+      ['welliton marques de albuquerque', 'wellinton marques de albuquerque']
+    ]);
+    const aliasKey = aliases.get(key);
+    if (aliasKey && index.has(aliasKey)) return index.get(aliasKey);
+
+    const tokens = key.split(' ').filter(token => token.length > 2);
+    const first = tokens[0] || '';
+    const last = tokens[tokens.length - 1] || '';
+    let best = null;
+    let bestRank = 0;
+    let tied = false;
+    index.forEach((url, candidate) => {
+      const candidateTokens = candidate.split(' ').filter(token => token.length > 2);
+      const matches = candidateTokens.filter(token => tokens.includes(token)).length;
+      const ratio = matches / Math.max(tokens.length, candidateTokens.length, 1);
+      const sameFirst = Boolean(first && first === candidateTokens[0]);
+      const sameLast = Boolean(last && last === candidateTokens[candidateTokens.length - 1]);
+      if (matches < 2 || ratio < 0.6 || (!sameLast && ratio < 0.75)) return;
+      const rank = ratio + (sameLast ? 0.2 : 0) + (sameFirst ? 0.1 : 0);
+      if (rank > bestRank) { best = url; bestRank = rank; tied = false; }
+      else if (Math.abs(rank - bestRank) < 0.0001) tied = true;
+    });
+    return tied ? DEFAULT_PHOTO : (best || DEFAULT_PHOTO);
   }
 
   async function loadRegistrations() {

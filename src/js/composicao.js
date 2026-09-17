@@ -47,6 +47,40 @@
     .replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9]+/g, ' ')
     .trim().replace(/\s+/g, ' ').toLowerCase();
 
+  const COUNSELOR_PHOTO_ALIASES = new Map([
+    ['alessandra marques', 'Alessandra Arantes Marques.jpg'],
+    ['abelardo osni rocha junior', 'ABELARDO OSNI ROCHA FILHO.jpg'],
+    ['welliton marques de albuquerque', 'Wellinton Marques de Albuquerque.jpeg']
+  ]);
+
+  function findPhotoFile(map, name) {
+    const key = normalize(name);
+    if (!key) return null;
+    if (map.has(key)) return map.get(key);
+    const alias = COUNSELOR_PHOTO_ALIASES.get(key);
+    if (alias) return alias;
+
+    const tokens = key.split(' ').filter(token => token.length > 2);
+    const first = tokens[0] || '';
+    const last = tokens[tokens.length - 1] || '';
+    let best = null;
+    let bestRank = 0;
+    let tied = false;
+    map.forEach((value, candidate) => {
+      if (!/\.(?:png|jpe?g|webp|svg)$/i.test(value) || /^(?:padrao|manifest)\b/i.test(value)) return;
+      const candidateTokens = candidate.split(' ').filter(token => token.length > 2);
+      const matches = candidateTokens.filter(token => tokens.includes(token)).length;
+      const ratio = matches / Math.max(tokens.length, candidateTokens.length, 1);
+      const sameFirst = Boolean(first && first === candidateTokens[0]);
+      const sameLast = Boolean(last && last === candidateTokens[candidateTokens.length - 1]);
+      if (matches < 2 || ratio < 0.6 || (!sameLast && ratio < 0.75)) return;
+      const rank = ratio + (sameLast ? 0.2 : 0) + (sameFirst ? 0.1 : 0);
+      if (rank > bestRank) { best = value; bestRank = rank; tied = false; }
+      else if (Math.abs(rank - bestRank) < 0.0001) tied = true;
+    });
+    return tied ? null : best;
+  }
+
   function findByFlexibleName(map, name) {
     const key = normalize(name);
     if (map.has(key)) return map.get(key);
@@ -63,12 +97,7 @@
   }
 
   function photoFor(name) {
-    const key = normalize(name);
-    const exact = photos.get(key);
-    const candidates = exact ? [] : [...photos.entries()].filter(([photoKey]) => (
-      photoKey.startsWith(`${key} `) || key.startsWith(`${photoKey} `)
-    ));
-    const file = exact || (candidates.length === 1 ? candidates[0][1] : null);
+    const file = findPhotoFile(photos, name);
     return file ? `${PHOTO_DIR}/${encodeURIComponent(file)}` : FALLBACK_PHOTO;
   }
 
@@ -240,7 +269,10 @@
       const biographyList = Array.isArray(biographyData) ? biographyData : (biographyData.people || biographyData.pessoas || biographyData.participants || []);
       biographyList.forEach(person => biographies.set(normalize(person.name || person.nome), person));
       const manifest = manifestResponse.ok ? await manifestResponse.json() : [];
-      (Array.isArray(manifest) ? manifest : []).forEach(file => photos.set(normalize(file), file));
+      (Array.isArray(manifest) ? manifest : []).forEach(file => {
+        if (typeof file !== 'string' || !/\.(?:png|jpe?g|webp|svg)$/i.test(file) || /^(?:padrao|manifest)\b/i.test(file)) return;
+        photos.set(normalize(file), file);
+      });
       document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => openSection(button.dataset.section)));
       els.select.addEventListener('change', () => { if (els.select.value) selectState(els.select.value); });
       els.detailClose.addEventListener('click', () => {

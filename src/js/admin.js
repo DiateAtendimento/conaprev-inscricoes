@@ -315,15 +315,33 @@
     const index = await loadPhotoIndex(perfil);
     let filename = index.get(key) || config.aliases?.get(key);
     if (!filename && perfil === 'Conselheiro') {
-      const nameTokens = new Set(key.split(' ').filter(Boolean));
-      let bestKey = '';
-      index.forEach((_file, idxKey) => {
-        const idxTokens = idxKey.split(' ').filter(Boolean);
-        if (idxTokens.length < 2) return;
-        const allPresent = idxTokens.every(t => nameTokens.has(t));
-        if (allPresent && idxKey.length > bestKey.length) bestKey = idxKey;
-      });
-      if (bestKey) filename = index.get(bestKey);
+      const aliases = new Map([
+        ['alessandra marques', 'alessandra arantes marques'],
+        ['abelardo osni rocha junior', 'abelardo osni rocha filho'],
+        ['welliton marques de albuquerque', 'wellinton marques de albuquerque']
+      ]);
+      const aliasKey = aliases.get(key);
+      if (aliasKey) filename = index.get(aliasKey);
+      if (!filename) {
+        const tokens = key.split(' ').filter(token => token.length > 2);
+        const first = tokens[0] || '';
+        const last = tokens[tokens.length - 1] || '';
+        let bestRank = 0;
+        let bestKey = '';
+        let tied = false;
+        index.forEach((_file, idxKey) => {
+          const idxTokens = idxKey.split(' ').filter(token => token.length > 2);
+          const matches = idxTokens.filter(token => tokens.includes(token)).length;
+          const ratio = matches / Math.max(tokens.length, idxTokens.length, 1);
+          const sameFirst = Boolean(first && first === idxTokens[0]);
+          const sameLast = Boolean(last && last === idxTokens[idxTokens.length - 1]);
+          if (matches < 2 || ratio < 0.6 || (!sameLast && ratio < 0.75)) return;
+          const rank = ratio + (sameLast ? 0.2 : 0) + (sameFirst ? 0.1 : 0);
+          if (rank > bestRank) { bestKey = idxKey; bestRank = rank; tied = false; }
+          else if (Math.abs(rank - bestRank) < 0.0001) tied = true;
+        });
+        if (bestKey && !tied) filename = index.get(bestKey);
+      }
     }
     if (!filename && perfil === 'Staff' && safeName) {
       filename = `${safeName}.png`;
