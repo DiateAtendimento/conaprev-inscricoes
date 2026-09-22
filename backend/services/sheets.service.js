@@ -240,7 +240,27 @@ function mapRow(headers, row) {
 
 function rowBelongsToPerfil(rowObj, perfil, sheetName) {
   if (sheetName !== "Apoiadores") return true;
-  return String(rowObj.identificacao || "").trim() === String(perfil || "").trim();
+
+  // A aba Apoiadores é exclusiva deste público. Os registros legados dessa
+  // aba não possuem a coluna "Identificação", por isso não podem ser
+  // descartados apenas porque esse campo está vazio. Quando a coluna existir,
+  // Apoiador e Patrocinador continuam sendo tratados como o mesmo perfil.
+  const rowProfile = normalizeKey(rowObj.identificacao || "");
+  if (!rowProfile) return true;
+
+  const requestedProfile = normalizeKey(perfil || "");
+  const supporterProfiles = new Set([
+    "apoiador",
+    "apoiadores",
+    "patrocinador",
+    "patrocinadores",
+  ]);
+
+  if (supporterProfiles.has(rowProfile) && supporterProfiles.has(requestedProfile)) {
+    return true;
+  }
+
+  return rowProfile === requestedProfile;
 }
 
 function getUsedCodesForPerfil(headers, rows, perfil) {
