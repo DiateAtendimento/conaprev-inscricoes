@@ -139,6 +139,34 @@
     { id: 'convidadopor',      label: 'Convidado por',       type: 'text' },
     { id: 'email',             label: 'E-mail',              type: 'email' },
   ];
+  const INSTITUICOES_APOIADORAS = [
+    'AGENDA ACESSORIA',
+    'BANRISUL',
+    'BTG',
+    'EMPIRE',
+    'VINCI COMPASS',
+    'XP',
+  ];
+  const CAMPOS_DADOS_APOIADOR = [
+    ...CAMPOS_DADOS_REDUZIDOS,
+    {
+      id: 'patrocinador',
+      label: 'Instituição',
+      type: 'select',
+      required: true,
+      options: INSTITUICOES_APOIADORAS,
+    },
+  ];
+  function normalizeInstituicaoApoiadora(value) {
+    const normalized = String(value || '').trim().toUpperCase().replace(/\s+/g, ' ');
+    const aliases = {
+      'AGENDA ASSESSORIA': 'AGENDA ACESSORIA',
+      'BTG PACTUAL': 'BTG',
+      'BTG PACTUAL ASSET MANAGEMENT': 'BTG',
+      'VINCI COMPASS ': 'VINCI COMPASS',
+    };
+    return aliases[normalized] || normalized;
+  }
   const CAMPOS_PERFIL_BASE = [
     { id: 'identificacao',     label: 'Identificação',       type: 'text', readonly: true },
   ];
@@ -617,17 +645,26 @@
     const pane = document.querySelector('.mi-pane[data-step="2"]');
     if (!pane) return;
 
-    const fields = (perfil === 'Conselheiro') ? CAMPOS_DADOS_CONSELHEIRO : CAMPOS_DADOS_REDUZIDOS;
+    const fields = perfil === 'Conselheiro'
+      ? CAMPOS_DADOS_CONSELHEIRO
+      : (perfil === 'Apoiador' ? CAMPOS_DADOS_APOIADOR : CAMPOS_DADOS_REDUZIDOS);
     const blocks = fields.map(f => {
       if (f.id === 'numerodeinscricao' && !data.numerodeinscricao) return '';
-      const val = data[f.id] ?? '';
+      const rawVal = data[f.id] ?? '';
+      const val = f.id === 'patrocinador' ? normalizeInstituicaoApoiadora(rawVal) : rawVal;
       const ro  = f.readonly ? 'readonly' : '';
       const req = f.required ? 'required' : '';
       const type= f.type || 'text';
+      const control = type === 'select'
+        ? `<select id="${f.id}" name="${f.id}" class="form-select" ${req}>
+            <option value="">Selecione uma instituição</option>
+            ${(f.options || []).map(option => `<option value="${escapeHtml(option)}" ${String(val) === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+          </select>`
+        : `<input id="${f.id}" name="${f.id}" type="${type}" class="form-control" value="${escapeHtml(val)}" ${ro} ${req}>`;
       return `
         <div class="col-12 col-md-6">
           <label class="form-label" for="${f.id}">${f.label}${f.required ? ' *' : ''}</label>
-          <input id="${f.id}" name="${f.id}" type="${type}" class="form-control" value="${escapeHtml(val)}" ${ro} ${req}>
+          ${control}
           ${f.required ? '<div class="invalid-feedback">Campo obrigatório.</div>' : ''}
         </div>
       `;
@@ -778,6 +815,7 @@
     emailconselheiroa: 'E-mail Conselheiro(a)',
     emailsecretarioa: 'E-mail Secretário(a)',
     convidadopor: 'Convidado por',
+    patrocinador: 'Instituição',
     email: 'E-mail'
   };
   const HIDDEN_KEYS = new Set(['_rowIndex', 'foto']);
@@ -1140,20 +1178,37 @@
    * API helpers
    * =============================== */
   async function apiLookupCpf(cpf) {
-    const res = await fetch(ROUTES.buscarCpf, {
-      method: 'POST',
-      headers: defaultHeaders,
-      body: JSON.stringify({ cpf, perfil: state.perfil })
-    });
-    if (!res.ok) {
-      let msg = 'Erro ao buscar CPF';
-      try {
-        const j = await res.json();
-        if (j?.error) msg = j.error;
-      } catch {}
-      throw new Error(msg);
+    const perfis = state.perfil === 'Apoiador' ? ['Apoiador', 'Patrocinador'] : [state.perfil];
+    const cpfs = [cpf];
+    if (state.perfil === 'Apoiador') cpfs.push(`'${cpf}`);
+    let successfulResponse = false;
+    let lastError = 'Erro ao buscar CPF';
+
+    for (const perfil of perfis) {
+      for (const cpfValue of cpfs) {
+        const res = await fetch(ROUTES.buscarCpf, {
+          method: 'POST',
+          headers: defaultHeaders,
+          body: JSON.stringify({ cpf: cpfValue, perfil })
+        });
+        if (!res.ok) {
+          try {
+            const body = await res.json();
+            if (body?.error) lastError = body.error;
+          } catch {}
+          continue;
+        }
+        successfulResponse = true;
+        const found = await res.json().catch(() => null);
+        const hasRecord = found && typeof found === 'object' && (
+          found._rowIndex || found.cpf || found.nome || found.numerodeinscricao || found.numero || found.protocolo
+        );
+        if (hasRecord) return found;
+      }
     }
-    return res.json();
+
+    if (successfulResponse) return null;
+    throw new Error(lastError);
   }
 
   async function apiConfirmar(payload) {
@@ -1345,6 +1400,7 @@
           emailconselheiroa: found.emailconselheiroa || found.email || '',
           emailsecretarioa: found.emailsecretarioa || '',
           convidadopor: found.convidadopor || '',
+          patrocinador: found.patrocinador || found.instituicao || '',
           email: found.email || '',
           _rowIndex: found._rowIndex
         };

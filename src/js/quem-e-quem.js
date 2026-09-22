@@ -88,7 +88,7 @@
   }
 
   function registrationEntity(item) {
-    return String(item?.sigladaentidade || item?.ufsigla || '').trim();
+    return String(item?.patrocinador || item?.instituicao || item?.sigladaentidade || item?.ufsigla || '').trim();
   }
 
   function catalogMatch(catalog, registeredName) {
@@ -162,7 +162,12 @@
 
   async function loadRegistrations() {
     const results = await Promise.allSettled(PROFILE_NAMES.map(async profileName => {
-      const list = await fetchJson(`${API_BASE}/api/inscricoes/galeria?perfil=${encodeURIComponent(profileName)}`);
+      let list = await fetchJson(`${API_BASE}/api/inscricoes/galeria?perfil=${encodeURIComponent(profileName)}`);
+      if (profileName === 'Apoiador' && (!Array.isArray(list) || !list.length)) {
+        try {
+          list = await fetchJson(`${API_BASE}/api/inscricoes/galeria?perfil=${encodeURIComponent('Patrocinador')}`);
+        } catch {}
+      }
       return Array.isArray(list) ? list.map(item => ({ ...item, perfil: profileName })) : [];
     }));
     const successful = results.filter(result => result.status === 'fulfilled');
