@@ -347,48 +347,6 @@ function parseResponsesText(text, vote) {
   return { answers: parsed, durationMs };
 }
 
-function normalizePresenceCode(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-}
-
-function normalizePresenceName(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ");
-}
-
-/* ===== presença Dia2 ===== */
-async function checarPresencaDia2(codInscricao, nomeOpcional) {
-  const sheets = await getSheets();
-  const targetCode = normalizePresenceCode(codInscricao);
-  const targetName = normalizePresenceName(nomeOpcional);
-
-  try {
-    const resp = await sheets.spreadsheets.values.get({ spreadsheetId: cfg.sheetId, range: "Dia2!A2:B" });
-    const rows = resp.data.values || [];
-    for (const r of rows) {
-      const num = normalizePresenceCode(r[0]);
-      const nome = normalizePresenceName(r[1]);
-      if (num !== targetCode) continue;
-      if (targetName && nome) {
-        const sameName = nome === targetName;
-        const partialName = nome.includes(targetName) || targetName.includes(nome);
-        if (!sameName && !partialName) continue;
-      }
-      return true;
-    }
-  } catch {
-    // aba pode nao existir
-  }
-  return false;
-}
-
 /* ===== consultas ===== */
 export async function listThemesWithLatest() {
   const { rows } = await readVotacoesSheetCached();
@@ -546,7 +504,7 @@ export async function setVoteActive(id, active) {
 export async function validateVoter(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
   if (!/^\d{11}$/.test(clean)) throw new Error("CPF inválido");
-  const cacheKey = `validate:${clean}`;
+  const cacheKey = `validate:authorized-only:${clean}`;
   const cached = getCache(cacheKey);
   if (cached) return cached;
 
@@ -563,13 +521,6 @@ export async function validateVoter(cpf) {
   }
 
   const user = await buscarPorCpf(clean, "Conselheiro").catch(() => null);
-  const presenteDia2 = await checarPresencaDia2(authorized.numerodeinscricao, authorized.nome || user?.nome);
-  if (!presenteDia2) {
-    const out = { ok: false, reason: "SEM_PRESENCA" };
-    setCache(cacheKey, out, VALIDATION_CACHE_TTL_MS);
-    return out;
-  }
-
   const out = {
     ok: true,
     user: {
