@@ -521,6 +521,9 @@ export async function buscarPorCpf(cpf, perfil) {
 export async function buscarAutorizadoParaVotarPorCpf(cpf) {
   const clean = String(cpf || "").replace(/\D/g, "");
   const { headers, rows } = await readAllCached(AUTHORIZED_VOTERS_SHEET, CACHE_TTL_SEARCH_MS);
+  // Uma base ainda sem participantes equivale a uma busca sem resultado.
+  // Evita transformar a ausência de linhas (e até de cabeçalho) em erro.
+  if (!rows.length) return null;
   const idxCpf = headers.map(normalizeKey).indexOf("cpf");
   if (idxCpf < 0) throw new Error('Cabeçalho "CPF" não encontrado na aba "Autorizados para votar".');
   for (let i = 0; i < rows.length; i++) {

@@ -3340,23 +3340,48 @@
         return;
       }
       voteLog('info', 'Iniciando validação de eleitor', { cpfFinal: cpf.slice(-4) });
+      const controller = new AbortController();
+      const timeoutMs = 10000;
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
       const stop = startLoading('Validando CPF...');
+      let loadingStopped = false;
+      const finishLoading = () => {
+        if (loadingStopped) return;
+        loadingStopped = true;
+        stop();
+      };
       try {
         const res = await apiFetch('/api/votacao/login', {
           method: 'POST',
           body: JSON.stringify({ cpf }),
+          signal: controller.signal,
         });
         const data = await res.json().catch(() => null);
         if (!res.ok) {
           voteLog('warn', 'Falha HTTP no login de votação', { status: res.status, body: data });
-          await showDenied('Desculpe! Ação não permitida');
+          finishLoading();
+          await showUiModal({
+            title: 'Aviso',
+            message: 'Não foi possível consultar o CPF. Tente novamente.',
+            variant: 'danger',
+          });
           return;
         }
         if (!data?.ok) {
-          voteLog('warn', 'Eleitor negado na validação', { reason: data?.reason || 'DESCONHECIDO' });
-          await showDenied('Desculpe! Ação não permitida');
+          const reason = data?.reason || 'DESCONHECIDO';
+          voteLog('warn', 'Eleitor negado na validação', { reason });
+          finishLoading();
+          const message = reason === 'NAO_AUTORIZADO'
+            ? 'CPF não encontrado na base de participantes.'
+            : 'CPF não autorizado para acessar a votação.';
+          loginMsg.classList.remove('d-none');
+          loginMsg.textContent = message;
+          await showUiModal({ title: 'Aviso', message, variant: 'warning' });
           return;
         }
+        finishLoading();
         loginMsg.classList.add('d-none');
         loginMsg.textContent = '';
         currentUser = data.user;
@@ -3376,10 +3401,22 @@
           nome: currentUser?.nome || '',
         });
       } catch (error) {
-        voteLogError('Erro inesperado no login de votação', error, { cpfFinal: cpf.slice(-4) });
-        await showUiModal({ title: 'Aviso', message: 'Falha ao validar acesso ao módulo de votação.', variant: 'danger' });
+        finishLoading();
+        if (error?.name === 'AbortError') {
+          voteLog('warn', 'Tempo limite ao validar eleitor', { cpfFinal: cpf.slice(-4), timeoutMs });
+          await showUiModal({
+            title: 'Aviso',
+            message: 'A consulta do CPF demorou mais que o esperado. Tente novamente.',
+            variant: 'warning',
+          });
+        } else {
+          voteLogError('Erro inesperado no login de votação', error, { cpfFinal: cpf.slice(-4) });
+          await showUiModal({ title: 'Aviso', message: 'Falha ao validar acesso ao módulo de votação.', variant: 'danger' });
+        }
       } finally {
-        stop();
+        clearTimeout(timeout);
+        finishLoading();
+        if (submitButton) submitButton.disabled = false;
       }
     });
 
