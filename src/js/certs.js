@@ -19,10 +19,10 @@
   const isCertLiberado = () =>
     isCertDevMode() || (releaseAt && Date.now() >= releaseAt);
 
-  const btnAbrir = document.getElementById("btnEmitirCert");
+  const certButtons = Array.from(document.querySelectorAll("[data-cert-action]"));
   const msgEl = document.getElementById("certMessageModal");
 
-  if (!btnAbrir) return;
+  if (!certButtons.length) return;
 
   const messageModal = msgEl ? new bootstrap.Modal(msgEl) : null;
 
@@ -46,8 +46,8 @@
     );
   }
 
-  // Clique no botão de emitir certificado
-  btnAbrir.addEventListener("click", (e) => {
+  // Clique em qualquer botão de emitir certificado
+  certButtons.forEach((button) => button.addEventListener("click", (e) => {
     e.preventDefault();
 
     if (!isCertLiberado()) {
@@ -58,5 +58,5 @@
     // Se já estiver liberado ou em modo dev, redireciona para o Apps Script
     window.location.href =
       "https://script.google.com/macros/s/AKfycbywUU1DZyxXapGgE874ptZhNIBtIAjhREl9c_e8ZBCcgGzPsX6wT3Mf8ekG6NLF_4vrSA/exec";
-  });
+  }));
 })();
